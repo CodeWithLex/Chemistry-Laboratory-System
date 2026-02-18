@@ -2,6 +2,7 @@
 session_start();
 if (!isset($_SESSION['group_id'])) { header("Location: login.php"); exit(); }
 require_once 'db.php';
+require_once 'send_mail.php';
 
 $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -9,6 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("iii", $_SESSION['group_id'], $_POST['apparatus_id'], $_POST['qty']);
     if ($stmt->execute()) {
         $msg = 'success';
+        
+        // Get apparatus name for email
+        $appStmt = $conn->prepare("SELECT item_name FROM apparatus WHERE apparatus_id = ?");
+        $appStmt->bind_param("i", $_POST['apparatus_id']);
+        $appStmt->execute();
+        $appResult = $appStmt->get_result();
+        $appRow = $appResult->fetch_assoc();
+        
+        // Send email notification to admin
+        sendAdminNotification($_SESSION['group_name'], $appRow['item_name'], $_POST['qty']);
     }
 }
 
