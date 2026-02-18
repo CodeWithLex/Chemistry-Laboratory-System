@@ -16,20 +16,20 @@
          <image>
             <Image url="@UI%20DESIGN/LOGIN%20ui.png" />
          </image></ImageView>
-      <Button fx:id="loginButton" layoutX="777.0" layoutY="366.0" mnemonicParsing="false" onAction="#loginClicked" prefHeight="56.0" prefWidth="152.0" text="LOGIN">
+      <Button fx:id="loginButton" layoutX="746.0" layoutY="347.0" mnemonicParsing="false" onAction="#loginClicked" prefHeight="56.0" prefWidth="152.0" styleClass="login-button" text="LOGIN">
          <font>
             <Font name="Montserrat-Bold" size="12.0" />
          </font>
       </Button>
-      <Button fx:id="createButton" layoutX="777.0" layoutY="434.0" mnemonicParsing="false" onAction="#createClciked" prefHeight="56.0" prefWidth="152.0" text="Create Admin Account">
+      <Button fx:id="createButton" layoutX="746.0" layoutY="415.0" mnemonicParsing="false" onAction="#createClciked" prefHeight="56.0" prefWidth="218.0" styleClass="secondary-button" text="Create Admin Account">
          <font>
-            <Font name="Montserrat-Bold" size="10.0" />
+            <Font name="Montserrat-Bold" size="7.0" />
          </font>
       </Button>
       <Accordion layoutX="746.0" layoutY="129.0" />
-      <TextField fx:id="usernameField" layoutX="726.0" layoutY="233.0" prefHeight="29.0" prefWidth="255.0" />
-      <Label layoutX="823.0" layoutY="215.0" text="Username" />
-      <PasswordField fx:id="passwordField" layoutX="726.0" layoutY="316.0" prefHeight="26.0" prefWidth="255.0" />
-      <Label layoutX="823.0" layoutY="298.0" text="Password" />
+      <TextField fx:id="usernameField" layoutX="721.0" layoutY="208.0" prefHeight="29.0" prefWidth="255.0" />
+      <Label layoutX="818.0" layoutY="190.0" text="Username" />
+      <PasswordField fx:id="passwordField" layoutX="721.0" layoutY="291.0" prefHeight="26.0" prefWidth="255.0" />
+      <Label layoutX="818.0" layoutY="273.0" text="Password" />
    </children>
 </AnchorPane>
