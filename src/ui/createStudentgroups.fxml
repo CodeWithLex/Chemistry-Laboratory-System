@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" prefHeight="380.0" prefWidth="450.0" styleClass="group-create-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.CreateStudentgroupsController">
+    <stylesheets>
+        <URL value="@/css/createstudentgroups.css" />
+    </stylesheets>
+    <children>
+        <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="20.0">
+            <!-- Title -->
+            <Label styleClass="page-title" text="Create Student Group">
+                <font>
+                    <Font name="System Bold" size="22.0" />
+                </font>
+            </Label>
+            <Label styleClass="page-subtitle" text="Fill in the details for the new student group" />
+
+            <!-- Form Grid -->
+            <GridPane hgap="10.0" vgap="12.0">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="120.0" prefWidth="130.0" />
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                </rowConstraints>
+
+                <!-- Row 0: Group Name -->
+                <Label styleClass="form-label" text="Group Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <TextField fx:id="groupNameField" promptText="Enter group name" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                <!-- Row 1: Username -->
+                <Label styleClass="form-label" text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="usernameField" promptText="Enter username" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                <!-- Row 2: Password -->
+                <Label styleClass="form-label" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                <!-- Row 3: Confirm Password -->
+                <Label styleClass="form-label" text="Confirm:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <PasswordField fx:id="confirmPassField" promptText="Confirm password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            </GridPane>
+
+            <!-- Buttons -->
+            <VBox alignment="CENTER" spacing="10.0">
+                <padding>
+                    <Insets top="10.0" />
+                </padding>
+                <Button fx:id="createGroupBtn" mnemonicParsing="false" onAction="#createGroupClicked" prefHeight="42.0" prefWidth="200.0" styleClass="create-group-button" text="Create Group">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                </Button>
+                <Button fx:id="cancelBtn" mnemonicParsing="false" onAction="#cancelClicked" prefHeight="36.0" prefWidth="200.0" styleClass="cancel-button" text="Cancel">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font>
+                </Button>
+            </VBox>
+        </VBox>
+    </children>
+</AnchorPane>

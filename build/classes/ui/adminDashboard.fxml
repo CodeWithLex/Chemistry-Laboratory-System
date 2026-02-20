@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" prefHeight="650.0" prefWidth="1100.0" styleClass="dashboard-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AdminDashboardController">
+    <stylesheets>
+        <URL value="@/css/admindashboard.css" />
+    </stylesheets>
+    <children>
+        <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+            <!-- Top Header Bar -->
+            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="header-bar">
+                <padding>
+                    <Insets bottom="12.0" left="20.0" right="20.0" top="12.0" />
+                </padding>
+                <Label styleClass="header-title" text="🔬 ChemLab Admin Dashboard">
+                    <font>
+                        <Font name="System Bold" size="18.0" />
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome, Admin">
+                    <font>
+                        <Font size="13.0" />
+                    </font>
+                </Label>
+                <Button fx:id="logoutBtn" mnemonicParsing="false" onAction="#logoutClicked" styleClass="logout-button" text="Logout">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font>
+                </Button>
+            </HBox>
+
+            <!-- Stats Cards Row -->
+            <HBox alignment="CENTER" spacing="20.0" styleClass="stats-row">
+                <padding>
+                    <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                </padding>
+                <VBox alignment="CENTER" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label fx:id="pendingCountLabel" styleClass="stat-number" text="0">
+                        <font><Font name="System Bold" size="32.0" /></font>
+                    </Label>
+                    <Label styleClass="stat-label" text="Pending Requests" />
+                </VBox>
+                <VBox alignment="CENTER" styleClass="stat-card-green" HBox.hgrow="ALWAYS">
+                    <Label fx:id="approvedCountLabel" styleClass="stat-number" text="0">
+                        <font><Font name="System Bold" size="32.0" /></font>
+                    </Label>
+                    <Label styleClass="stat-label" text="Approved Today" />
+                </VBox>
+                <VBox alignment="CENTER" styleClass="stat-card-blue" HBox.hgrow="ALWAYS">
+                    <Label fx:id="totalApparatusLabel" styleClass="stat-number" text="0">
+                        <font><Font name="System Bold" size="32.0" /></font>
+                    </Label>
+                    <Label styleClass="stat-label" text="Total Apparatus" />
+                </VBox>
+                <VBox alignment="CENTER" styleClass="stat-card-purple" HBox.hgrow="ALWAYS">
+                    <Label fx:id="totalUsersLabel" styleClass="stat-number" text="0">
+                        <font><Font name="System Bold" size="32.0" /></font>
+                    </Label>
+                    <Label styleClass="stat-label" text="Total Users" />
+                </VBox>
+            </HBox>
+
+            <!-- Tabs: Requests | Apparatus -->
+            <TabPane fx:id="tabPane" styleClass="dashboard-tabs" VBox.vgrow="ALWAYS">
+
+                <!-- Pending Requests Tab -->
+                <Tab text="Pending Requests" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button fx:id="refreshBtn" mnemonicParsing="false" onAction="#refreshRequests" styleClass="action-button" text="⟳ Refresh" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#approveSelected" styleClass="approve-button" text="✓ Approve" />
+                            <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#rejectSelected" styleClass="reject-button" text="✕ Reject" />
+                            <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="↩ Mark Returned" />
+                        </HBox>
+                        <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colRequestId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colGroupName" prefWidth="180" text="Group Name" />
+                                <TableColumn fx:id="colApparatus" prefWidth="200" text="Apparatus" />
+                                <TableColumn fx:id="colQty" prefWidth="80" text="Qty" />
+                                <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />
+                                <TableColumn fx:id="colDate" prefWidth="200" text="Requested At" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- All Requests Tab -->
+                <Tab text="All Requests" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshAllRequests" styleClass="action-button" text="⟳ Refresh" />
+                        </HBox>
+                        <TableView fx:id="allRequestsTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAllId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colAllGroup" prefWidth="180" text="Group Name" />
+                                <TableColumn fx:id="colAllApparatus" prefWidth="200" text="Apparatus" />
+                                <TableColumn fx:id="colAllQty" prefWidth="80" text="Qty" />
+                                <TableColumn fx:id="colAllStatus" prefWidth="120" text="Status" />
+                                <TableColumn fx:id="colAllDate" prefWidth="200" text="Requested At" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- Currently In Use Tab -->
+                <Tab text="Currently In Use" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshInUse" styleClass="action-button" text="⟳ Refresh" />
+                        </HBox>
+                        <TableView fx:id="inUseTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colInUseId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colInUseGroup" prefWidth="180" text="Group Name" />
+                                <TableColumn fx:id="colInUseApparatus" prefWidth="200" text="Apparatus" />
+                                <TableColumn fx:id="colInUseQty" prefWidth="80" text="Qty" />
+                                <TableColumn fx:id="colInUseDate" prefWidth="200" text="Approved At" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- Apparatus Inventory Tab -->
+                <Tab text="Apparatus Inventory" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshApparatus" styleClass="action-button" text="⟳ Refresh" />
+                        </HBox>
+                        <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colAppName" prefWidth="350" text="Item Name" />
+                                <TableColumn fx:id="colAppQty" prefWidth="200" text="Current Quantity" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- Student Groups Tab -->
+                <Tab text="Student Groups" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshGroups" styleClass="action-button" text="⟳ Refresh" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button mnemonicParsing="false" onAction="#openAddGroupDialog" styleClass="add-group-button" text="+ Add Group" />
+                        </HBox>
+                        <TableView fx:id="groupsTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colGroupId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colGrpName" prefWidth="300" text="Group Name" />
+                                <TableColumn fx:id="colGrpUsername" prefWidth="250" text="Username" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+            </TabPane>
+        </VBox>
+    </children>
+</AnchorPane>

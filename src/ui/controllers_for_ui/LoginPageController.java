@@ -22,6 +22,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import chemlab_system.database.Connector_ChemSystem;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 
 /**
  * FXML Controller class
@@ -138,8 +140,28 @@ public class LoginPageController implements Initializable {
 
                 showAlert(AlertType.INFORMATION, "Success", "Login Successfully");
 
-                // TODO: Navigate to main application page
-                System.out.println("User logged in: " + fullName);
+                // Navigate to Admin Dashboard
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/adminDashboard.fxml"));
+                    Parent root = loader.load();
+
+                    AdminDashboardController dashboardController = loader.getController();
+                    dashboardController.setAdminName(fullName);
+
+                    // Get screen dimensions for responsive sizing
+                    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+                    double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
+                    double height = Math.min(screenBounds.getHeight() * 0.85, 850);
+                    width = Math.max(width, 1000); // minimum width
+                    height = Math.max(height, 600); // minimum height
+
+                    chemlab_system.ChemLab_System.setContent(root, width, height);
+                    chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
+                } catch (Exception ex) {
+                    System.err.println("Error loading dashboard: " + ex.getMessage());
+                    ex.printStackTrace();
+                    showAlert(AlertType.ERROR, "Navigation Error", "Failed to load dashboard.");
+                }
             } else {
                 // Login failed
                 System.out.println("Invalid credentials");
