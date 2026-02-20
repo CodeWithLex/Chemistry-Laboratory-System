@@ -11,24 +11,23 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import chemlab_system.database.Connector_ChemSystem;
 
 /**
  * FXML Controller class
- * Handles Student Assistant account creation.
+ * Handles admin account creation (after admin verification has passed).
  *
  * @author User
  */
-public class Create_accController implements Initializable {
+public class Create_adminController implements Initializable {
 
     @FXML
     private TextField usernameField;
@@ -43,13 +42,7 @@ public class Create_accController implements Initializable {
     private PasswordField confirmPass;
 
     @FXML
-    private ComboBox<Integer> yearBox;
-
-    @FXML
-    private ComboBox<String> sectionBox;
-
-    @FXML
-    private Button createAccButton;
+    private Button createAdminBtn;
 
     @FXML
     private Button backBtn;
@@ -61,17 +54,7 @@ public class Create_accController implements Initializable {
             javafx.application.Platform.runLater(() -> usernameField.requestFocus());
         }
 
-        // Populate year level combo box
-        if (yearBox != null) {
-            yearBox.getItems().addAll(1, 2, 3, 4);
-        }
-
-        // Populate course combo box
-        if (sectionBox != null) {
-            sectionBox.getItems().addAll("BSCPE-1A", "BSCPE-2A");
-        }
-
-        // Set up Enter key navigation
+        // Enter key navigation
         if (usernameField != null) {
             usernameField.setOnAction(event -> {
                 if (fullnameField != null)
@@ -92,32 +75,29 @@ public class Create_accController implements Initializable {
         }
         if (confirmPass != null) {
             confirmPass.setOnAction(event -> {
-                if (yearBox != null)
-                    yearBox.requestFocus();
+                createAdminClicked(null);
             });
         }
-        if (createAccButton != null) {
-            createAccButton.setOnKeyPressed(event -> {
+        if (createAdminBtn != null) {
+            createAdminBtn.setOnKeyPressed(event -> {
                 if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
-                    createAccClicked(null);
+                    createAdminClicked(null);
                 }
             });
         }
     }
 
     @FXML
-    private void createAccClicked(ActionEvent event) {
+    private void createAdminClicked(ActionEvent event) {
         String username = usernameField.getText().trim();
         String fullname = fullnameField.getText().trim();
         String password = passwordField.getText();
         String confirmPassword = confirmPass.getText();
-        Integer yearLevel = yearBox.getValue();
-        String section = sectionBox.getValue();
 
         // Validation
         if (username.isEmpty() || fullname.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error",
-                    "Please fill in all required fields (Username, Full Name, Password).");
+                    "Please fill in all fields (Username, Full Name, Password, and Confirm Password).");
             return;
         }
 
@@ -129,29 +109,17 @@ public class Create_accController implements Initializable {
 
         try {
             Connection conn = Connector_ChemSystem.getConnection();
-            String sql = "INSERT INTO users (username, password_hash, full_name, role, year_level, section) VALUES (?, ?, ?, 'Student Assistant', ?, ?)";
+            String sql = "INSERT INTO users (username, password_hash, full_name, role) VALUES (?, ?, ?, 'Admin')";
             PreparedStatement pstmt = conn.prepareStatement(sql);
 
             pstmt.setString(1, username);
             pstmt.setString(2, password); // You should hash this in production
             pstmt.setString(3, fullname);
 
-            if (yearLevel != null) {
-                pstmt.setInt(4, yearLevel);
-            } else {
-                pstmt.setNull(4, java.sql.Types.INTEGER);
-            }
-
-            if (section != null && !section.isEmpty()) {
-                pstmt.setString(5, section);
-            } else {
-                pstmt.setNull(5, java.sql.Types.VARCHAR);
-            }
-
             int result = pstmt.executeUpdate();
 
             if (result > 0) {
-                showAlert(AlertType.INFORMATION, "Success", "Student Assistant Account Created!");
+                showAlert(AlertType.INFORMATION, "Success", "Admin Account Created Successfully!");
                 pstmt.close();
 
                 // Navigate back to login page
@@ -166,7 +134,7 @@ public class Create_accController implements Initializable {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Database Error", "Error creating account: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Database Error", "Error creating admin account: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());

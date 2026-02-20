@@ -186,9 +186,9 @@ public class LoginPageController implements Initializable {
     private void createClciked(ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader();
-            loader.setLocation(getClass().getResource("/ui/createAcc_page.fxml"));
+            loader.setLocation(getClass().getResource("/ui/create_acc_as.fxml"));
             javafx.scene.Parent root = loader.load();
-            chemlab_system.ChemLab_System.setContent(root, 454, 590);
+            chemlab_system.ChemLab_System.setContent(root, 500, 400);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Create Account");
         } catch (Exception e) {
             e.printStackTrace();
