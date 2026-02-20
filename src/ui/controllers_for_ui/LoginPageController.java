@@ -16,13 +16,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
 
 /**
@@ -34,13 +32,13 @@ public class LoginPageController implements Initializable {
 
     @FXML
     private TextField usernameField;
-    
+
     @FXML
     private PasswordField passwordField;
-    
+
     @FXML
     private Button loginButton;
-    
+
     @FXML
     private Button createButton;
 
@@ -53,7 +51,7 @@ public class LoginPageController implements Initializable {
         if (usernameField != null) {
             javafx.application.Platform.runLater(() -> usernameField.requestFocus());
         }
-        
+
         // Set up Enter key to move from username to password field
         if (usernameField != null) {
             usernameField.setOnAction(event -> {
@@ -62,7 +60,7 @@ public class LoginPageController implements Initializable {
                 }
             });
         }
-        
+
         // Set up Enter key in password field to focus login button
         if (passwordField != null) {
             passwordField.setOnAction(event -> {
@@ -71,7 +69,7 @@ public class LoginPageController implements Initializable {
                 }
             });
         }
-        
+
         // Set up Enter key on login button to trigger click
         if (loginButton != null) {
             loginButton.setOnKeyPressed(event -> {
@@ -80,7 +78,7 @@ public class LoginPageController implements Initializable {
                 }
             });
         }
-        
+
         // Set up Enter key on create button to trigger click
         if (createButton != null) {
             createButton.setOnKeyPressed(event -> {
@@ -89,56 +87,57 @@ public class LoginPageController implements Initializable {
                 }
             });
         }
-    }    
-    
+    }
+
     @FXML
     private void loginClicked(ActionEvent event) {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
-        
+
         // Validation
         if (username.isEmpty() || password.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error", "Please enter both username and password.");
             return;
         }
-        
+
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
+
         try {
             System.out.println("Attempting to get connection...");
             conn = Connector_ChemSystem.getConnection();
-            
+
             // Check if connection is valid
             if (conn == null) {
-                showAlert(AlertType.ERROR, "Connection Error", "Failed to connect to database. Please check if MySQL is running.");
+                showAlert(AlertType.ERROR, "Connection Error",
+                        "Failed to connect to database. Please check if MySQL is running.");
                 return;
             }
-            
+
             if (conn.isClosed()) {
                 showAlert(AlertType.ERROR, "Connection Error", "Database connection is closed.");
                 return;
             }
-            
+
             System.out.println("Connection successful, preparing statement...");
             String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
             pstmt = conn.prepareStatement(sql);
-            
+
             pstmt.setString(1, username);
             pstmt.setString(2, password);
-            
+
             System.out.println("Executing query...");
             rs = pstmt.executeQuery();
-            
+
             if (rs.next()) {
                 // Login successful - get data before closing
                 String fullName = rs.getString("full_name");
-                
+
                 System.out.println("Login successful for: " + fullName);
-                
+
                 showAlert(AlertType.INFORMATION, "Success", "Login Successfully");
-                
+
                 // TODO: Navigate to main application page
                 System.out.println("User logged in: " + fullName);
             } else {
@@ -146,7 +145,7 @@ public class LoginPageController implements Initializable {
                 System.out.println("Invalid credentials");
                 showAlert(AlertType.ERROR, "Login Failed", "Invalid username or password.");
             }
-            
+
         } catch (SQLException e) {
             System.err.println("SQLException occurred: " + e.getMessage());
             e.printStackTrace();
@@ -174,7 +173,7 @@ public class LoginPageController implements Initializable {
             }
         }
     }
-    
+
     private void showAlert(AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -182,22 +181,19 @@ public class LoginPageController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
-    
+
     @FXML
     private void createClciked(ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader();
             loader.setLocation(getClass().getResource("/ui/createAcc_page.fxml"));
             javafx.scene.Parent root = loader.load();
-            javafx.scene.Scene scene = new javafx.scene.Scene(root);
-            javafx.stage.Stage stage = (javafx.stage.Stage) createButton.getScene().getWindow();
-            stage.setTitle("ChemLab System - Create Account");
-            stage.setScene(scene);
-            stage.show();
+            chemlab_system.ChemLab_System.setContent(root, 454, 590);
+            chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Create Account");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error loading create account page: " + e.getMessage());
         }
     }
-    
+
 }

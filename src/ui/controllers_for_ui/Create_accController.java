@@ -20,8 +20,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
 
 /**
@@ -33,28 +31,28 @@ public class Create_accController implements Initializable {
 
     @FXML
     private TextField usernameField;
-    
+
     @FXML
     private TextField fullnameField;
-    
+
     @FXML
     private PasswordField passwordField;
-    
+
     @FXML
     private PasswordField confirmPass;
-    
+
     @FXML
     private ComboBox<String> roleBox;
-    
+
     @FXML
     private ComboBox<Integer> yearBox;
-    
+
     @FXML
     private ComboBox<String> sectionBox;
-    
+
     @FXML
     private Button createAccButton;
-    
+
     @FXML
     private Button loginBtn;
 
@@ -67,27 +65,27 @@ public class Create_accController implements Initializable {
         if (usernameField != null) {
             javafx.application.Platform.runLater(() -> usernameField.requestFocus());
         }
-        
+
         // Populate role combo box
         if (roleBox != null) {
             roleBox.getItems().addAll("Admin", "Instructor", "Student");
         }
-        
+
         // Populate year level combo box
         if (yearBox != null) {
             yearBox.getItems().addAll(1, 2, 3, 4);
         }
-        
+
         // Populate section combo box
         if (sectionBox != null) {
             sectionBox.getItems().addAll("BSCPE-1A", "BSCPE-2A");
         }
-        
+
         // Set focus traversal order
-        if (usernameField != null && fullnameField != null && passwordField != null && 
-            confirmPass != null && roleBox != null && yearBox != null && 
-            sectionBox != null && createAccButton != null && loginBtn != null) {
-            
+        if (usernameField != null && fullnameField != null && passwordField != null &&
+                confirmPass != null && roleBox != null && yearBox != null &&
+                sectionBox != null && createAccButton != null && loginBtn != null) {
+
             usernameField.setFocusTraversable(true);
             fullnameField.setFocusTraversable(true);
             passwordField.setFocusTraversable(true);
@@ -98,7 +96,7 @@ public class Create_accController implements Initializable {
             createAccButton.setFocusTraversable(true);
             loginBtn.setFocusTraversable(true);
         }
-        
+
         // Set up Enter key navigation
         if (usernameField != null) {
             usernameField.setOnAction(event -> {
@@ -107,7 +105,7 @@ public class Create_accController implements Initializable {
                 }
             });
         }
-        
+
         if (fullnameField != null) {
             fullnameField.setOnAction(event -> {
                 if (passwordField != null) {
@@ -115,7 +113,7 @@ public class Create_accController implements Initializable {
                 }
             });
         }
-        
+
         if (passwordField != null) {
             passwordField.setOnAction(event -> {
                 if (confirmPass != null) {
@@ -123,7 +121,7 @@ public class Create_accController implements Initializable {
                 }
             });
         }
-        
+
         if (confirmPass != null) {
             confirmPass.setOnAction(event -> {
                 if (roleBox != null) {
@@ -131,7 +129,7 @@ public class Create_accController implements Initializable {
                 }
             });
         }
-        
+
         // Set up Enter key on create button to trigger click
         if (createAccButton != null) {
             createAccButton.setOnKeyPressed(event -> {
@@ -140,7 +138,7 @@ public class Create_accController implements Initializable {
                 }
             });
         }
-        
+
         // Set up Enter key on login button to trigger click
         if (loginBtn != null) {
             loginBtn.setOnKeyPressed(event -> {
@@ -150,7 +148,7 @@ public class Create_accController implements Initializable {
             });
         }
     }
-    
+
     @FXML
     private void createAccClicked(ActionEvent event) {
         String username = usernameField.getText().trim();
@@ -160,62 +158,61 @@ public class Create_accController implements Initializable {
         String role = roleBox.getValue();
         Integer yearLevel = yearBox.getValue();
         String section = sectionBox.getValue();
-        
+
         // Validation
-        if (username.isEmpty() || fullname.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || role == null) {
-            showAlert(AlertType.ERROR, "Validation Error", "Please fill in all required fields (Username, Full Name, Password, and Role).");
+        if (username.isEmpty() || fullname.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()
+                || role == null) {
+            showAlert(AlertType.ERROR, "Validation Error",
+                    "Please fill in all required fields (Username, Full Name, Password, and Role).");
             return;
         }
-        
+
         // Check if passwords match
         if (!password.equals(confirmPassword)) {
             showAlert(AlertType.ERROR, "Password Error", "The password doesn't seem to match.");
             return;
         }
-        
+
         try {
             Connection conn = Connector_ChemSystem.getConnection();
             String sql = "INSERT INTO users (username, password_hash, full_name, role, year_level, section) VALUES (?, ?, ?, ?, ?, ?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            
+
             pstmt.setString(1, username);
             pstmt.setString(2, password); // You should hash this in production
             pstmt.setString(3, fullname);
             pstmt.setString(4, role);
-            
+
             if (yearLevel != null) {
                 pstmt.setInt(5, yearLevel);
             } else {
                 pstmt.setNull(5, java.sql.Types.INTEGER);
             }
-            
+
             if (section != null && !section.isEmpty()) {
                 pstmt.setString(6, section);
             } else {
                 pstmt.setNull(6, java.sql.Types.VARCHAR);
             }
-            
+
             int result = pstmt.executeUpdate();
-            
+
             if (result > 0) {
                 showAlert(AlertType.INFORMATION, "Success", "Account Created");
                 pstmt.close();
                 // Do NOT close connection - keep it open for reuse
-                
+
                 // Navigate back to login page
                 FXMLLoader loader = new FXMLLoader();
                 loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
                 Parent root = loader.load();
-                Scene scene = new Scene(root);
-                Stage stage = (Stage) createAccButton.getScene().getWindow();
-                stage.setTitle("ChemLab System - Login");
-                stage.setScene(scene);
-                stage.show();
+                chemlab_system.ChemLab_System.setContent(root, 1100, 650);
+                chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
             } else {
                 pstmt.close();
                 // Do NOT close connection - keep it open for reuse
             }
-            
+
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Database Error", "Error creating account: " + e.getMessage());
@@ -224,13 +221,21 @@ public class Create_accController implements Initializable {
             showAlert(AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
         }
     }
-    
+
     @FXML
     private void loginClicked(ActionEvent event) {
-        // TODO: Navigate back to login page
-        System.out.println("Navigate to login page");
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
+            Parent root = loader.load();
+            chemlab_system.ChemLab_System.setContent(root, 1100, 650);
+            chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error loading login page: " + e.getMessage());
+        }
     }
-    
+
     private void showAlert(AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -238,7 +243,7 @@ public class Create_accController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
-    
+
     private void clearFields() {
         usernameField.clear();
         fullnameField.clear();
