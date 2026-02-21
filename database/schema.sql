@@ -8,7 +8,8 @@ CREATE TABLE student_groups (
     group_id INT AUTO_INCREMENT PRIMARY KEY,
     group_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NULL
 );
 
 -- Apparatus
@@ -49,3 +50,6 @@ INSERT INTO apparatus (item_name, current_quantity) VALUES
 
 -- Migration: If the requests table already exists, run this to add updated_at:
 -- ALTER TABLE requests ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- Migration: add email column to student_groups (needed for desktop email notifications)
+-- ALTER TABLE student_groups ADD COLUMN email VARCHAR(255) NULL;

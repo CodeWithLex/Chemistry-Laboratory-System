@@ -3,6 +3,7 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -87,10 +88,11 @@
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button fx:id="refreshBtn" mnemonicParsing="false" onAction="#refreshRequests" styleClass="action-button" text="⟳ Refresh" />
+                            <DatePicker fx:id="pendingDatePicker" onAction="#filterPendingByDate" promptText="Filter date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearPendingFilter" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
                             <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#approveSelected" styleClass="approve-button" text="✓ Approve" />
                             <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#rejectSelected" styleClass="reject-button" text="✕ Reject" />
-                            <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="↩ Mark Returned" />
                         </HBox>
                         <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
                             <columns>
@@ -135,6 +137,10 @@
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button mnemonicParsing="false" onAction="#refreshInUse" styleClass="action-button" text="⟳ Refresh" />
+                            <DatePicker fx:id="inUseDatePicker" onAction="#filterInUseByDate" promptText="Filter date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearInUseFilter" styleClass="clear-filter-button" text="Clear" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="↩ Mark Returned" />
                         </HBox>
                         <TableView fx:id="inUseTable" VBox.vgrow="ALWAYS">
                             <columns>
@@ -143,6 +149,7 @@
                                 <TableColumn fx:id="colInUseApparatus" prefWidth="200" text="Apparatus" />
                                 <TableColumn fx:id="colInUseQty" prefWidth="80" text="Qty" />
                                 <TableColumn fx:id="colInUseDate" prefWidth="200" text="Approved At" />
+                                <TableColumn fx:id="colInUseRemaining" prefWidth="180" text="Remaining Available" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -162,6 +169,7 @@
                                 <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
                                 <TableColumn fx:id="colAppName" prefWidth="350" text="Item Name" />
                                 <TableColumn fx:id="colAppQty" prefWidth="200" text="Current Quantity" />
+                                <TableColumn fx:id="colAppRemaining" prefWidth="200" text="Remaining Available" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -183,6 +191,29 @@
                                 <TableColumn fx:id="colGroupId" prefWidth="80" text="ID" />
                                 <TableColumn fx:id="colGrpName" prefWidth="300" text="Group Name" />
                                 <TableColumn fx:id="colGrpUsername" prefWidth="250" text="Username" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- History Tab -->
+                <Tab text="History" closable="false">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshHistory" styleClass="action-button" text="⟳ Refresh" />
+                        </HBox>
+                        <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colHistId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colHistGroup" prefWidth="180" text="Group Name" />
+                                <TableColumn fx:id="colHistApparatus" prefWidth="220" text="Apparatus" />
+                                <TableColumn fx:id="colHistQty" prefWidth="80" text="Qty" />
+                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Borrowed" />
+                                <TableColumn fx:id="colHistReturned" prefWidth="200" text="Date Returned" />
+                                <TableColumn fx:id="colHistDuration" prefWidth="160" text="Duration" />
                             </columns>
                         </TableView>
                     </VBox>

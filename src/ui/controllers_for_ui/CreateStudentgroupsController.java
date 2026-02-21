@@ -35,6 +35,9 @@ public class CreateStudentgroupsController implements Initializable {
     private TextField usernameField;
 
     @FXML
+    private TextField emailField;
+
+    @FXML
     private PasswordField passwordField;
 
     @FXML
@@ -65,6 +68,12 @@ public class CreateStudentgroupsController implements Initializable {
         }
         if (usernameField != null) {
             usernameField.setOnAction(event -> {
+                if (emailField != null)
+                    emailField.requestFocus();
+            });
+        }
+        if (emailField != null) {
+            emailField.setOnAction(event -> {
                 if (passwordField != null)
                     passwordField.requestFocus();
             });
@@ -93,13 +102,22 @@ public class CreateStudentgroupsController implements Initializable {
     private void createGroupClicked(ActionEvent event) {
         String groupName = groupNameField.getText().trim();
         String username = usernameField.getText().trim();
+        String email = emailField.getText().trim();
         String password = passwordField.getText();
         String confirmPassword = confirmPassField.getText();
 
         // Validation — all fields required
-        if (groupName.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        if (groupName.isEmpty() || username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error",
-                    "Please fill in all fields (Group Name, Username, Password, and Confirm Password).");
+                    "Please fill in all fields (Group Name, Username, Gmail, Password, and Confirm Password)."
+            );
+            return;
+        }
+
+        // Basic email validation (gmail only as requested)
+        if (!email.toLowerCase().endsWith("@gmail.com")) {
+            showAlert(AlertType.ERROR, "Validation Error", "Please enter a valid Gmail address (ending with @gmail.com)."
+            );
             return;
         }
 
@@ -119,11 +137,12 @@ public class CreateStudentgroupsController implements Initializable {
                 return;
             }
 
-            String sql = "INSERT INTO student_groups (group_name, username, password) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO student_groups (group_name, username, email, password) VALUES (?, ?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, groupName);
             pstmt.setString(2, username);
-            pstmt.setString(3, password);
+            pstmt.setString(3, email);
+            pstmt.setString(4, password);
 
             int result = pstmt.executeUpdate();
 

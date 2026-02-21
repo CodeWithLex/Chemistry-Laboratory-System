@@ -34,11 +34,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Issue 4: Exclude apparatus that the group already has a pending/approved request for
-$apparatus = $conn->prepare("SELECT * FROM apparatus WHERE current_quantity > 0 AND apparatus_id NOT IN (SELECT apparatus_id FROM requests WHERE group_id = ? AND status IN ('Pending','Approved'))");
+// Feature 1: Real-time availability based on Approved + Pending reservations
+// Also exclude apparatus that the group already has a pending/approved request for
+$apparatus = $conn->prepare(
+    "SELECT a.*, " .
+    "(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending') THEN r.qty ELSE 0 END), 0)) AS real_available " .
+    "FROM apparatus a " .
+    "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending') " .
+    "WHERE a.apparatus_id NOT IN (" .
+    "    SELECT apparatus_id FROM requests WHERE group_id = ? AND status IN ('Pending','Approved')" .
+    ") " .
+    "GROUP BY a.apparatus_id " .
+    "HAVING real_available > 0 " .
+    "ORDER BY a.item_name"
+);
 $apparatus->bind_param("i", $_SESSION['group_id']);
 $apparatus->execute();
 $apparatusList = $apparatus->get_result();
+
+// Feature 1: Pending requests by OTHER groups (for visibility)
+$pendingByOthersStmt = $conn->prepare(
+    "SELECT r.apparatus_id, g.group_name, r.qty " .
+    "FROM requests r " .
+    "JOIN student_groups g ON r.group_id = g.group_id " .
+    "WHERE r.status = 'Pending' AND r.group_id != ?"
+);
+$pendingByOthersStmt->bind_param("i", $_SESSION['group_id']);
+$pendingByOthersStmt->execute();
+$pendingByOthersRs = $pendingByOthersStmt->get_result();
+
+$pendingByOthers = []; // apparatus_id => array of rows
+while ($row = $pendingByOthersRs->fetch_assoc()) {
+    $aid = (int)$row['apparatus_id'];
+    if (!isset($pendingByOthers[$aid])) {
+        $pendingByOthers[$aid] = [];
+    }
+    $pendingByOthers[$aid][] = $row;
+}
 
 // Show ALL requests (removed LIMIT 5)
 $requests = $conn->prepare("SELECT r.*, a.item_name FROM requests r JOIN apparatus a ON r.apparatus_id = a.apparatus_id WHERE r.group_id = ? ORDER BY created_at DESC");
@@ -87,6 +119,7 @@ $myBorrowing = $borrowing->get_result();
         .status-badge.Rejected { background: #dc3545; }
         .status-badge.Returned { background: #2196f3; }
         .borrow-item { padding: 12px; background: #e8f5e9; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #2e7d32; }
+        .hint { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.35; }
     </style>
 </head>
 <body>
@@ -123,12 +156,27 @@ $myBorrowing = $borrowing->get_result();
             <h3>Request Apparatus</h3>
             <?php if ($apparatusList->num_rows > 0): ?>
             <form method="POST">
+                <div class="hint">
+                    Availability is calculated in real-time: <b>Real Available</b> = Inventory − (Approved + Pending).<br/>
+                    Hover an apparatus option to see <b>Pending by others</b> (desktop browsers).
+                </div>
                 <div class="form-group">
                     <label>Apparatus</label>
                     <select name="apparatus_id" required>
                         <option value="">Select...</option>
                         <?php while ($a = $apparatusList->fetch_assoc()): ?>
-                            <option value="<?= $a['apparatus_id'] ?>"><?= htmlspecialchars($a['item_name']) ?> (<?= $a['current_quantity'] ?> available)</option>
+                            <?php
+                                $aid = (int)$a['apparatus_id'];
+                                $tooltip = "";
+                                if (isset($pendingByOthers[$aid])) {
+                                    $parts = [];
+                                    foreach ($pendingByOthers[$aid] as $p) {
+                                        $parts[] = $p['group_name'] . " (" . $p['qty'] . ")";
+                                    }
+                                    $tooltip = "Pending by others: " . implode(", ", $parts);
+                                }
+                            ?>
+                            <option value="<?= $a['apparatus_id'] ?>" title="<?= htmlspecialchars($tooltip) ?>"><?= htmlspecialchars($a['item_name']) ?> (<?= (int)$a['real_available'] ?> real available)</option>
                         <?php endwhile; ?>
                     </select>
                 </div>

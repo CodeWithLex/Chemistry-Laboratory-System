@@ -38,6 +38,7 @@
                     <RowConstraints />
                     <RowConstraints />
                     <RowConstraints />
+                    <RowConstraints />
                 </rowConstraints>
 
                 <!-- Row 0: Group Name -->
@@ -48,13 +49,17 @@
                 <Label styleClass="form-label" text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                 <TextField fx:id="usernameField" promptText="Enter username" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                <!-- Row 2: Password -->
-                <Label styleClass="form-label" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <!-- Row 2: Email -->
+                <Label styleClass="form-label" text="Gmail:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <TextField fx:id="emailField" promptText="Enter Gmail address" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                <!-- Row 3: Confirm Password -->
-                <Label styleClass="form-label" text="Confirm:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <PasswordField fx:id="confirmPassField" promptText="Confirm password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <!-- Row 3: Password -->
+                <Label styleClass="form-label" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                <!-- Row 4: Confirm Password -->
+                <Label styleClass="form-label" text="Confirm:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <PasswordField fx:id="confirmPassField" promptText="Confirm password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             </GridPane>
 
             <!-- Buttons -->

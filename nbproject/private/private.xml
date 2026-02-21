@@ -10,6 +10,21 @@
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/LoginPageController.java</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/style_for_createAcc.css</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/createAcc_page.fxml</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/validation_admin.css</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/Validation_adminController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/validation_admin.fxml</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/create_acc_as.fxml</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/Create_acc_asController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/create_acc_as.css</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/Create_adminController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/create_admin.fxml</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/create_admin.css</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/adminDashboard.fxml</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/admindashboard.css</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/AdminDashboardController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/createstudentgroups.css</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/CreateStudentgroupsController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/createStudentgroups.fxml</file>
         </group>
     </open-files>
 </project-private>
