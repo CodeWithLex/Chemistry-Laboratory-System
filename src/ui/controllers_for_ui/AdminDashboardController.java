@@ -16,6 +16,7 @@ import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.scene.input.KeyEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -30,6 +31,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -38,6 +40,19 @@ import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
 import chemlab_system.model.BorrowRequest;
 import chemlab_system.util.EmailService;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import java.sql.*;
+import java.time.LocalDate;
 
 /**
  * FXML Controller class for Admin Dashboard
@@ -138,9 +153,46 @@ public class AdminDashboardController implements Initializable {
 
     // Date filters
     @FXML
-    private DatePicker pendingDatePicker;
+    private DatePicker pendingStartDatePicker;
     @FXML
-    private DatePicker inUseDatePicker;
+    private DatePicker pendingEndDatePicker;
+
+    @FXML
+    private DatePicker allStartDatePicker;
+    @FXML
+    private DatePicker allEndDatePicker;
+
+    @FXML
+    private DatePicker inUseStartDatePicker;
+    @FXML
+    private DatePicker inUseEndDatePicker;
+
+    @FXML
+    private DatePicker historyStartDatePicker;
+    @FXML
+    private DatePicker historyEndDatePicker;
+
+    // Search fields (per tab)
+    @FXML
+    private TextField pendingSearchField;
+    @FXML
+    private TextField allSearchField;
+    @FXML
+    private TextField inUseSearchField;
+    @FXML
+    private TextField apparatusSearchField;
+    @FXML
+    private TextField groupsSearchField;
+    @FXML
+    private TextField historySearchField;
+
+    // Cached full lists for client-side searching
+    private ObservableList<BorrowRequest> pendingRequestsMaster = FXCollections.observableArrayList();
+    private ObservableList<BorrowRequest> allRequestsMaster = FXCollections.observableArrayList();
+    private ObservableList<BorrowRequest> inUseMaster = FXCollections.observableArrayList();
+    private ObservableList<ApparatusItem> apparatusMaster = FXCollections.observableArrayList();
+    private ObservableList<StudentGroupItem> groupsMaster = FXCollections.observableArrayList();
+    private ObservableList<BorrowRequest> historyMaster = FXCollections.observableArrayList();
 
     // History Table
     @FXML
@@ -247,7 +299,8 @@ public class AdminDashboardController implements Initializable {
                 Timestamp ts = data.getValue().getUpdatedAt();
                 return new SimpleStringProperty(ts != null ? ts.toString() : "");
             });
-            colHistDuration.setCellValueFactory(data -> new SimpleStringProperty(calculateDurationText(data.getValue().getCreatedAt(), data.getValue().getUpdatedAt())));
+            colHistDuration.setCellValueFactory(data -> new SimpleStringProperty(
+                    calculateDurationText(data.getValue().getCreatedAt(), data.getValue().getUpdatedAt())));
         }
 
         // Apply cell style to ensure text is visible (fix for CSS inheritance issues)
@@ -261,7 +314,8 @@ public class AdminDashboardController implements Initializable {
         applyTextCellStyle(colGroupId, colGrpName, colGrpUsername);
         applyTextCellStyle(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate, colInUseRemaining);
         if (colHistId != null) {
-            applyTextCellStyle(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed, colHistReturned, colHistDuration);
+            applyTextCellStyle(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed, colHistReturned,
+                    colHistDuration);
         }
 
         // Set column resize policy so columns auto-fill the table width
@@ -283,9 +337,11 @@ public class AdminDashboardController implements Initializable {
             disableReorderAndSort(colAppId, colAppName, colAppQty);
         }
         disableReorderAndSort(colGroupId, colGrpName, colGrpUsername);
-        disableReorderAndSort(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate, colInUseRemaining);
+        disableReorderAndSort(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate,
+                colInUseRemaining);
         if (colHistId != null) {
-            disableReorderAndSort(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed, colHistReturned, colHistDuration);
+            disableReorderAndSort(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed,
+                    colHistReturned, colHistDuration);
         }
 
         // Set minimum widths to prevent text truncation
@@ -336,6 +392,26 @@ public class AdminDashboardController implements Initializable {
         // Load initial data
         loadStats();
         loadPendingRequests();
+
+        // Add listeners to search fields to apply filters dynamically
+        if (pendingSearchField != null) {
+            pendingSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyPendingSearchFilter());
+        }
+        if (allSearchField != null) {
+            allSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyAllSearchFilter());
+        }
+        if (inUseSearchField != null) {
+            inUseSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyInUseSearchFilter());
+        }
+        if (apparatusSearchField != null) {
+            apparatusSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyApparatusSearchFilter());
+        }
+        if (groupsSearchField != null) {
+            groupsSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyGroupsSearchFilter());
+        }
+        if (historySearchField != null) {
+            historySearchField.textProperty().addListener((obs, oldVal, newVal) -> applyHistorySearchFilter());
+        }
 
         // Auto-load data when switching tabs
         tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
@@ -447,10 +523,10 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadPendingRequests() {
-        loadPendingRequests(null);
+        loadPendingRequests(null, null);
     }
 
-    private void loadPendingRequests(LocalDate filterDate) {
+    private void loadPendingRequests(LocalDate startDate, LocalDate endDate) {
         ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
         Connection conn = Connector_ChemSystem.getConnection();
         if (conn == null) {
@@ -469,14 +545,21 @@ public class AdminDashboardController implements Initializable {
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
                 "WHERE r.status = 'Pending'";
 
-        if (filterDate != null) {
-            sql += " AND DATE(r.created_at) = ?";
+        if (startDate != null) {
+            sql += " AND DATE(r.created_at) >= ?";
+        }
+        if (endDate != null) {
+            sql += " AND DATE(r.created_at) <= ?";
         }
         sql += " ORDER BY r.created_at";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (filterDate != null) {
-                stmt.setDate(1, Date.valueOf(filterDate));
+            int paramIndex = 1;
+            if (startDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(endDate));
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -497,10 +580,15 @@ public class AdminDashboardController implements Initializable {
             System.err.println("loadPendingRequests SQL error: " + e.getMessage());
             e.printStackTrace();
         }
-        requestsTable.setItems(list);
+        pendingRequestsMaster = list;
+        applyPendingSearchFilter();
     }
 
     private void loadAllRequests() {
+        loadAllRequests(null, null);
+    }
+
+    private void loadAllRequests(LocalDate startDate, LocalDate endDate) {
         ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
         Connection conn = Connector_ChemSystem.getConnection();
         if (conn == null) {
@@ -515,26 +603,44 @@ public class AdminDashboardController implements Initializable {
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "ORDER BY r.created_at DESC";
+                "WHERE 1=1";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                BorrowRequest req = new BorrowRequest();
-                req.setRequestId(rs.getInt("rid"));
-                req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                req.setQty(rs.getInt("rqty"));
-                req.setStatus(rs.getString("rstatus"));
-                req.setCreatedAt(rs.getTimestamp("rdate"));
-                list.add(req);
+        if (startDate != null) {
+            sql += " AND DATE(r.created_at) >= ?";
+        }
+        if (endDate != null) {
+            sql += " AND DATE(r.created_at) <= ?";
+        }
+        sql += " ORDER BY r.created_at DESC";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int paramIndex = 1;
+            if (startDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(endDate));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BorrowRequest req = new BorrowRequest();
+                    req.setRequestId(rs.getInt("rid"));
+                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
+                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
+                    req.setQty(rs.getInt("rqty"));
+                    req.setStatus(rs.getString("rstatus"));
+                    req.setCreatedAt(rs.getTimestamp("rdate"));
+                    list.add(req);
+                }
             }
             System.out.println("loadAllRequests: Loaded " + list.size() + " total requests");
         } catch (SQLException e) {
             System.err.println("loadAllRequests SQL error: " + e.getMessage());
             e.printStackTrace();
         }
-        allRequestsTable.setItems(list);
+        allRequestsMaster = list;
+        applyAllSearchFilter();
     }
 
     private void loadApparatus() {
@@ -546,7 +652,8 @@ public class AdminDashboardController implements Initializable {
         }
 
         String sql = "SELECT a.apparatus_id, a.item_name, a.current_quantity, " +
-                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending') THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty " +
+                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending') THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
+                +
                 "FROM apparatus a " +
                 "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id " +
                 "GROUP BY a.apparatus_id, a.item_name, a.current_quantity " +
@@ -566,7 +673,8 @@ public class AdminDashboardController implements Initializable {
             System.err.println("loadApparatus SQL error: " + e.getMessage());
             e.printStackTrace();
         }
-        apparatusTable.setItems(list);
+        apparatusMaster = list;
+        applyApparatusSearchFilter();
     }
 
     private void loadStudentGroups() {
@@ -592,14 +700,15 @@ public class AdminDashboardController implements Initializable {
             System.err.println("loadStudentGroups SQL error: " + e.getMessage());
             e.printStackTrace();
         }
-        groupsTable.setItems(list);
+        groupsMaster = list;
+        applyGroupsSearchFilter();
     }
 
     private void loadCurrentlyInUse() {
-        loadCurrentlyInUse(null);
+        loadCurrentlyInUse(null, null);
     }
 
-    private void loadCurrentlyInUse(LocalDate filterDate) {
+    private void loadCurrentlyInUse(LocalDate startDate, LocalDate endDate) {
         ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
         Connection conn = Connector_ChemSystem.getConnection();
         if (conn == null) {
@@ -611,22 +720,31 @@ public class AdminDashboardController implements Initializable {
                 "g.group_name AS gname, " +
                 "a.item_name AS aname, " +
                 "r.qty AS rqty, r.updated_at AS rdate, " +
-                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r2.status IN ('Approved','Pending') THEN r2.qty ELSE 0 END), 0), 0) AS remaining_qty " +
+                "GREATEST(a.current_quantity - (" +
+                "  SELECT COALESCE(SUM(r2.qty), 0) " +
+                "  FROM requests r2 " +
+                "  WHERE r2.apparatus_id = r.apparatus_id AND r2.status IN ('Approved', 'Pending')" +
+                "), 0) AS remaining_qty " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "LEFT JOIN requests r2 ON r2.apparatus_id = r.apparatus_id " +
                 "WHERE r.status = 'Approved'";
 
-        if (filterDate != null) {
-            sql += " AND DATE(r.updated_at) = ?";
+        if (startDate != null) {
+            sql += " AND DATE(r.updated_at) >= ?";
         }
-        sql += " GROUP BY r.request_id, g.group_name, a.item_name, r.qty, r.updated_at, a.current_quantity";
+        if (endDate != null) {
+            sql += " AND DATE(r.updated_at) <= ?";
+        }
         sql += " ORDER BY r.updated_at DESC";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (filterDate != null) {
-                stmt.setDate(1, Date.valueOf(filterDate));
+            int paramIndex = 1;
+            if (startDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(endDate));
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -648,7 +766,8 @@ public class AdminDashboardController implements Initializable {
             System.err.println("loadCurrentlyInUse SQL error: " + e.getMessage());
             e.printStackTrace();
         }
-        inUseTable.setItems(list);
+        inUseMaster = list;
+        applyInUseSearchFilter();
     }
 
     // ==================== ACTION HANDLERS ====================
@@ -703,6 +822,57 @@ public class AdminDashboardController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Error", "Failed to open Add Group dialog: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void openAddApparatusDialog(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/addApparatus.fxml"));
+            Parent root = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Add New Apparatus");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setResizable(false);
+            dialogStage.setScene(new Scene(root));
+            dialogStage.showAndWait();
+
+            // Refresh the apparatus table after dialog closes
+            loadApparatus();
+            loadStats();
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(AlertType.ERROR, "Error", "Failed to open Add Apparatus dialog: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void showGroupHistorySelected(ActionEvent event) {
+        StudentGroupItem selectedGroup = groupsTable.getSelectionModel().getSelectedItem();
+        if (selectedGroup == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select a student group from the table first.");
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/groupHistory.fxml"));
+            Parent root = loader.load();
+
+            GroupHistoryController controller = loader.getController();
+            controller.initData(selectedGroup.getId(), selectedGroup.getGroupName());
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("History for " + selectedGroup.getGroupName());
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(root));
+            dialogStage.showAndWait();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(AlertType.ERROR, "Error", "Failed to open Group History dialog: " + e.getMessage());
         }
     }
 
@@ -782,6 +952,14 @@ public class AdminDashboardController implements Initializable {
         }
     }
 
+    private void showAlert(AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     // ==================== UTILITY ====================
 
     private void sendEmailNotificationForRequest(int requestId, String newStatus) {
@@ -818,6 +996,10 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadHistory() {
+        loadHistory(null, null);
+    }
+
+    private void loadHistory(LocalDate startDate, LocalDate endDate) {
         if (historyTable == null)
             return;
 
@@ -831,28 +1013,44 @@ public class AdminDashboardController implements Initializable {
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Returned' " +
-                "ORDER BY r.updated_at DESC";
+                "WHERE r.status = 'Returned' ";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                BorrowRequest req = new BorrowRequest();
-                req.setRequestId(rs.getInt("rid"));
-                req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                req.setQty(rs.getInt("rqty"));
-                req.setCreatedAt(rs.getTimestamp("created_at"));
-                req.setUpdatedAt(rs.getTimestamp("updated_at"));
-                req.setStatus("Returned");
-                list.add(req);
+        if (startDate != null) {
+            sql += " AND DATE(r.updated_at) >= ?";
+        }
+        if (endDate != null) {
+            sql += " AND DATE(r.updated_at) <= ?";
+        }
+        sql += " ORDER BY r.updated_at DESC";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int paramIndex = 1;
+            if (startDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+            }
+            if (endDate != null) {
+                stmt.setDate(paramIndex++, Date.valueOf(endDate));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BorrowRequest req = new BorrowRequest();
+                    req.setRequestId(rs.getInt("rid"));
+                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
+                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
+                    req.setQty(rs.getInt("rqty"));
+                    req.setCreatedAt(rs.getTimestamp("created_at"));
+                    req.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    req.setStatus("Returned");
+                    list.add(req);
+                }
             }
         } catch (SQLException e) {
             System.err.println("loadHistory SQL error: " + e.getMessage());
             e.printStackTrace();
         }
 
-        historyTable.setItems(list);
+        historyMaster = list;
+        applyHistorySearchFilter();
     }
 
     private String calculateDurationText(Timestamp start, Timestamp end) {
@@ -881,38 +1079,244 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void filterPendingByDate() {
-        LocalDate d = pendingDatePicker != null ? pendingDatePicker.getValue() : null;
-        loadPendingRequests(d);
+        LocalDate start = pendingStartDatePicker != null ? pendingStartDatePicker.getValue() : null;
+        LocalDate end = pendingEndDatePicker != null ? pendingEndDatePicker.getValue() : null;
+        loadPendingRequests(start, end);
     }
 
     @FXML
     private void clearPendingFilter() {
-        if (pendingDatePicker != null) {
-            pendingDatePicker.setValue(null);
-        }
-        loadPendingRequests(null);
+        if (pendingStartDatePicker != null)
+            pendingStartDatePicker.setValue(null);
+        if (pendingEndDatePicker != null)
+            pendingEndDatePicker.setValue(null);
+        loadPendingRequests(null, null);
+    }
+
+    @FXML
+    private void filterAllByDate() {
+        LocalDate start = allStartDatePicker != null ? allStartDatePicker.getValue() : null;
+        LocalDate end = allEndDatePicker != null ? allEndDatePicker.getValue() : null;
+        loadAllRequests(start, end);
+    }
+
+    @FXML
+    private void clearAllFilter() {
+        if (allStartDatePicker != null)
+            allStartDatePicker.setValue(null);
+        if (allEndDatePicker != null)
+            allEndDatePicker.setValue(null);
+        loadAllRequests(null, null);
     }
 
     @FXML
     private void filterInUseByDate() {
-        LocalDate d = inUseDatePicker != null ? inUseDatePicker.getValue() : null;
-        loadCurrentlyInUse(d);
+        LocalDate start = inUseStartDatePicker != null ? inUseStartDatePicker.getValue() : null;
+        LocalDate end = inUseEndDatePicker != null ? inUseEndDatePicker.getValue() : null;
+        loadCurrentlyInUse(start, end);
     }
 
     @FXML
     private void clearInUseFilter() {
-        if (inUseDatePicker != null) {
-            inUseDatePicker.setValue(null);
-        }
-        loadCurrentlyInUse(null);
+        if (inUseStartDatePicker != null)
+            inUseStartDatePicker.setValue(null);
+        if (inUseEndDatePicker != null)
+            inUseEndDatePicker.setValue(null);
+        loadCurrentlyInUse(null, null);
     }
 
-    private void showAlert(AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    @FXML
+    private void filterHistoryByDate() {
+        LocalDate start = historyStartDatePicker != null ? historyStartDatePicker.getValue() : null;
+        LocalDate end = historyEndDatePicker != null ? historyEndDatePicker.getValue() : null;
+        loadHistory(start, end);
+    }
+
+    @FXML
+    private void clearHistoryFilter() {
+        if (historyStartDatePicker != null)
+            historyStartDatePicker.setValue(null);
+        if (historyEndDatePicker != null)
+            historyEndDatePicker.setValue(null);
+        loadHistory(null, null);
+    }
+
+    // ==================== FXML EVENT HANDLERS FOR SEARCH ====================
+
+    @FXML
+    public void filterPendingBySearch(KeyEvent event) {
+        applyPendingSearchFilter();
+    }
+
+    @FXML
+    public void filterAllBySearch(KeyEvent event) {
+        applyAllSearchFilter();
+    }
+
+    @FXML
+    public void filterInUseBySearch(KeyEvent event) {
+        applyInUseSearchFilter();
+    }
+
+    @FXML
+    public void filterApparatusBySearch(KeyEvent event) {
+        applyApparatusSearchFilter();
+    }
+
+    @FXML
+    public void filterGroupsBySearch(KeyEvent event) {
+        applyGroupsSearchFilter();
+    }
+
+    @FXML
+    public void filterHistoryBySearch(KeyEvent event) {
+        applyHistorySearchFilter();
+    }
+
+    @FXML
+    public void clearPendingSearch(ActionEvent event) {
+        if (pendingSearchField != null) {
+            pendingSearchField.clear();
+        }
+        applyPendingSearchFilter();
+    }
+
+    @FXML
+    public void clearAllSearch(ActionEvent event) {
+        if (allSearchField != null) {
+            allSearchField.clear();
+        }
+        applyAllSearchFilter();
+    }
+
+    @FXML
+    public void clearInUseSearch(ActionEvent event) {
+        if (inUseSearchField != null) {
+            inUseSearchField.clear();
+        }
+        applyInUseSearchFilter();
+    }
+
+    @FXML
+    public void clearApparatusSearch(ActionEvent event) {
+        if (apparatusSearchField != null) {
+            apparatusSearchField.clear();
+        }
+        applyApparatusSearchFilter();
+    }
+
+    @FXML
+    public void clearGroupsSearch(ActionEvent event) {
+        if (groupsSearchField != null) {
+            groupsSearchField.clear();
+        }
+        applyGroupsSearchFilter();
+    }
+
+    @FXML
+    public void clearHistorySearch(ActionEvent event) {
+        if (historySearchField != null) {
+            historySearchField.clear();
+        }
+        applyHistorySearchFilter();
+    }
+
+    // ==================== SEARCH/FILTER LOGIC ====================
+
+    private void applyPendingSearchFilter() {
+        String keyword = pendingSearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            requestsTable.setItems(pendingRequestsMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<BorrowRequest> filteredList = pendingRequestsMaster.filtered(request -> {
+            return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
+                    request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+        });
+        requestsTable.setItems(filteredList);
+    }
+
+    private void applyAllSearchFilter() {
+        String keyword = allSearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            allRequestsTable.setItems(allRequestsMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<BorrowRequest> filteredList = allRequestsMaster.filtered(request -> {
+            return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
+                    request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword) ||
+                    request.getStatus().toLowerCase().contains(lowerCaseKeyword);
+        });
+        allRequestsTable.setItems(filteredList);
+    }
+
+    private void applyInUseSearchFilter() {
+        String keyword = inUseSearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            inUseTable.setItems(inUseMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<BorrowRequest> filteredList = inUseMaster.filtered(request -> {
+            return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
+                    request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+        });
+        inUseTable.setItems(filteredList);
+    }
+
+    private void applyApparatusSearchFilter() {
+        String keyword = apparatusSearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            apparatusTable.setItems(apparatusMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<ApparatusItem> filteredList = apparatusMaster.filtered(item -> {
+            return String.valueOf(item.getId()).contains(lowerCaseKeyword) ||
+                    item.getItemName().toLowerCase().contains(lowerCaseKeyword);
+        });
+        apparatusTable.setItems(filteredList);
+    }
+
+    private void applyGroupsSearchFilter() {
+        String keyword = groupsSearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            groupsTable.setItems(groupsMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<StudentGroupItem> filteredList = groupsMaster.filtered(group -> {
+            return String.valueOf(group.getId()).contains(lowerCaseKeyword) ||
+                    group.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
+                    group.getUsername().toLowerCase().contains(lowerCaseKeyword);
+        });
+        groupsTable.setItems(filteredList);
+    }
+
+    private void applyHistorySearchFilter() {
+        String keyword = historySearchField.getText();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            historyTable.setItems(historyMaster);
+            return;
+        }
+
+        String lowerCaseKeyword = keyword.toLowerCase();
+        ObservableList<BorrowRequest> filteredList = historyMaster.filtered(request -> {
+            return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
+                    request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+        });
+        historyTable.setItems(filteredList);
     }
 
     // ==================== INNER CLASS: ApparatusItem ====================

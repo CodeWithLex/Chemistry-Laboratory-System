@@ -16,20 +16,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($dupRow['cnt'] > 0) {
         $msg = 'duplicate';
     } else {
-        $stmt = $conn->prepare("INSERT INTO requests (group_id, apparatus_id, qty) VALUES (?, ?, ?)");
-        $stmt->bind_param("iii", $_SESSION['group_id'], $_POST['apparatus_id'], $_POST['qty']);
-        if ($stmt->execute()) {
-            $msg = 'success';
-            
-            // Get apparatus name for email
-            $appStmt = $conn->prepare("SELECT item_name FROM apparatus WHERE apparatus_id = ?");
-            $appStmt->bind_param("i", $_POST['apparatus_id']);
-            $appStmt->execute();
-            $appResult = $appStmt->get_result();
-            $appRow = $appResult->fetch_assoc();
-            
-            // Send email notification to admin
-            sendAdminNotification($_SESSION['group_name'], $appRow['item_name'], $_POST['qty']);
+        // Issue: Validate quantity against real_available
+        $availStmt = $conn->prepare(
+            "SELECT (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = ? AND status IN ('Approved', 'Pending')), 0)) AS real_available " .
+            "FROM apparatus WHERE apparatus_id = ?"
+        );
+        $availStmt->bind_param("ii", $_POST['apparatus_id'], $_POST['apparatus_id']);
+        $availStmt->execute();
+        $availResult = $availStmt->get_result();
+        $availRow = $availResult->fetch_assoc();
+
+        if ($_POST['qty'] > $availRow['real_available']) {
+            $msg = 'exceeds_qty';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO requests (group_id, apparatus_id, qty) VALUES (?, ?, ?)");
+            $stmt->bind_param("iii", $_SESSION['group_id'], $_POST['apparatus_id'], $_POST['qty']);
+            if ($stmt->execute()) {
+                $msg = 'success';
+                
+                // Get apparatus name for email
+                $appStmt = $conn->prepare("SELECT item_name FROM apparatus WHERE apparatus_id = ?");
+                $appStmt->bind_param("i", $_POST['apparatus_id']);
+                $appStmt->execute();
+                $appResult = $appStmt->get_result();
+                $appRow = $appResult->fetch_assoc();
+                
+                // Send email notification to admin
+                sendAdminNotification($_SESSION['group_name'], $appRow['item_name'], $_POST['qty']);
+            }
         }
     }
 }
@@ -138,6 +152,9 @@ $myBorrowing = $borrowing->get_result();
         <?php endif; ?>
         <?php if ($msg === 'duplicate'): ?>
             <div class="error-msg">You already have a pending or approved request for this apparatus.</div>
+        <?php endif; ?>
+        <?php if ($msg === 'exceeds_qty'): ?>
+            <div class="error-msg">Cannot request that many items. Quantity exceeds real available amount.</div>
         <?php endif; ?>
 
         <!-- Currently Borrowing Section -->

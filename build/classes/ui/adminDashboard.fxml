@@ -9,9 +9,9 @@
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -81,15 +81,19 @@
             <TabPane fx:id="tabPane" styleClass="dashboard-tabs" VBox.vgrow="ALWAYS">
 
                 <!-- Pending Requests Tab -->
-                <Tab text="Pending Requests" closable="false">
+                <Tab closable="false" text="Pending Requests">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button fx:id="refreshBtn" mnemonicParsing="false" onAction="#refreshRequests" styleClass="action-button" text="⟳ Refresh" />
-                            <DatePicker fx:id="pendingDatePicker" onAction="#filterPendingByDate" promptText="Filter date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearPendingFilter" styleClass="clear-filter-button" text="Clear" />
+                            <DatePicker fx:id="pendingStartDatePicker" onAction="#filterPendingByDate" promptText="From date" styleClass="table-date-picker" />
+                            <DatePicker fx:id="pendingEndDatePicker" onAction="#filterPendingByDate" promptText="To date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearPendingFilter" styleClass="clear-filter-button" text="Clear Dates" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="pendingSearchField" onKeyReleased="#filterPendingBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearPendingSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
                             <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#approveSelected" styleClass="approve-button" text="✓ Approve" />
                             <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#rejectSelected" styleClass="reject-button" text="✕ Reject" />
@@ -108,13 +112,19 @@
                 </Tab>
 
                 <!-- All Requests Tab -->
-                <Tab text="All Requests" closable="false">
+                <Tab closable="false" text="All Requests">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button mnemonicParsing="false" onAction="#refreshAllRequests" styleClass="action-button" text="⟳ Refresh" />
+                            <DatePicker fx:id="allStartDatePicker" onAction="#filterAllByDate" promptText="From date" styleClass="table-date-picker" />
+                            <DatePicker fx:id="allEndDatePicker" onAction="#filterAllByDate" promptText="To date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearAllFilter" styleClass="clear-filter-button" text="Clear Dates" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="allSearchField" onKeyReleased="#filterAllBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearAllSearch" styleClass="clear-filter-button" text="Clear" />
                         </HBox>
                         <TableView fx:id="allRequestsTable" VBox.vgrow="ALWAYS">
                             <columns>
@@ -130,15 +140,19 @@
                 </Tab>
 
                 <!-- Currently In Use Tab -->
-                <Tab text="Currently In Use" closable="false">
+                <Tab closable="false" text="Currently In Use">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button mnemonicParsing="false" onAction="#refreshInUse" styleClass="action-button" text="⟳ Refresh" />
-                            <DatePicker fx:id="inUseDatePicker" onAction="#filterInUseByDate" promptText="Filter date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearInUseFilter" styleClass="clear-filter-button" text="Clear" />
+                            <DatePicker fx:id="inUseStartDatePicker" onAction="#filterInUseByDate" promptText="From date" styleClass="table-date-picker" />
+                            <DatePicker fx:id="inUseEndDatePicker" onAction="#filterInUseByDate" promptText="To date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearInUseFilter" styleClass="clear-filter-button" text="Clear Dates" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="inUseSearchField" onKeyReleased="#filterInUseBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearInUseSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
                             <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="↩ Mark Returned" />
                         </HBox>
@@ -155,35 +169,48 @@
                     </VBox>
                 </Tab>
 
-                <!-- Apparatus Inventory Tab -->
-                <Tab text="Apparatus Inventory" closable="false">
+                <!-- History Tab -->
+                <Tab closable="false" text="History">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshApparatus" styleClass="action-button" text="⟳ Refresh" />
+                            <Button mnemonicParsing="false" onAction="#refreshHistory" styleClass="action-button" text="⟳ Refresh" />
+                            <DatePicker fx:id="historyStartDatePicker" onAction="#filterHistoryByDate" promptText="From date" styleClass="table-date-picker" />
+                            <DatePicker fx:id="historyEndDatePicker" onAction="#filterHistoryByDate" promptText="To date" styleClass="table-date-picker" />
+                            <Button mnemonicParsing="false" onAction="#clearHistoryFilter" styleClass="clear-filter-button" text="Clear Dates" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="historySearchField" onKeyReleased="#filterHistoryBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearHistorySearch" styleClass="clear-filter-button" text="Clear" />
                         </HBox>
-                        <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colAppName" prefWidth="350" text="Item Name" />
-                                <TableColumn fx:id="colAppQty" prefWidth="200" text="Current Quantity" />
-                                <TableColumn fx:id="colAppRemaining" prefWidth="200" text="Remaining Available" />
+                                <TableColumn fx:id="colHistId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colHistGroup" prefWidth="180" text="Group Name" />
+                                <TableColumn fx:id="colHistApparatus" prefWidth="220" text="Apparatus" />
+                                <TableColumn fx:id="colHistQty" prefWidth="80" text="Qty" />
+                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Borrowed" />
+                                <TableColumn fx:id="colHistReturned" prefWidth="200" text="Date Returned" />
+                                <TableColumn fx:id="colHistDuration" prefWidth="160" text="Duration" />
                             </columns>
                         </TableView>
                     </VBox>
                 </Tab>
 
                 <!-- Student Groups Tab -->
-                <Tab text="Student Groups" closable="false">
+                <Tab closable="false" text="Student Groups">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <Button mnemonicParsing="false" onAction="#refreshGroups" styleClass="action-button" text="⟳ Refresh" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="groupsSearchField" onKeyReleased="#filterGroupsBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearGroupsSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="showGroupHistoryBtn" mnemonicParsing="false" onAction="#showGroupHistorySelected" styleClass="action-button" text="📋 Show History" />
                             <Button mnemonicParsing="false" onAction="#openAddGroupDialog" styleClass="add-group-button" text="+ Add Group" />
                         </HBox>
                         <TableView fx:id="groupsTable" VBox.vgrow="ALWAYS">
@@ -196,24 +223,26 @@
                     </VBox>
                 </Tab>
 
-                <!-- History Tab -->
-                <Tab text="History" closable="false">
+                <!-- Apparatus Inventory Tab -->
+                <Tab closable="false" text="Apparatus Inventory">
                     <VBox spacing="10.0">
                         <padding>
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshHistory" styleClass="action-button" text="⟳ Refresh" />
+                            <Button mnemonicParsing="false" onAction="#refreshApparatus" styleClass="action-button" text="⟳ Refresh" />
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="apparatusSearchField" onKeyReleased="#filterApparatusBySearch" promptText="ID or item" />
+                            <Button mnemonicParsing="false" onAction="#clearApparatusSearch" styleClass="clear-filter-button" text="Clear" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button mnemonicParsing="false" onAction="#openAddApparatusDialog" styleClass="add-group-button" text="+ Add Apparatus" />
                         </HBox>
-                        <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colHistId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colHistGroup" prefWidth="180" text="Group Name" />
-                                <TableColumn fx:id="colHistApparatus" prefWidth="220" text="Apparatus" />
-                                <TableColumn fx:id="colHistQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Borrowed" />
-                                <TableColumn fx:id="colHistReturned" prefWidth="200" text="Date Returned" />
-                                <TableColumn fx:id="colHistDuration" prefWidth="160" text="Duration" />
+                                <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
+                                <TableColumn fx:id="colAppName" prefWidth="350" text="Item Name" />
+                                <TableColumn fx:id="colAppQty" prefWidth="200" text="Current Quantity" />
+                                <TableColumn fx:id="colAppRemaining" prefWidth="200" text="Remaining Available" />
                             </columns>
                         </TableView>
                     </VBox>
