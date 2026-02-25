@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="card">
-        <h1>🔬 ChemLab</h1>
+        <h1>🔬 Chemistry Lab Laboratory System</h1>
         <?php if ($error): ?><div class="error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
         <form method="POST">
             <div class="form-group">

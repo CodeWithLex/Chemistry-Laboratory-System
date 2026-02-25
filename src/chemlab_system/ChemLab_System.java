@@ -62,7 +62,7 @@ public class ChemLab_System extends Application {
             loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
             Parent content = loader.load();
             
-            // Create custom title bar
+            // pang change sa title here
             HBox titleBar = new HBox();
             titleBar.getStyleClass().add("custom-title-bar");
             
@@ -81,22 +81,20 @@ public class ChemLab_System extends Application {
             closeBtn.setOnAction(e -> primaryStage.close());
             
             titleBar.getChildren().addAll(title, spacer, minimizeBtn, closeBtn);
-            
-            // Combine title bar and content
             rootContainer = new VBox();
             rootContainer.getChildren().addAll(titleBar, content);
             
             Scene scene = new Scene(rootContainer);
             scene.getStylesheets().add(getClass().getResource("/css/style_for_loginPage.css").toExternalForm());
             
-            // Remove native title bar
+            // pang remove sa bar in a scene
             primaryStage.initStyle(StageStyle.UNDECORATED);
             primaryStage.setScene(scene);
             primaryStage.centerOnScreen();
             primaryStage.setWidth(1100);
             primaryStage.setHeight(650);
             
-            // Enable dragging window by title bar
+            // for dragging
             final double[] xOffset = new double[1];
             final double[] yOffset = new double[1];
             titleBar.setOnMousePressed(e -> {
