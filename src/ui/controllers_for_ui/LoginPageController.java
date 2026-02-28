@@ -135,28 +135,55 @@ public class LoginPageController implements Initializable {
             if (rs.next()) {
                 // Login successful - get data before closing
                 String fullName = rs.getString("full_name");
+                String role = "admin"; // default
+                try {
+                    role = rs.getString("role");
+                    if (role == null || role.isEmpty())
+                        role = "admin";
+                } catch (SQLException ignored) {
+                    // role column might not exist yet in older databases
+                }
+                int userId = rs.getInt("user_id");
 
-                System.out.println("Login successful for: " + fullName);
+                System.out.println("Login successful for: " + fullName + " (role: " + role + ")");
 
                 showAlert(AlertType.INFORMATION, "Success", "Login Successfully");
 
-                // Navigate to Admin Dashboard
+                // Navigate based on role
                 try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/adminDashboard.fxml"));
-                    Parent root = loader.load();
+                    if ("instructor".equalsIgnoreCase(role)) {
+                        // Load Instructor Dashboard
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/instructorDashboard.fxml"));
+                        Parent root = loader.load();
 
-                    AdminDashboardController dashboardController = loader.getController();
-                    dashboardController.setAdminName(fullName);
+                        InstructorDashboardController instrController = loader.getController();
+                        instrController.initData(userId, fullName);
 
-                    // Get screen dimensions for responsive sizing
-                    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-                    double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
-                    double height = Math.min(screenBounds.getHeight() * 0.85, 850);
-                    width = Math.max(width, 1000); // minimum width
-                    height = Math.max(height, 600); // minimum height
+                        javafx.geometry.Rectangle2D screenBounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+                        double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
+                        double height = Math.min(screenBounds.getHeight() * 0.85, 850);
+                        width = Math.max(width, 1000);
+                        height = Math.max(height, 600);
 
-                    chemlab_system.ChemLab_System.setContent(root, width, height);
-                    chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
+                        chemlab_system.ChemLab_System.setContent(root, width, height);
+                        chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Instructor Dashboard");
+                    } else {
+                        // Load Admin Dashboard (default)
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/adminDashboard.fxml"));
+                        Parent root = loader.load();
+
+                        AdminDashboardController dashboardController = loader.getController();
+                        dashboardController.setAdminName(fullName);
+
+                        javafx.geometry.Rectangle2D screenBounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+                        double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
+                        double height = Math.min(screenBounds.getHeight() * 0.85, 850);
+                        width = Math.max(width, 1000);
+                        height = Math.max(height, 600);
+
+                        chemlab_system.ChemLab_System.setContent(root, width, height);
+                        chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
+                    }
                 } catch (Exception ex) {
                     System.err.println("Error loading dashboard: " + ex.getMessage());
                     ex.printStackTrace();

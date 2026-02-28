@@ -14,6 +14,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.text.Font?>
 
 <AnchorPane id="AnchorPane" prefHeight="650.0" prefWidth="1100.0" styleClass="dashboard-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AdminDashboardController">
@@ -95,17 +96,19 @@
                             <javafx.scene.control.TextField fx:id="pendingSearchField" onKeyReleased="#filterPendingBySearch" promptText="ID or group" />
                             <Button mnemonicParsing="false" onAction="#clearPendingSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
+                            <CheckBox fx:id="selectAllCheckBox" onAction="#toggleSelectAll" text="Select All" />
                             <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#approveSelected" styleClass="approve-button" text="✓ Approve" />
                             <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#rejectSelected" styleClass="reject-button" text="✕ Reject" />
                         </HBox>
                         <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colRequestId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colGroupName" prefWidth="180" text="Group Name" />
-                                <TableColumn fx:id="colApparatus" prefWidth="200" text="Apparatus" />
-                                <TableColumn fx:id="colQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />
-                                <TableColumn fx:id="colDate" prefWidth="200" text="Requested At" />
+                                <TableColumn fx:id="colSelect" prefWidth="50" text="✓" />
+                                <TableColumn fx:id="colRequestId" prefWidth="70" text="ID" />
+                                <TableColumn fx:id="colGroupName" prefWidth="170" text="Group Name" />
+                                <TableColumn fx:id="colApparatus" prefWidth="180" text="Apparatus" />
+                                <TableColumn fx:id="colQty" prefWidth="60" text="Qty" />
+                                <TableColumn fx:id="colStatus" prefWidth="100" text="Status" />
+                                <TableColumn fx:id="colDate" prefWidth="180" text="Requested At" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -190,7 +193,7 @@
                                 <TableColumn fx:id="colHistGroup" prefWidth="180" text="Group Name" />
                                 <TableColumn fx:id="colHistApparatus" prefWidth="220" text="Apparatus" />
                                 <TableColumn fx:id="colHistQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Borrowed" />
+                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Approved" />
                                 <TableColumn fx:id="colHistReturned" prefWidth="200" text="Date Returned" />
                                 <TableColumn fx:id="colHistDuration" prefWidth="160" text="Duration" />
                             </columns>
@@ -215,9 +218,10 @@
                         </HBox>
                         <TableView fx:id="groupsTable" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colGroupId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colGrpName" prefWidth="300" text="Group Name" />
-                                <TableColumn fx:id="colGrpUsername" prefWidth="250" text="Username" />
+                                <TableColumn fx:id="colGroupId" prefWidth="60" text="ID" />
+                                <TableColumn fx:id="colGrpName" prefWidth="220" text="Group Name" />
+                                <TableColumn fx:id="colGrpUsername" prefWidth="180" text="Username" />
+                                <TableColumn fx:id="colGrpDepartment" prefWidth="180" text="Department" />
                             </columns>
                         </TableView>
                     </VBox>
@@ -248,7 +252,32 @@
                     </VBox>
                 </Tab>
 
+                <!-- Apparatus Requests Tab (Feature 3: admin reviews student requests for unlisted items) -->
+                <Tab closable="false" text="Apparatus Requests">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshApparatusRequests" styleClass="action-button" text="⟳ Refresh" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button mnemonicParsing="false" onAction="#markApparatusRequestReviewed" styleClass="approve-button" text="✓ Mark Reviewed" />
+                        </HBox>
+                        <TableView fx:id="apparatusRequestsTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colArId" prefWidth="60" text="ID" />
+                                <TableColumn fx:id="colArGroup" prefWidth="160" text="Group Name" />
+                                <TableColumn fx:id="colArApparatus" prefWidth="220" text="Requested Apparatus" />
+                                <TableColumn fx:id="colArReason" prefWidth="280" text="Reason" />
+                                <TableColumn fx:id="colArStatus" prefWidth="100" text="Status" />
+                                <TableColumn fx:id="colArDate" prefWidth="180" text="Requested At" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
             </TabPane>
+
         </VBox>
     </children>
 </AnchorPane>

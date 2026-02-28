@@ -12,6 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,17 +25,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.stage.Modality;
@@ -40,19 +36,6 @@ import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
 import chemlab_system.model.BorrowRequest;
 import chemlab_system.util.EmailService;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.input.KeyEvent;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import java.sql.*;
-import java.time.LocalDate;
 
 /**
  * FXML Controller class for Admin Dashboard
@@ -85,6 +68,8 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableView<BorrowRequest> requestsTable;
     @FXML
+    private TableColumn<BorrowRequest, Boolean> colSelect;
+    @FXML
     private TableColumn<BorrowRequest, Integer> colRequestId;
     @FXML
     private TableColumn<BorrowRequest, String> colGroupName;
@@ -96,6 +81,14 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<BorrowRequest, String> colStatus;
     @FXML
     private TableColumn<BorrowRequest, String> colDate;
+
+    // Batch action controls
+    @FXML
+    private CheckBox selectAllCheckBox;
+    @FXML
+    private Button batchApproveBtn;
+    @FXML
+    private Button batchRejectBtn;
 
     // All Requests Table
     @FXML
@@ -134,6 +127,8 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<StudentGroupItem, String> colGrpName;
     @FXML
     private TableColumn<StudentGroupItem, String> colGrpUsername;
+    @FXML
+    private TableColumn<StudentGroupItem, String> colGrpDepartment;
 
     // Currently In Use Table
     @FXML
@@ -194,6 +189,23 @@ public class AdminDashboardController implements Initializable {
     private ObservableList<StudentGroupItem> groupsMaster = FXCollections.observableArrayList();
     private ObservableList<BorrowRequest> historyMaster = FXCollections.observableArrayList();
 
+    // Apparatus Requests Table (Feature 3 admin side)
+    @FXML
+    private TableView<ApparatusRequestItem> apparatusRequestsTable;
+    @FXML
+    private TableColumn<ApparatusRequestItem, Integer> colArId;
+    @FXML
+    private TableColumn<ApparatusRequestItem, String> colArGroup;
+    @FXML
+    private TableColumn<ApparatusRequestItem, String> colArApparatus;
+    @FXML
+    private TableColumn<ApparatusRequestItem, String> colArReason;
+    @FXML
+    private TableColumn<ApparatusRequestItem, String> colArStatus;
+    @FXML
+    private TableColumn<ApparatusRequestItem, String> colArDate;
+    private ObservableList<ApparatusRequestItem> apparatusRequestsMaster = FXCollections.observableArrayList();
+
     // History Table
     @FXML
     private TableView<BorrowRequest> historyTable;
@@ -238,6 +250,28 @@ public class AdminDashboardController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Setup Pending Requests Table columns
+        // Checkbox column for batch selection
+        if (colSelect != null) {
+            colSelect.setCellValueFactory(data -> data.getValue().selectedProperty());
+            colSelect.setCellFactory(col -> new TableCell<BorrowRequest, Boolean>() {
+                private final CheckBox checkBox = new CheckBox();
+
+                @Override
+                protected void updateItem(Boolean item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        BorrowRequest req = getTableView().getItems().get(getIndex());
+                        checkBox.setSelected(req.isSelected());
+                        checkBox.setOnAction(e -> req.setSelected(checkBox.isSelected()));
+                        setGraphic(checkBox);
+                        setStyle("-fx-alignment: CENTER;");
+                    }
+                }
+            });
+        }
+
         colRequestId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
         colGroupName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
         colApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
@@ -271,6 +305,9 @@ public class AdminDashboardController implements Initializable {
         colGroupId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
         colGrpName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
         colGrpUsername.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getUsername()));
+        if (colGrpDepartment != null) {
+            colGrpDepartment.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDepartment()));
+        }
 
         // Setup Currently In Use Table columns
         colInUseId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
@@ -292,6 +329,7 @@ public class AdminDashboardController implements Initializable {
             colHistApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
             colHistQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
             colHistBorrowed.setCellValueFactory(data -> {
+                // Show created_at as "Date Borrowed"
                 Timestamp ts = data.getValue().getCreatedAt();
                 return new SimpleStringProperty(ts != null ? ts.toString() : "");
             });
@@ -299,8 +337,12 @@ public class AdminDashboardController implements Initializable {
                 Timestamp ts = data.getValue().getUpdatedAt();
                 return new SimpleStringProperty(ts != null ? ts.toString() : "");
             });
-            colHistDuration.setCellValueFactory(data -> new SimpleStringProperty(
-                    calculateDurationText(data.getValue().getCreatedAt(), data.getValue().getUpdatedAt())));
+            // Duration: from request creation to return time
+            colHistDuration.setCellValueFactory(data -> {
+                Timestamp start = data.getValue().getCreatedAt();
+                return new SimpleStringProperty(
+                        calculateDurationText(start, data.getValue().getUpdatedAt()));
+            });
         }
 
         // Apply cell style to ensure text is visible (fix for CSS inheritance issues)
@@ -311,7 +353,11 @@ public class AdminDashboardController implements Initializable {
         } else {
             applyTextCellStyle(colAppId, colAppName, colAppQty);
         }
-        applyTextCellStyle(colGroupId, colGrpName, colGrpUsername);
+        if (colGrpDepartment != null) {
+            applyTextCellStyle(colGroupId, colGrpName, colGrpUsername, colGrpDepartment);
+        } else {
+            applyTextCellStyle(colGroupId, colGrpName, colGrpUsername);
+        }
         applyTextCellStyle(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate, colInUseRemaining);
         if (colHistId != null) {
             applyTextCellStyle(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed, colHistReturned,
@@ -336,7 +382,11 @@ public class AdminDashboardController implements Initializable {
         } else {
             disableReorderAndSort(colAppId, colAppName, colAppQty);
         }
-        disableReorderAndSort(colGroupId, colGrpName, colGrpUsername);
+        if (colGrpDepartment != null) {
+            disableReorderAndSort(colGroupId, colGrpName, colGrpUsername, colGrpDepartment);
+        } else {
+            disableReorderAndSort(colGroupId, colGrpName, colGrpUsername);
+        }
         disableReorderAndSort(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate,
                 colInUseRemaining);
         if (colHistId != null) {
@@ -369,6 +419,9 @@ public class AdminDashboardController implements Initializable {
         colGroupId.setMinWidth(60);
         colGrpName.setMinWidth(200);
         colGrpUsername.setMinWidth(150);
+        if (colGrpDepartment != null) {
+            colGrpDepartment.setMinWidth(150);
+        }
 
         colInUseId.setMinWidth(60);
         colInUseGroup.setMinWidth(130);
@@ -387,6 +440,20 @@ public class AdminDashboardController implements Initializable {
             colHistBorrowed.setMinWidth(170);
             colHistReturned.setMinWidth(170);
             colHistDuration.setMinWidth(130);
+        }
+
+        // Setup Apparatus Requests Table columns
+        if (apparatusRequestsTable != null && colArId != null) {
+            colArId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
+            colArGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+            colArApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
+            colArReason.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getReason()));
+            colArStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
+            colArDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCreatedAt()));
+
+            apparatusRequestsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            applyTextCellStyle(colArId, colArGroup, colArApparatus, colArReason, colArStatus, colArDate);
+            disableReorderAndSort(colArId, colArGroup, colArApparatus, colArReason, colArStatus, colArDate);
         }
 
         // Load initial data
@@ -434,6 +501,9 @@ public class AdminDashboardController implements Initializable {
                         break;
                     case "History":
                         loadHistory();
+                        break;
+                    case "Apparatus Requests":
+                        loadApparatusRequests();
                         break;
                 }
                 loadStats();
@@ -685,7 +755,11 @@ public class AdminDashboardController implements Initializable {
             return;
         }
 
-        String sql = "SELECT group_id, group_name, username FROM student_groups ORDER BY group_name";
+        String sql = "SELECT sg.group_id, sg.group_name, sg.username, " +
+                "COALESCE(d.department_name, 'N/A') AS department_name " +
+                "FROM student_groups sg " +
+                "LEFT JOIN departments d ON sg.department_id = d.department_id " +
+                "ORDER BY sg.group_name";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
@@ -693,7 +767,8 @@ public class AdminDashboardController implements Initializable {
                 list.add(new StudentGroupItem(
                         rs.getInt("group_id"),
                         rs.getString("group_name"),
-                        rs.getString("username")));
+                        rs.getString("username"),
+                        rs.getString("department_name")));
             }
             System.out.println("loadStudentGroups: Loaded " + list.size() + " student groups");
         } catch (SQLException e) {
@@ -878,22 +953,46 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void approveSelected(ActionEvent event) {
-        BorrowRequest selected = requestsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert(AlertType.WARNING, "No Selection", "Please select a request to approve.");
-            return;
+        // Collect checked items first
+        List<BorrowRequest> checked = new ArrayList<>();
+        for (BorrowRequest req : requestsTable.getItems()) {
+            if (req.isSelected()) {
+                checked.add(req);
+            }
         }
-        updateRequestStatus(selected.getRequestId(), "Approved");
+        // If checkboxes are used, do batch; otherwise fall back to row selection
+        if (!checked.isEmpty()) {
+            processBatchAction("Approved");
+        } else {
+            BorrowRequest selected = requestsTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showAlert(AlertType.WARNING, "No Selection", "Please select or check request(s) to approve.");
+                return;
+            }
+            updateRequestStatus(selected.getRequestId(), "Approved");
+        }
     }
 
     @FXML
     private void rejectSelected(ActionEvent event) {
-        BorrowRequest selected = requestsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert(AlertType.WARNING, "No Selection", "Please select a request to reject.");
-            return;
+        // Collect checked items first
+        List<BorrowRequest> checked = new ArrayList<>();
+        for (BorrowRequest req : requestsTable.getItems()) {
+            if (req.isSelected()) {
+                checked.add(req);
+            }
         }
-        updateRequestStatus(selected.getRequestId(), "Rejected");
+        // If checkboxes are used, do batch; otherwise fall back to row selection
+        if (!checked.isEmpty()) {
+            processBatchAction("Rejected");
+        } else {
+            BorrowRequest selected = requestsTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showAlert(AlertType.WARNING, "No Selection", "Please select or check request(s) to reject.");
+                return;
+            }
+            updateRequestStatus(selected.getRequestId(), "Rejected");
+        }
     }
 
     @FXML
@@ -920,9 +1019,6 @@ public class AdminDashboardController implements Initializable {
             stmt.setInt(2, requestId);
             int result = stmt.executeUpdate();
             if (result > 0) {
-                showAlert(AlertType.INFORMATION, "Success",
-                        "Request #" + requestId + " has been " + newStatus + ".");
-
                 if ("Approved".equalsIgnoreCase(newStatus) || "Rejected".equalsIgnoreCase(newStatus)) {
                     sendEmailNotificationForRequest(requestId, newStatus);
                 }
@@ -1298,7 +1394,8 @@ public class AdminDashboardController implements Initializable {
         ObservableList<StudentGroupItem> filteredList = groupsMaster.filtered(group -> {
             return String.valueOf(group.getId()).contains(lowerCaseKeyword) ||
                     group.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
-                    group.getUsername().toLowerCase().contains(lowerCaseKeyword);
+                    group.getUsername().toLowerCase().contains(lowerCaseKeyword) ||
+                    group.getDepartment().toLowerCase().contains(lowerCaseKeyword);
         });
         groupsTable.setItems(filteredList);
     }
@@ -1363,11 +1460,13 @@ public class AdminDashboardController implements Initializable {
         private final int id;
         private final String groupName;
         private final String username;
+        private final String department;
 
-        public StudentGroupItem(int id, String groupName, String username) {
+        public StudentGroupItem(int id, String groupName, String username, String department) {
             this.id = id;
             this.groupName = groupName;
             this.username = username;
+            this.department = department;
         }
 
         public int getId() {
@@ -1380,6 +1479,205 @@ public class AdminDashboardController implements Initializable {
 
         public String getUsername() {
             return username;
+        }
+
+        public String getDepartment() {
+            return department;
+        }
+    }
+
+    // ==================== INNER CLASS: ApparatusRequestItem ====================
+
+    /**
+     * Simple model for the Apparatus Requests table (student requests for unlisted
+     * apparatus).
+     */
+    public static class ApparatusRequestItem {
+        private final int id;
+        private final String groupName;
+        private final String apparatusName;
+        private final String reason;
+        private final String status;
+        private final String createdAt;
+
+        public ApparatusRequestItem(int id, String groupName, String apparatusName, String reason, String status,
+                String createdAt) {
+            this.id = id;
+            this.groupName = groupName;
+            this.apparatusName = apparatusName;
+            this.reason = reason;
+            this.status = status;
+            this.createdAt = createdAt;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getGroupName() {
+            return groupName;
+        }
+
+        public String getApparatusName() {
+            return apparatusName;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public String getCreatedAt() {
+            return createdAt;
+        }
+    }
+
+    // ==================== BATCH OPERATIONS ====================
+
+    @FXML
+    private void toggleSelectAll(ActionEvent event) {
+        boolean selectAll = selectAllCheckBox != null && selectAllCheckBox.isSelected();
+        for (BorrowRequest req : pendingRequestsMaster) {
+            req.setSelected(selectAll);
+        }
+        requestsTable.refresh();
+    }
+
+    @FXML
+    private void batchApproveSelected(ActionEvent event) {
+        processBatchAction("Approved");
+    }
+
+    @FXML
+    private void batchRejectSelected(ActionEvent event) {
+        processBatchAction("Rejected");
+    }
+
+    private void processBatchAction(String newStatus) {
+        List<BorrowRequest> selected = new ArrayList<>();
+        for (BorrowRequest req : requestsTable.getItems()) {
+            if (req.isSelected()) {
+                selected.add(req);
+            }
+        }
+
+        if (selected.isEmpty()) {
+            showAlert(AlertType.WARNING, "No Selection",
+                    "Please check at least one request to " + newStatus.toLowerCase() + ".");
+            return;
+        }
+
+        // Build confirmation message listing all selected apparatus
+        StringBuilder sb = new StringBuilder();
+        sb.append("You are about to " + newStatus.toLowerCase() + " the following ");
+        sb.append(selected.size()).append(" request(s):\n\n");
+        for (BorrowRequest req : selected) {
+            sb.append("  • #").append(req.getRequestId())
+                    .append(" - ").append(req.getGroupName())
+                    .append(" → ").append(req.getApparatusName())
+                    .append(" x").append(req.getQty())
+                    .append("\n");
+        }
+        sb.append("\nAre you sure?");
+
+        // Show confirmation dialog
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Batch " + newStatus);
+        confirm.setHeaderText("Confirm Batch " + newStatus);
+        confirm.setContentText(sb.toString());
+        confirm.getDialogPane().setMinWidth(500);
+        confirm.getDialogPane().setMinHeight(300);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            int successCount = 0;
+            for (BorrowRequest req : selected) {
+                updateRequestStatus(req.getRequestId(), newStatus);
+                successCount++;
+            }
+            // Reset selection
+            if (selectAllCheckBox != null) {
+                selectAllCheckBox.setSelected(false);
+            }
+            showAlert(AlertType.INFORMATION, "Batch " + newStatus,
+                    successCount + " request(s) have been " + newStatus.toLowerCase() + ".");
+            loadPendingRequests();
+            loadCurrentlyInUse();
+            loadApparatus();
+            loadStats();
+        }
+    }
+
+    // ==================== APPARATUS REQUESTS (Feature 3 admin side)
+    // ====================
+
+    private void loadApparatusRequests() {
+        if (apparatusRequestsTable == null)
+            return;
+
+        ObservableList<ApparatusRequestItem> list = FXCollections.observableArrayList();
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
+            return;
+
+        String sql = "SELECT ar.ar_id, g.group_name, ar.apparatus_name, ar.reason, ar.status, ar.created_at " +
+                "FROM apparatus_requests ar " +
+                "LEFT JOIN student_groups g ON ar.group_id = g.group_id " +
+                "ORDER BY ar.created_at DESC";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ApparatusRequestItem(
+                        rs.getInt("ar_id"),
+                        rs.getString("group_name") != null ? rs.getString("group_name") : "Unknown",
+                        rs.getString("apparatus_name"),
+                        rs.getString("reason") != null ? rs.getString("reason") : "",
+                        rs.getString("status"),
+                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toString() : ""));
+            }
+        } catch (SQLException e) {
+            System.err.println("loadApparatusRequests SQL error: " + e.getMessage());
+            e.printStackTrace();
+        }
+        apparatusRequestsMaster = list;
+        apparatusRequestsTable.setItems(list);
+    }
+
+    @FXML
+    private void refreshApparatusRequests(ActionEvent event) {
+        loadApparatusRequests();
+    }
+
+    @FXML
+    private void markApparatusRequestReviewed(ActionEvent event) {
+        if (apparatusRequestsTable == null)
+            return;
+
+        ApparatusRequestItem selected = apparatusRequestsTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert(AlertType.WARNING, "No Selection", "Please select an apparatus request to mark as reviewed.");
+            return;
+        }
+
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
+            return;
+
+        String sql = "UPDATE apparatus_requests SET status = 'Reviewed' WHERE ar_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, selected.getId());
+            if (stmt.executeUpdate() > 0) {
+                showAlert(AlertType.INFORMATION, "Success",
+                        "Apparatus request #" + selected.getId() + " marked as reviewed.");
+                loadApparatusRequests();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(AlertType.ERROR, "Error", "Failed to update apparatus request: " + e.getMessage());
         }
     }
 }

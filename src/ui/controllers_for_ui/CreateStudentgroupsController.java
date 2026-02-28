@@ -7,14 +7,20 @@ package ui.controllers_for_ui;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -35,6 +41,9 @@ public class CreateStudentgroupsController implements Initializable {
     private TextField usernameField;
 
     @FXML
+    private ComboBox<String> departmentComboBox;
+
+    @FXML
     private TextField emailField;
 
     @FXML
@@ -52,8 +61,14 @@ public class CreateStudentgroupsController implements Initializable {
     // Flag to indicate if a group was successfully created
     private boolean created = false;
 
+    // Map department names to their IDs
+    private Map<String, Integer> departmentMap = new HashMap<>();
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Load departments from database
+        loadDepartments();
+
         // Set initial focus on group name field
         if (groupNameField != null) {
             javafx.application.Platform.runLater(() -> groupNameField.requestFocus());
@@ -62,8 +77,8 @@ public class CreateStudentgroupsController implements Initializable {
         // Enter key navigation between fields
         if (groupNameField != null) {
             groupNameField.setOnAction(event -> {
-                if (usernameField != null)
-                    usernameField.requestFocus();
+                if (departmentComboBox != null)
+                    departmentComboBox.requestFocus();
             });
         }
         if (usernameField != null) {
@@ -92,6 +107,49 @@ public class CreateStudentgroupsController implements Initializable {
     }
 
     /**
+     * Loads department names from the database into the ComboBox.
+     */
+    private void loadDepartments() {
+        ObservableList<String> departmentNames = FXCollections.observableArrayList();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = Connector_ChemSystem.getConnection();
+            if (conn != null) {
+                pstmt = conn.prepareStatement(
+                        "SELECT department_id, department_name FROM departments ORDER BY department_name");
+                rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    int id = rs.getInt("department_id");
+                    String name = rs.getString("department_name");
+                    departmentNames.add(name);
+                    departmentMap.put(name, id);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null)
+                    rs.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (pstmt != null)
+                    pstmt.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        if (departmentComboBox != null) {
+            departmentComboBox.setItems(departmentNames);
+        }
+    }
+
+    /**
      * Returns whether a group was successfully created.
      */
     public boolean isCreated() {
@@ -101,23 +159,24 @@ public class CreateStudentgroupsController implements Initializable {
     @FXML
     private void createGroupClicked(ActionEvent event) {
         String groupName = groupNameField.getText().trim();
+        String selectedDepartment = departmentComboBox.getValue();
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText();
         String confirmPassword = confirmPassField.getText();
 
         // Validation — all fields required
-        if (groupName.isEmpty() || username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        if (groupName.isEmpty() || selectedDepartment == null || username.isEmpty() || email.isEmpty()
+                || password.isEmpty() || confirmPassword.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error",
-                    "Please fill in all fields (Group Name, Username, Gmail, Password, and Confirm Password)."
-            );
+                    "Please fill in all fields (Group Name, Department, Username, Gmail, Password, and Confirm Password).");
             return;
         }
 
-        // Basic email validation (gmail only as requested)
-        if (!email.toLowerCase().endsWith("@gmail.com")) {
-            showAlert(AlertType.ERROR, "Validation Error", "Please enter a valid Gmail address (ending with @gmail.com)."
-            );
+        // Email validation: only institutional email allowed
+        if (!email.toLowerCase().endsWith("@g.cjc.edu.ph")) {
+            showAlert(AlertType.ERROR, "Validation Error",
+                    "Please enter a valid institutional email address (ending with @g.cjc.edu.ph).");
             return;
         }
 
@@ -137,12 +196,13 @@ public class CreateStudentgroupsController implements Initializable {
                 return;
             }
 
-            String sql = "INSERT INTO student_groups (group_name, username, email, password) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO student_groups (group_name, username, email, password, department_id) VALUES (?, ?, ?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, groupName);
             pstmt.setString(2, username);
             pstmt.setString(3, email);
             pstmt.setString(4, password);
+            pstmt.setInt(5, departmentMap.get(selectedDepartment));
 
             int result = pstmt.executeUpdate();
 
