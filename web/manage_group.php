@@ -61,7 +61,8 @@ $memberList = $members->get_result();
         .btn-remove:hover { background: #b02a37; }
         .success { background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
         .error-msg { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-        .member-item { padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #2e7d32; }
+        .member-item { padding: 12px; background: #f8f9fa; border-radius: 
+Hover an apparatus option to see Pending by others (desktop browsers).8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #2e7d32; }
         .member-name { font-weight: bold; color: #333; }
         .empty-text { color: #999; font-style: italic; padding: 20px; text-align: center; }
         .add-form { display: flex; gap: 10px; }

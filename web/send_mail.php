@@ -27,7 +27,7 @@ function sendAdminNotification($groupName, $apparatusName, $quantity) {
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = '🔬 New Apparatus Borrow Request';
+        $mail->Subject = 'New Apparatus Borrow Request';
         $mail->Body    = "
             <div style='font-family: Arial, sans-serif; padding: 20px;'>
                 <h2 style='color: #667eea;'>New Borrow Request</h2>

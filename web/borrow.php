@@ -71,13 +71,9 @@ $apparatus = $conn->prepare(
     "FROM apparatus a " .
     "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending') " .
     "WHERE a.current_quantity > 0 " .
-    "AND a.apparatus_id NOT IN (" .
-    "    SELECT apparatus_id FROM requests WHERE group_id = ? AND status IN ('Pending','Approved')" .
-    ") " .
     "GROUP BY a.apparatus_id " .
     "ORDER BY a.item_name"
 );
-$apparatus->bind_param("i", $_SESSION['group_id']);
 $apparatus->execute();
 $apparatusList = $apparatus->get_result();
 
@@ -164,7 +160,7 @@ $myBorrowing = $borrowing->get_result();
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔬 ChemLab</h1>
+            <h1>ChemLab System</h1>
             <div class="header-actions">
                 <a href="manage_group.php" class="btn-nav">👥 Members</a>
                 <a href="logout.php" class="btn-logout">Logout</a>
@@ -204,10 +200,6 @@ $myBorrowing = $borrowing->get_result();
             <h3>Request Apparatus</h3>
             <?php if ($apparatusList->num_rows > 0): ?>
             <form method="POST">
-                <div class="hint">
-                    Availability is calculated in real-time: <b>Real Available</b> = Inventory − (Approved + Pending).<br/>
-                    Hover an apparatus option to see <b>Pending by others</b> (desktop browsers).
-                </div>
                 <div class="form-group">
                     <label>Apparatus</label>
                     <select name="apparatus_id" required>
@@ -216,16 +208,8 @@ $myBorrowing = $borrowing->get_result();
                             <?php
                                 $aid = (int)$a['apparatus_id'];
                                 $realAvail = max(0, (int)$a['real_available']);
-                                $tooltip = "";
-                                if (isset($pendingByOthers[$aid])) {
-                                    $parts = [];
-                                    foreach ($pendingByOthers[$aid] as $p) {
-                                        $parts[] = $p['group_name'] . " (" . $p['qty'] . ")";
-                                    }
-                                    $tooltip = "Pending by others: " . implode(", ", $parts);
-                                }
                             ?>
-                            <option value="<?= $a['apparatus_id'] ?>" title="<?= htmlspecialchars($tooltip) ?>" <?= $realAvail <= 0 ? 'disabled' : '' ?>><?= htmlspecialchars($a['item_name']) ?> (<?= $realAvail ?> available)</option>
+                            <option value="<?= $a['apparatus_id'] ?>" <?= $realAvail <= 0 ? 'disabled' : '' ?>><?= htmlspecialchars($a['item_name']) ?> (<?= $realAvail ?> available)</option>
                         <?php endwhile; ?>
                     </select>
                 </div>
@@ -236,7 +220,37 @@ $myBorrowing = $borrowing->get_result();
                 <button type="submit">Submit Request</button>
             </form>
             <?php else: ?>
-                <p style="color: #666;">All available apparatus already have pending or approved requests from your group.</p>
+                <p style="color: #666;">No apparatus available at this time.</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- All Pending Requests by Other Groups -->
+        <div class="card">
+            <h3>⏳ All Pending Requests by Other Groups</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 12px;">These items are currently being requested by other groups and awaiting approval.</p>
+            <?php if (!empty($pendingByOthers)): ?>
+                <?php
+                    $allApparatusNames = [];
+                    $nameQuery = $conn->query("SELECT apparatus_id, item_name FROM apparatus");
+                    while ($nr = $nameQuery->fetch_assoc()) {
+                        $allApparatusNames[(int)$nr['apparatus_id']] = $nr['item_name'];
+                    }
+                ?>
+                <?php foreach ($pendingByOthers as $aid => $others): ?>
+                    <div class="request-item Pending">
+                        <div>
+                            <strong><?= htmlspecialchars($allApparatusNames[$aid] ?? 'Unknown') ?></strong><br>
+                            <span style="font-size: 13px; color: #555;">
+                                <?php foreach ($others as $p): ?>
+                                    <?= htmlspecialchars($p['group_name']) ?> — qty: <?= $p['qty'] ?><br>
+                                <?php endforeach; ?>
+                            </span>
+                        </div>
+                        <span class="status-badge Pending">Pending</span>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p style="color: #666;">No pending requests from other groups at this time.</p>
             <?php endif; ?>
         </div>
 
