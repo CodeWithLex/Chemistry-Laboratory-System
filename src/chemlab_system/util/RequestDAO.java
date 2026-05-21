@@ -38,7 +38,7 @@ public class RequestDAO {
 
     // Approve request
     public static boolean approveRequest(int requestId) {
-        String sql = "UPDATE requests SET status = 'Approved' WHERE request_id = ?";
+        String sql = "UPDATE requests SET status = 'Approved'::request_status WHERE request_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, requestId);
@@ -51,7 +51,7 @@ public class RequestDAO {
 
     // Reject request
     public static boolean rejectRequest(int requestId) {
-        String sql = "UPDATE requests SET status = 'Rejected' WHERE request_id = ?";
+        String sql = "UPDATE requests SET status = 'Rejected'::request_status WHERE request_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, requestId);
@@ -64,7 +64,7 @@ public class RequestDAO {
 
     // Mark as returned
     public static boolean markReturned(int requestId) {
-        String sql = "UPDATE requests SET status = 'Returned' WHERE request_id = ?";
+        String sql = "UPDATE requests SET status = 'Returned'::request_status WHERE request_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, requestId);

@@ -20,6 +20,8 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
+import chemlab_system.util.PasswordUtil;
+import chemlab_system.util.PasswordUtil.VerifyResult;
 
 /**
  * FXML Controller class
@@ -31,58 +33,36 @@ public class Validation_adminController implements Initializable {
 
     @FXML
     private TextField adminUsernameField;
-
     @FXML
     private PasswordField adminPasswordField;
-
     @FXML
     private Button verifyBtn;
-
     @FXML
     private Button cancelBtn;
 
-    // This flag indicates whether admin verification was successful
     private boolean verified = false;
-
-    // Callback to run after successful verification
     private Runnable onVerifiedCallback;
 
-    /**
-     * Initializes the controller class.
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Set initial focus on admin username field
         if (adminUsernameField != null) {
             javafx.application.Platform.runLater(() -> adminUsernameField.requestFocus());
         }
-
-        // Enter key navigation
         if (adminUsernameField != null) {
             adminUsernameField.setOnAction(event -> {
-                if (adminPasswordField != null) {
+                if (adminPasswordField != null)
                     adminPasswordField.requestFocus();
-                }
             });
         }
-
         if (adminPasswordField != null) {
-            adminPasswordField.setOnAction(event -> {
-                verifyClicked(null);
-            });
+            adminPasswordField.setOnAction(event -> verifyClicked(null));
         }
     }
 
-    /**
-     * Sets the callback to run when admin verification succeeds.
-     */
     public void setOnVerifiedCallback(Runnable callback) {
         this.onVerifiedCallback = callback;
     }
 
-    /**
-     * Returns whether admin verification was successful.
-     */
     public boolean isVerified() {
         return verified;
     }
@@ -92,61 +72,79 @@ public class Validation_adminController implements Initializable {
         String adminUsername = adminUsernameField.getText().trim();
         String adminPassword = adminPasswordField.getText();
 
-        // Validation
         if (adminUsername.isEmpty() || adminPassword.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error", "Please enter both admin username and password.");
             return;
         }
 
         Connection conn = null;
-        PreparedStatement pstmt = null;
+        PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
             conn = Connector_ChemSystem.getConnection();
-
             if (conn == null) {
-                showAlert(AlertType.ERROR, "Connection Error", "Failed to connect to database.");
+                showAlert(AlertType.ERROR, "Connection Error", "Could not connect to the database.");
                 return;
             }
 
-            // Check if the provided credentials belong to an existing Admin account
-            String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ? AND role = 'Admin'";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, adminUsername);
-            pstmt.setString(2, adminPassword);
+            // Fetch by username + role ONLY — verify password separately with BCrypt
+            String sql = "SELECT user_id, password_hash FROM users WHERE username = ? AND role = 'Admin'";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, adminUsername);
+            rs = ps.executeQuery();
 
-            rs = pstmt.executeQuery();
-
+            boolean isAdmin = false;
             if (rs.next()) {
-                // Admin verified successfully
-                verified = true;
+                int userId = rs.getInt("user_id");
+                String storedHash = rs.getString("password_hash");
 
-                // Run the callback (which will create the admin account)
+                VerifyResult result = PasswordUtil.verify(adminPassword, storedHash);
+                if (result.matches) {
+                    isAdmin = true;
+
+                    // Silently upgrade legacy plaintext to BCrypt
+                    if (result.needsRehash) {
+                        try {
+                            String newHash = PasswordUtil.hash(adminPassword);
+                            PreparedStatement upStmt = conn.prepareStatement(
+                                    "UPDATE users SET password_hash = ? WHERE user_id = ?");
+                            upStmt.setString(1, newHash);
+                            upStmt.setInt(2, userId);
+                            upStmt.executeUpdate();
+                            upStmt.close();
+                            System.out.println("Password upgraded to BCrypt for admin user_id=" + userId);
+                        } catch (SQLException ex) {
+                            System.err.println("Non-fatal: failed to upgrade admin hash: " + ex.getMessage());
+                        }
+                    }
+                }
+            }
+
+            if (isAdmin) {
+                verified = true;
                 if (onVerifiedCallback != null) {
                     onVerifiedCallback.run();
                 }
-
-                // Close the popup
                 Stage stage = (Stage) verifyBtn.getScene().getWindow();
                 stage.close();
             } else {
                 showAlert(AlertType.ERROR, "Verification Failed",
-                        "Invalid admin credentials. Only existing admins can authorize new admin accounts.");
+                        "Invalid admin credentials. Only existing admins can authorise new admin accounts.");
             }
 
         } catch (SQLException e) {
+            System.err.println("Admin verify SQL error: " + e.getMessage());
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Database Error", "Error verifying admin: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error", "Verification failed. Please try again.");
         } finally {
             try {
                 if (rs != null)
                     rs.close();
-                if (pstmt != null)
-                    pstmt.close();
-                // Keep connection open for reuse
+                if (ps != null)
+                    ps.close();
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                System.err.println("Error closing resources: " + ex.getMessage());
             }
         }
     }

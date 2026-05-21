@@ -268,3 +268,12 @@
 .clear-filter-button:hover {
     -fx-background-color: #e0e0e0;
 }
+
+/* Empty-state placeholder shown when a TableView has no rows */
+.table-placeholder {
+    -fx-text-fill: #9e9e9e;
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
+    -fx-padding: 30;
+    -fx-alignment: center;
+}

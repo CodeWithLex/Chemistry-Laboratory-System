@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: chemlab-web-portal
+    env: node
+    region: singapore # closest to PH
+    plan: free
+    rootDir: web
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      # ── Deployment ───────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+
+      # ── Session — auto-generated secure random value ────────────
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # ── Supabase Database — fill in Render dashboard ────────────
+      - key: SUPABASE_HOST
+        sync: false
+      - key: SUPABASE_PORT
+        sync: false
+      - key: SUPABASE_DB
+        sync: false
+      - key: SUPABASE_USER
+        sync: false
+      - key: SUPABASE_PASS
+        sync: false
+
+      # ── Email (Gmail SMTP) — fill in Render dashboard ───────────
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_FROM_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false

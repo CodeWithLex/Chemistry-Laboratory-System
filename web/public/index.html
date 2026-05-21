@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChemLab System - Laboratory Portal</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main App Wrapper -->
+  <div id="app">
+
+    <!-- 1. LOGIN CONTAINER -->
+    <div id="login-view" class="view-container active">
+      <div class="login-card glass">
+        <div class="login-header">
+          <div class="logo-animation">
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="bubble"></span>
+            <span class="flask-icon">🔬</span>
+          </div>
+          <h1>ChemLab System</h1>
+          <p>Laboratory Borrowing Portal</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Group Username</label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input type="text" id="username" name="username" placeholder="e.g., groupa" required
+                autocomplete="username">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="password" name="password" placeholder="••••••••" required
+                autocomplete="current-password">
+            </div>
+          </div>
+
+          <button type="submit" id="login-btn" class="btn-primary">
+            <span>Login to Portal</span>
+            <span class="btn-shine"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. DASHBOARD CONTAINER (Initially Hidden) -->
+    <div id="dashboard-view" class="view-container">
+
+      <!-- Navbar -->
+      <header class="navbar glass">
+        <div class="nav-brand">
+          <span class="flask-icon">🧪</span>
+          <h2>ChemLab Portal</h2>
+        </div>
+        <div class="nav-actions">
+          <span id="group-welcome-badge" class="welcome-badge">👤 Loading...</span>
+          <button id="toggle-members-btn" class="btn-secondary">
+            <span>👥 Members</span>
+          </button>
+          <button id="logout-btn" class="btn-danger">
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Layout Grid -->
+      <main class="dashboard-grid">
+
+        <!-- Column 1: Forms & Active Items -->
+        <div class="dashboard-col">
+
+          <!-- Welcome card -->
+          <div class="welcome-card glass">
+            <h1>Welcome back, <span id="group-name-title">Student Group</span>!</h1>
+            <p>Access inventory details and submit apparatus borrowing requests instantly.</p>
+          </div>
+
+          <!-- Currently Borrowing -->
+          <div id="borrowing-card" class="card glass hidden">
+            <h3>📦 Currently Borrowing</h3>
+            <p class="section-desc">Apparatuses currently approved and in your possession.</p>
+            <div id="borrowing-list" class="list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Borrow Request Form -->
+          <div class="card glass">
+            <h3>Request Apparatus</h3>
+            <p class="section-desc">Select an apparatus and quantity to submit a new request.</p>
+            <form id="borrow-form">
+              <div class="form-group">
+                <label for="apparatus-select">Apparatus</label>
+                <select id="apparatus-select" required>
+                  <option value="">Select an item...</option>
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="borrow-qty">Quantity</label>
+                <input type="number" id="borrow-qty" min="1" placeholder="e.g., 2" required>
+              </div>
+
+              <button type="submit" id="submit-request-btn" class="btn-primary">
+                <span>Submit Borrow Request</span>
+                <span class="btn-shine"></span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Unlisted Apparatus Request Form -->
+          <div class="card glass">
+            <h3>🔍 Can't Find What You Need?</h3>
+            <p class="section-desc">Request items that are not currently in the inventory list. Admin will review your
+              request.</p>
+            <div class="collapsible-header" id="unlisted-toggle">
+              <span>▶ Request Unlisted Apparatus</span>
+            </div>
+            <form id="unlisted-form" class="collapsible-content hidden">
+              <div class="form-group">
+                <label for="unlisted-name">Apparatus Name</label>
+                <input type="text" id="unlisted-name" placeholder="e.g., Volumetric Flask 500ml" required>
+              </div>
+              <div class="form-group">
+                <label for="unlisted-reason">Reason / Details (Optional)</label>
+                <textarea id="unlisted-reason" rows="3"
+                  placeholder="Explain why your experiment requires this item..."></textarea>
+              </div>
+              <button type="submit" class="btn-accent">
+                <span>📩 Submit Custom Request</span>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Column 2: Lists & History -->
+        <div class="dashboard-col">
+
+          <!-- Other Groups' Pending Requests (Visibility Mode) -->
+          <div class="card glass">
+            <h3>⏳ Pending Requests by Other Groups</h3>
+            <p class="section-desc">Items currently requested by other groups and awaiting approval.</p>
+            <div id="others-pending-list" class="list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- All Request History -->
+          <div class="card glass">
+            <h3>All Requests</h3>
+            <p class="section-desc">The complete log of requests submitted by your group.</p>
+            <div id="requests-history-list" class="list-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- 3. GROUP MEMBERS MODAL (Overlay) -->
+  <div id="members-modal" class="modal-overlay">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h2>👥 Manage Group Members</h2>
+        <button id="close-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="section-desc">Add or remove student names belonging to your group.</p>
+
+        <form id="add-member-form" class="member-add-form">
+          <input type="text" id="new-member-name" placeholder="Enter student's full name" required>
+          <button type="submit" class="btn-accent">+ Add</button>
+        </form>
+
+        <div class="members-list-wrapper">
+          <h4 id="members-count">Current Members (0)</h4>
+          <div id="members-list" class="members-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <p>&copy; 2026 ChemLab System.</p>
+  </footer>
+
+  <!-- App Logic JS -->
+  <script src="/js/app.js"></script>
+</body>
+
+</html>

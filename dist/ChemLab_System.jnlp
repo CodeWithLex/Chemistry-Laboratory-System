@@ -8,10 +8,10 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ChemLab_System.jar" size="433550" download="eager" />
+    <jar href="ChemLab_System.jar" size="440756" download="eager" />
     <jar href="lib\javax.mail-1.6.2.jar" size="659031" download="eager" />
     <jar href="lib\jbcrypt-0.4.jar" size="17429" download="eager" />
-    <jar href="lib\mysql-connector-j-8.0.33.jar" size="2481560" download="eager" />
+    <jar href="lib\postgresql-42.7.4.jar" size="1086687" download="eager" />
   </resources>
   <jfx:javafx-desc  width="800" height="600" main-class="chemlab_system.ChemLab_System"  name="ChemLab_System" />
   <update check="always"/>

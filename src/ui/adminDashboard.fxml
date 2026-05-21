@@ -110,6 +110,9 @@
                                 <TableColumn fx:id="colStatus" prefWidth="100" text="Status" />
                                 <TableColumn fx:id="colDate" prefWidth="180" text="Requested At" />
                             </columns>
+                            <placeholder>
+                                <Label styleClass="table-placeholder" text="✅ No pending requests. All caught up!" />
+                            </placeholder>
                         </TableView>
                     </VBox>
                 </Tab>
@@ -138,6 +141,9 @@
                                 <TableColumn fx:id="colAllStatus" prefWidth="120" text="Status" />
                                 <TableColumn fx:id="colAllDate" prefWidth="200" text="Requested At" />
                             </columns>
+                            <placeholder>
+                                <Label styleClass="table-placeholder" text="📭 No requests found for the selected filters." />
+                            </placeholder>
                         </TableView>
                     </VBox>
                 </Tab>
@@ -272,6 +278,9 @@
                                 <TableColumn fx:id="colArStatus" prefWidth="100" text="Status" />
                                 <TableColumn fx:id="colArDate" prefWidth="180" text="Requested At" />
                             </columns>
+                            <placeholder>
+                                <Label styleClass="table-placeholder" text="📋 No apparatus requests at this time." />
+                            </placeholder>
                         </TableView>
                     </VBox>
                 </Tab>

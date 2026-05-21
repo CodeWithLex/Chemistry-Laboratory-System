@@ -1,0 +1,19 @@
+# ============================================================
+# ChemLab System — Desktop Application Configuration Template
+# ============================================================
+# SETUP INSTRUCTIONS:
+#   1. Copy this file → rename it to: config.properties
+#   2. Fill in your actual Supabase credentials below
+#   3. Place config.properties in the same folder as ChemLab_System.jar
+#      (the dist/ folder after building in NetBeans)
+#   4. NEVER commit config.properties to Git
+# ============================================================
+
+# Supabase Pooler Host (find in: Supabase Dashboard → Settings → Database → Connection Pooling)
+supabase.host=aws-0-ap-northeast-2.pooler.supabase.com
+supabase.port=6543
+supabase.dbname=postgres
+
+# Supabase User & Password (find in: Settings → Database → Connection string)
+supabase.user=postgres.YOUR_PROJECT_REF_HERE
+supabase.password=YOUR_DATABASE_PASSWORD_HERE

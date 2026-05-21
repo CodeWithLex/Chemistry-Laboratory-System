@@ -1013,7 +1013,7 @@ public class AdminDashboardController implements Initializable {
         if (conn == null)
             return;
 
-        String sql = "UPDATE requests SET status = ? WHERE request_id = ?";
+        String sql = "UPDATE requests SET status = ?::request_status WHERE request_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newStatus);
             stmt.setInt(2, requestId);
@@ -1667,7 +1667,7 @@ public class AdminDashboardController implements Initializable {
         if (conn == null)
             return;
 
-        String sql = "UPDATE apparatus_requests SET status = 'Reviewed' WHERE ar_id = ?";
+        String sql = "UPDATE apparatus_requests SET status = 'Reviewed'::apparatus_request_status WHERE ar_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, selected.getId());
             if (stmt.executeUpdate() > 0) {

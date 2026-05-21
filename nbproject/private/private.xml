@@ -4,7 +4,6 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/ChemLab_System.java</file>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/loginPage.fxml</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/css/style_for_loginPage.css</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/Create_accController.java</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/LoginPageController.java</file>
@@ -28,6 +27,11 @@
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/util/EmailService.java</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/util/RequestDAO.java</file>
             <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/util/DatabaseUtil.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/AddApparatusController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/GroupHistoryController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/ui/controllers_for_ui/InstructorDashboardController.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/database/Connector_ChemSystem.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/ChemLab_System/src/chemlab_system/database/Connect_SQL.java</file>
         </group>
     </open-files>
 </project-private>

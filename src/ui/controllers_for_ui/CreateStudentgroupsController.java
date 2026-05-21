@@ -25,6 +25,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import chemlab_system.database.Connector_ChemSystem;
+import chemlab_system.util.PasswordUtil;
 
 /**
  * FXML Controller class
@@ -196,12 +197,15 @@ public class CreateStudentgroupsController implements Initializable {
                 return;
             }
 
+            // Hash the group password with BCrypt before storing — NEVER store plaintext
+            String hashedPassword = PasswordUtil.hash(password);
+
             String sql = "INSERT INTO student_groups (group_name, username, email, password, department_id) VALUES (?, ?, ?, ?, ?)";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, groupName);
             pstmt.setString(2, username);
             pstmt.setString(3, email);
-            pstmt.setString(4, password);
+            pstmt.setString(4, hashedPassword);
             pstmt.setInt(5, departmentMap.get(selectedDepartment));
 
             int result = pstmt.executeUpdate();
@@ -216,12 +220,14 @@ public class CreateStudentgroupsController implements Initializable {
             }
 
         } catch (SQLException e) {
+            System.err.println("Create group SQL error: " + e.getMessage());
             e.printStackTrace();
-            if (e.getMessage().contains("Duplicate")) {
+            if (e.getMessage() != null
+                    && (e.getMessage().contains("duplicate key") || e.getMessage().contains("Duplicate"))) {
                 showAlert(AlertType.ERROR, "Duplicate Error",
                         "A group with that username already exists. Please choose a different username.");
             } else {
-                showAlert(AlertType.ERROR, "Database Error", "Error creating student group: " + e.getMessage());
+                showAlert(AlertType.ERROR, "Error", "Could not create the group. Please try again.");
             }
         } finally {
             try {

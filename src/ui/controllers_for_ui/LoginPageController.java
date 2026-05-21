@@ -22,8 +22,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import chemlab_system.database.Connector_ChemSystem;
-import javafx.geometry.Rectangle2D;
-import javafx.stage.Screen;
+import chemlab_system.util.PasswordUtil;
+import chemlab_system.util.PasswordUtil.VerifyResult;
 
 /**
  * FXML Controller class
@@ -34,59 +34,40 @@ public class LoginPageController implements Initializable {
 
     @FXML
     private TextField usernameField;
-
     @FXML
     private PasswordField passwordField;
-
     @FXML
     private Button loginButton;
-
     @FXML
     private Button createButton;
 
-    /**
-     * Initializes the controller class.
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Set initial focus on username field
         if (usernameField != null) {
             javafx.application.Platform.runLater(() -> usernameField.requestFocus());
         }
-
-        // Set up Enter key to move from username to password field
         if (usernameField != null) {
             usernameField.setOnAction(event -> {
-                if (passwordField != null) {
+                if (passwordField != null)
                     passwordField.requestFocus();
-                }
             });
         }
-
-        // Set up Enter key in password field to focus login button
         if (passwordField != null) {
             passwordField.setOnAction(event -> {
-                if (loginButton != null) {
+                if (loginButton != null)
                     loginButton.requestFocus();
-                }
             });
         }
-
-        // Set up Enter key on login button to trigger click
         if (loginButton != null) {
             loginButton.setOnKeyPressed(event -> {
-                if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+                if (event.getCode() == javafx.scene.input.KeyCode.ENTER)
                     loginClicked(null);
-                }
             });
         }
-
-        // Set up Enter key on create button to trigger click
         if (createButton != null) {
             createButton.setOnKeyPressed(event -> {
-                if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+                if (event.getCode() == javafx.scene.input.KeyCode.ENTER)
                     createClciked(null);
-                }
             });
         }
     }
@@ -96,129 +77,123 @@ public class LoginPageController implements Initializable {
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
-        // Validation
         if (username.isEmpty() || password.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error", "Please enter both username and password.");
             return;
         }
 
         Connection conn = null;
-        PreparedStatement pstmt = null;
+        PreparedStatement ps = null;
         ResultSet rs = null;
 
         try {
-            System.out.println("Attempting to get connection...");
             conn = Connector_ChemSystem.getConnection();
-
-            // Check if connection is valid
             if (conn == null) {
                 showAlert(AlertType.ERROR, "Connection Error",
-                        "Failed to connect to database. Please check if MySQL is running.");
+                        "Could not connect to the database. Please check your internet connection.");
                 return;
             }
-
             if (conn.isClosed()) {
-                showAlert(AlertType.ERROR, "Connection Error", "Database connection is closed.");
+                showAlert(AlertType.ERROR, "Connection Error", "Database connection is not available.");
                 return;
             }
 
-            System.out.println("Connection successful, preparing statement...");
-            String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
-            pstmt = conn.prepareStatement(sql);
+            // Fetch user by username ONLY — never compare plaintext in SQL
+            String sql = "SELECT user_id, username, password_hash, full_name, role FROM users WHERE username = ?";
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            rs = ps.executeQuery();
 
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
-
-            System.out.println("Executing query...");
-            rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                // Login successful - get data before closing
-                String fullName = rs.getString("full_name");
-                String role = "admin"; // default
-                try {
-                    role = rs.getString("role");
-                    if (role == null || role.isEmpty())
-                        role = "admin";
-                } catch (SQLException ignored) {
-                    // role column might not exist yet in older databases
-                }
-                int userId = rs.getInt("user_id");
-
-                System.out.println("Login successful for: " + fullName + " (role: " + role + ")");
-
-                showAlert(AlertType.INFORMATION, "Success", "Login Successfully");
-
-                // Navigate based on role
-                try {
-                    if ("instructor".equalsIgnoreCase(role)) {
-                        // Load Instructor Dashboard
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/instructorDashboard.fxml"));
-                        Parent root = loader.load();
-
-                        InstructorDashboardController instrController = loader.getController();
-                        instrController.initData(userId, fullName);
-
-                        javafx.geometry.Rectangle2D screenBounds = javafx.stage.Screen.getPrimary().getVisualBounds();
-                        double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
-                        double height = Math.min(screenBounds.getHeight() * 0.85, 850);
-                        width = Math.max(width, 1000);
-                        height = Math.max(height, 600);
-
-                        chemlab_system.ChemLab_System.setContent(root, width, height);
-                        chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Instructor Dashboard");
-                    } else {
-                        // Load Admin Dashboard (default)
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/adminDashboard.fxml"));
-                        Parent root = loader.load();
-
-                        AdminDashboardController dashboardController = loader.getController();
-                        dashboardController.setAdminName(fullName);
-
-                        javafx.geometry.Rectangle2D screenBounds = javafx.stage.Screen.getPrimary().getVisualBounds();
-                        double width = Math.min(screenBounds.getWidth() * 0.85, 1400);
-                        double height = Math.min(screenBounds.getHeight() * 0.85, 850);
-                        width = Math.max(width, 1000);
-                        height = Math.max(height, 600);
-
-                        chemlab_system.ChemLab_System.setContent(root, width, height);
-                        chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
-                    }
-                } catch (Exception ex) {
-                    System.err.println("Error loading dashboard: " + ex.getMessage());
-                    ex.printStackTrace();
-                    showAlert(AlertType.ERROR, "Navigation Error", "Failed to load dashboard.");
-                }
-            } else {
-                // Login failed
-                System.out.println("Invalid credentials");
+            if (!rs.next()) {
+                // Generic message — do NOT reveal whether the username exists
                 showAlert(AlertType.ERROR, "Login Failed", "Invalid username or password.");
+                return;
+            }
+
+            int userId = rs.getInt("user_id");
+            String storedHash = rs.getString("password_hash");
+            String fullName = rs.getString("full_name");
+            String role = rs.getString("role");
+            if (role == null || role.isEmpty())
+                role = "admin";
+
+            // BCrypt-aware verification with legacy plaintext fallback
+            VerifyResult result = PasswordUtil.verify(password, storedHash);
+
+            if (!result.matches) {
+                showAlert(AlertType.ERROR, "Login Failed", "Invalid username or password.");
+                return;
+            }
+
+            // Silently upgrade legacy plaintext passwords to BCrypt on first login
+            if (result.needsRehash) {
+                try {
+                    String newHash = PasswordUtil.hash(password);
+                    PreparedStatement upStmt = conn.prepareStatement(
+                            "UPDATE users SET password_hash = ? WHERE user_id = ?");
+                    upStmt.setString(1, newHash);
+                    upStmt.setInt(2, userId);
+                    upStmt.executeUpdate();
+                    upStmt.close();
+                    System.out.println("Password upgraded to BCrypt for user_id=" + userId);
+                } catch (SQLException ex) {
+                    // Non-fatal — login still proceeds even if rehash fails
+                    System.err.println("Non-fatal: failed to upgrade password hash: " + ex.getMessage());
+                }
+            }
+
+            showAlert(AlertType.INFORMATION, "Success", "Login successful. Welcome, " + fullName + "!");
+
+            // Navigate based on role
+            try {
+                if ("instructor".equalsIgnoreCase(role)) {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/instructorDashboard.fxml"));
+                    Parent root = loader.load();
+                    InstructorDashboardController instrController = loader.getController();
+                    instrController.initData(userId, fullName);
+
+                    javafx.geometry.Rectangle2D sb = javafx.stage.Screen.getPrimary().getVisualBounds();
+                    double w = Math.max(Math.min(sb.getWidth() * 0.85, 1400), 1000);
+                    double h = Math.max(Math.min(sb.getHeight() * 0.85, 850), 600);
+
+                    chemlab_system.ChemLab_System.setContent(root, w, h);
+                    chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Instructor Dashboard");
+                } else {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/adminDashboard.fxml"));
+                    Parent root = loader.load();
+                    AdminDashboardController dashController = loader.getController();
+                    dashController.setAdminName(fullName);
+
+                    javafx.geometry.Rectangle2D sb = javafx.stage.Screen.getPrimary().getVisualBounds();
+                    double w = Math.max(Math.min(sb.getWidth() * 0.85, 1400), 1000);
+                    double h = Math.max(Math.min(sb.getHeight() * 0.85, 850), 600);
+
+                    chemlab_system.ChemLab_System.setContent(root, w, h);
+                    chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
+                }
+            } catch (Exception ex) {
+                System.err.println("Error loading dashboard: " + ex.getMessage());
+                ex.printStackTrace();
+                showAlert(AlertType.ERROR, "Navigation Error", "Could not load dashboard. Please try again.");
             }
 
         } catch (SQLException e) {
-            System.err.println("SQLException occurred: " + e.getMessage());
+            System.err.println("Login SQL error: " + e.getMessage());
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Database Error", "Error: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error", "An error occurred. Please try again.");
         } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
+            System.err.println("Login unexpected error: " + e.getMessage());
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error", "An unexpected error occurred. Please try again.");
         } finally {
-            // Close only ResultSet and PreparedStatement, keep Connection open for reuse
             try {
-                if (rs != null) {
+                if (rs != null)
                     rs.close();
-                    System.out.println("ResultSet closed");
-                }
-                if (pstmt != null) {
-                    pstmt.close();
-                    System.out.println("PreparedStatement closed");
-                }
-                // Do NOT close the connection - it will be reused
-                System.out.println("Connection kept open for reuse");
+                if (ps != null)
+                    ps.close();
+                // Keep connection open for reuse (singleton pattern)
             } catch (SQLException ex) {
                 System.err.println("Error closing resources: " + ex.getMessage());
-                ex.printStackTrace();
             }
         }
     }
@@ -234,15 +209,13 @@ public class LoginPageController implements Initializable {
     @FXML
     private void createClciked(ActionEvent event) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader();
+            FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/ui/create_acc_as.fxml"));
-            javafx.scene.Parent root = loader.load();
+            Parent root = loader.load();
             chemlab_system.ChemLab_System.setContent(root, 500, 400);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Create Account");
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error loading create account page: " + e.getMessage());
+            System.err.println("Error loading create account page: " + e.getMessage());
         }
     }
-
 }

@@ -21,6 +21,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import chemlab_system.database.Connector_ChemSystem;
+import chemlab_system.util.PasswordUtil;
 
 /**
  * FXML Controller class
@@ -32,75 +33,55 @@ public class Create_accController implements Initializable {
 
     @FXML
     private TextField usernameField;
-
     @FXML
     private TextField fullnameField;
-
     @FXML
     private PasswordField passwordField;
-
     @FXML
     private PasswordField confirmPass;
-
     @FXML
     private ComboBox<Integer> yearBox;
-
     @FXML
     private ComboBox<String> sectionBox;
-
     @FXML
     private Button createAccButton;
-
     @FXML
     private Button backBtn;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Set initial focus on username field
         if (usernameField != null) {
             javafx.application.Platform.runLater(() -> usernameField.requestFocus());
         }
-
-        // Populate year level combo box
-        if (yearBox != null) {
+        if (yearBox != null)
             yearBox.getItems().addAll(1, 2, 3, 4);
-        }
-
-        // Populate course combo box
-        if (sectionBox != null) {
+        if (sectionBox != null)
             sectionBox.getItems().addAll("BSCPE-1A", "BSCPE-2A");
-        }
 
-        // Set up Enter key navigation
-        if (usernameField != null) {
-            usernameField.setOnAction(event -> {
+        if (usernameField != null)
+            usernameField.setOnAction(e -> {
                 if (fullnameField != null)
                     fullnameField.requestFocus();
             });
-        }
-        if (fullnameField != null) {
-            fullnameField.setOnAction(event -> {
+        if (fullnameField != null)
+            fullnameField.setOnAction(e -> {
                 if (passwordField != null)
                     passwordField.requestFocus();
             });
-        }
-        if (passwordField != null) {
-            passwordField.setOnAction(event -> {
+        if (passwordField != null)
+            passwordField.setOnAction(e -> {
                 if (confirmPass != null)
                     confirmPass.requestFocus();
             });
-        }
-        if (confirmPass != null) {
-            confirmPass.setOnAction(event -> {
+        if (confirmPass != null)
+            confirmPass.setOnAction(e -> {
                 if (yearBox != null)
                     yearBox.requestFocus();
             });
-        }
         if (createAccButton != null) {
-            createAccButton.setOnKeyPressed(event -> {
-                if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+            createAccButton.setOnKeyPressed(e -> {
+                if (e.getCode() == javafx.scene.input.KeyCode.ENTER)
                     createAccClicked(null);
-                }
             });
         }
     }
@@ -114,26 +95,37 @@ public class Create_accController implements Initializable {
         Integer yearLevel = yearBox.getValue();
         String section = sectionBox.getValue();
 
-        // Validation
         if (username.isEmpty() || fullname.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             showAlert(AlertType.ERROR, "Validation Error",
                     "Please fill in all required fields (Username, Full Name, Password).");
             return;
         }
 
-        // Check if passwords match
+        if (password.length() < 8) {
+            showAlert(AlertType.ERROR, "Weak Password", "Password must be at least 8 characters long.");
+            return;
+        }
+
         if (!password.equals(confirmPassword)) {
-            showAlert(AlertType.ERROR, "Password Error", "The password doesn't seem to match.");
+            showAlert(AlertType.ERROR, "Password Error", "Passwords do not match.");
             return;
         }
 
         try {
             Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null) {
+                showAlert(AlertType.ERROR, "Connection Error",
+                        "Could not connect to the database. Please check your internet connection.");
+                return;
+            }
+
+            // Hash password with BCrypt before storing — NEVER store plaintext
+            String hashedPassword = PasswordUtil.hash(password);
+
             String sql = "INSERT INTO users (username, password_hash, full_name, role, year_level, section) VALUES (?, ?, ?, 'Student Assistant', ?, ?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
-
             pstmt.setString(1, username);
-            pstmt.setString(2, password); // You should hash this in production
+            pstmt.setString(2, hashedPassword);
             pstmt.setString(3, fullname);
 
             if (yearLevel != null) {
@@ -141,7 +133,6 @@ public class Create_accController implements Initializable {
             } else {
                 pstmt.setNull(4, java.sql.Types.INTEGER);
             }
-
             if (section != null && !section.isEmpty()) {
                 pstmt.setString(5, section);
             } else {
@@ -149,27 +140,30 @@ public class Create_accController implements Initializable {
             }
 
             int result = pstmt.executeUpdate();
+            pstmt.close();
 
             if (result > 0) {
-                showAlert(AlertType.INFORMATION, "Success", "Student Assistant Account Created!");
-                pstmt.close();
-
-                // Navigate back to login page
+                showAlert(AlertType.INFORMATION, "Success", "Student Assistant account created successfully!");
                 FXMLLoader loader = new FXMLLoader();
                 loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
                 Parent root = loader.load();
                 chemlab_system.ChemLab_System.setContent(root, 1100, 650);
                 chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
-            } else {
-                pstmt.close();
             }
 
         } catch (SQLException e) {
+            System.err.println("Account creation SQL error: " + e.getMessage());
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Database Error", "Error creating account: " + e.getMessage());
+            if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+                showAlert(AlertType.ERROR, "Username Taken",
+                        "That username is already registered. Please choose a different username.");
+            } else {
+                showAlert(AlertType.ERROR, "Error", "Could not create the account. Please try again.");
+            }
         } catch (Exception e) {
+            System.err.println("Account creation unexpected error: " + e.getMessage());
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error", "An unexpected error occurred. Please try again.");
         }
     }
 
@@ -182,8 +176,7 @@ public class Create_accController implements Initializable {
             chemlab_system.ChemLab_System.setContent(root, 500, 400);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Create Account");
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error loading chooser page: " + e.getMessage());
+            System.err.println("Error loading chooser page: " + e.getMessage());
         }
     }
 
