@@ -1,10 +1,8 @@
 'use strict';
-// Force IPv4 DNS resolution — Render free tier blocks outbound IPv6 connections.
-// This MUST be set before any network imports (pg, nodemailer, etc.).
-require('dns').setDefaultResultOrder('ipv4first');
 require('dotenv').config();
 
 const express   = require('express');
+
 const session   = require('express-session');
 const { Pool }  = require('pg');
 const bcrypt    = require('bcryptjs');
@@ -16,6 +14,12 @@ const path      = require('path');
 const app          = express();
 const PORT         = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Trust the first proxy (Render's reverse proxy) so express-rate-limit
+// and express-session can read the real client IP from X-Forwarded-For.
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Environment Validation — Fail fast on startup if required vars are missing.
