@@ -10,10 +10,15 @@ const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const nodemailer= require('nodemailer');
 const path      = require('path');
+const dns       = require('dns').promises; // Use promises version 
+
 
 const app          = express();
 const PORT         = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
+
+let pool; // Declare pool globally to be initialized in startServer()
+
 
 // Trust the first proxy (Render's reverse proxy) so express-rate-limit
 // and express-session can read the real client IP from X-Forwarded-For.
@@ -35,29 +40,56 @@ function requireEnv(name) {
   return value.trim();
 }
 
-// ─── Database Pool ────────────────────────────────────────────────────────────
-const pool = new Pool({
-  host:                   requireEnv('SUPABASE_HOST'),
-  port:                   parseInt(process.env.SUPABASE_PORT || '6543'),
-  database:               process.env.SUPABASE_DB || 'postgres',
-  user:                   requireEnv('SUPABASE_USER'),
-  password:               requireEnv('SUPABASE_PASS'),
-  ssl:                    { rejectUnauthorized: false },
-  family:                 4,   // Force IPv4 — Render free tier blocks IPv6 outbound
-  max:                    10,
-  idleTimeoutMillis:      30000,
-  connectionTimeoutMillis: 5000,
-});
+// ─── Startup Logic ────────────────────────────────────────────────────────────
+// We wrap the startup in an async function to handle manual DNS resolution.
+// This is a definitive fix for IPv6 ENETUNREACH errors on Render/Free-Tier.
+async function startServer() {
+  let dbHost = requireEnv('SUPABASE_HOST');
 
-
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('[DB] Failed to connect to Supabase:', err.message);
-  } else {
-    console.log('[DB] Connected to Supabase PostgreSQL successfully.');
-    release();
+  // Manual DNS Resolution to force IPv4
+  if (isProduction || dbHost.includes('supabase.co') || dbHost.includes('supabase.com')) {
+    try {
+      console.log(`[STARTUP] Resolving IPv4 for host: ${dbHost}...`);
+      const { address } = await dns.lookup(dbHost, { family: 4 });
+      console.log(`[STARTUP] Resolved to IPv4: ${address}`);
+      dbHost = address;
+    } catch (dnsErr) {
+      console.warn(`[STARTUP WARNING] DNS resolution failed for ${dbHost}: ${dnsErr.message}. Falling back to hostname.`);
+    }
   }
-});
+
+  // ─── Database Pool ──────────────────────────────────────────────────────────
+  pool = new Pool({
+    host:                   dbHost,
+    port:                   parseInt(process.env.SUPABASE_PORT || '5432'),
+    database:               process.env.SUPABASE_DB || 'postgres',
+    user:                   requireEnv('SUPABASE_USER'),
+    password:               requireEnv('SUPABASE_PASS'),
+    ssl:                    { rejectUnauthorized: false },
+    max:                    10,
+    idleTimeoutMillis:      30000,
+    connectionTimeoutMillis: 10000,
+  });
+
+
+  pool.on('error', (err) => {
+    console.error('[DB ERROR] Unexpected error on idle client:', err.message);
+  });
+
+  try {
+    const client = await pool.connect();
+    console.log('[DB] Connected to Supabase PostgreSQL successfully.');
+    client.release();
+  } catch (err) {
+    console.error('[DB FATAL] Failed to connect to Supabase:', err.message);
+    console.error('[DB HINT] If your IP changed recently, wait 1-2 mins and Render will retry.');
+    // We don't exit here to allow Render to keep trying the deploy
+  }
+
+  // Global reference for any tools that need it
+  global.dbPool = pool; 
+
+
 
 // ─── Mail Transporter ─────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -419,8 +451,19 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`[SERVER] ChemLab Server running on port ${PORT}`);
-  console.log(`[SERVER] Environment: ${isProduction ? 'production' : 'development'}`);
+  // Start server after DB and DNS are handled
+  app.listen(PORT, () => {
+    console.log(`[SERVER] ChemLab Server running on port ${PORT}`);
+    console.log(`[SERVER] Environment: ${isProduction ? 'production' : 'development'}`);
+  });
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kick off the startup sequence
+// ─────────────────────────────────────────────────────────────────────────────
+startServer().catch(err => {
+  console.error('[FATAL STARTUP ERROR]', err);
+  process.exit(1);
 });
+
