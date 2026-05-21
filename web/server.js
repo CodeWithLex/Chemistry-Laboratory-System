@@ -36,10 +36,12 @@ const pool = new Pool({
   user:                   requireEnv('SUPABASE_USER'),
   password:               requireEnv('SUPABASE_PASS'),
   ssl:                    { rejectUnauthorized: false },
+  family:                 4,   // Force IPv4 — Render free tier blocks IPv6 outbound
   max:                    10,
   idleTimeoutMillis:      30000,
   connectionTimeoutMillis: 5000,
 });
+
 
 pool.connect((err, client, release) => {
   if (err) {
