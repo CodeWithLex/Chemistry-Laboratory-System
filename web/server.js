@@ -1,4 +1,7 @@
 'use strict';
+// Force IPv4 DNS resolution — Render free tier blocks outbound IPv6 connections.
+// This MUST be set before any network imports (pg, nodemailer, etc.).
+require('dns').setDefaultResultOrder('ipv4first');
 require('dotenv').config();
 
 const express   = require('express');
