@@ -277,3 +277,12 @@
     -fx-padding: 30;
     -fx-alignment: center;
 }
+
+/* SVG Graphics Styling */
+.button .graphic, .label .graphic {
+    -fx-padding: 0 8 0 0;
+}
+
+SVGPath {
+    -fx-smooth: true;
+}

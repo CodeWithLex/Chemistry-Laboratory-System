@@ -61,8 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showDashboard(groupData) {
     currentGroup = groupData;
-    groupWelcomeBadge.textContent = `👥 ${groupData.groupName}`;
+    groupWelcomeBadge.innerHTML = `
+      <svg class="svg-icon icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>${groupData.groupName}</span>
+    `;
     groupNameTitle.textContent = groupData.groupName;
+
     
     showView(dashboardView);
     
@@ -92,12 +96,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
-    let icon = '🔔';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
-    if (type === 'info') icon = 'ℹ️';
+    let svgPath = '';
+    let iconClass = 'icon-sm';
 
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    if (type === 'success') {
+      svgPath = '<path d="M20 6 9 17l-5-5"/>';
+      iconClass += ' icon-primary';
+    } else if (type === 'error') {
+      svgPath = '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>';
+      iconClass += ' icon-danger';
+    } else if (type === 'info') {
+      svgPath = '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>';
+      iconClass += ' icon-accent';
+    } else {
+      svgPath = '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>';
+    }
+
+    toast.innerHTML = `
+      <svg class="svg-icon ${iconClass}" viewBox="0 0 24 24">${svgPath}</svg>
+      <span>${message}</span>
+    `;
+
     container.appendChild(toast);
 
     // Auto-remove after 4 seconds

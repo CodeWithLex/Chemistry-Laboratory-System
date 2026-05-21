@@ -26,34 +26,36 @@
     <!-- 1. LOGIN CONTAINER -->
     <div id="login-view" class="view-container active">
       <div class="login-card glass">
-        <div class="login-header">
           <div class="logo-animation">
-            <span class="bubble"></span>
-            <span class="bubble"></span>
-            <span class="bubble"></span>
-            <span class="flask-icon">🔬</span>
+            <svg class="svg-icon icon-lg icon-primary" viewBox="0 0 24 24"><path d="M6 18h8M3 22h18M14 10a4 4 0 1 0-8 0v4h8v-4zM9 14h2M11 22v-4M7 22v-4M8 11V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7M12 7h2"/></svg>
           </div>
           <h1>ChemLab System</h1>
           <p>Laboratory Borrowing Portal</p>
-        </div>
+
 
         <form id="login-form">
           <div class="form-group">
             <label for="username">Group Username</label>
             <div class="input-wrapper">
-              <span class="input-icon">👤</span>
+              <span class="input-icon">
+                <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
               <input type="text" id="username" name="username" placeholder="e.g., groupa" required
                 autocomplete="username">
             </div>
+
           </div>
 
           <div class="form-group">
             <label for="password">Password</label>
             <div class="input-wrapper">
-              <span class="input-icon">🔒</span>
+              <span class="input-icon">
+                <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
               <input type="password" id="password" name="password" placeholder="••••••••" required
                 autocomplete="current-password">
             </div>
+
           </div>
 
           <button type="submit" id="login-btn" class="btn-primary">
@@ -70,14 +72,17 @@
       <!-- Navbar -->
       <header class="navbar glass">
         <div class="nav-brand">
-          <span class="flask-icon">🧪</span>
+          <svg class="svg-icon icon-md icon-primary" style="margin-right: 8px;" viewBox="0 0 24 24"><path d="M4.5 3h15M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3M6 14h12"/></svg>
           <h2>ChemLab Portal</h2>
         </div>
+
         <div class="nav-actions">
           <span id="group-welcome-badge" class="welcome-badge">👤 Loading...</span>
           <button id="toggle-members-btn" class="btn-secondary">
-            <span>👥 Members</span>
+            <svg class="svg-icon icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Members</span>
           </button>
+
           <button id="logout-btn" class="btn-danger">
             <span>Logout</span>
           </button>
@@ -98,7 +103,11 @@
 
           <!-- Currently Borrowing -->
           <div id="borrowing-card" class="card glass hidden">
-            <h3>📦 Currently Borrowing</h3>
+            <h3>
+              <svg class="svg-icon icon-md icon-accent" style="margin-right: 8px;" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+              Currently Borrowing
+            </h3>
+
             <p class="section-desc">Apparatuses currently approved and in your possession.</p>
             <div id="borrowing-list" class="list-container">
               <!-- Dynamically populated -->
@@ -131,13 +140,11 @@
           </div>
 
           <!-- Unlisted Apparatus Request Form -->
-          <div class="card glass">
-            <h3>🔍 Can't Find What You Need?</h3>
-            <p class="section-desc">Request items that are not currently in the inventory list. Admin will review your
-              request.</p>
             <div class="collapsible-header" id="unlisted-toggle">
-              <span>▶ Request Unlisted Apparatus</span>
+              <svg class="svg-icon icon-sm icon-primary" style="margin-right: 4px;" viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"/><circle cx="10" cy="10" r="7"/></svg>
+              <span>Request Unlisted Apparatus</span>
             </div>
+
             <form id="unlisted-form" class="collapsible-content hidden">
               <div class="form-group">
                 <label for="unlisted-name">Apparatus Name</label>
@@ -148,9 +155,11 @@
                 <textarea id="unlisted-reason" rows="3"
                   placeholder="Explain why your experiment requires this item..."></textarea>
               </div>
-              <button type="submit" class="btn-accent">
-                <span>📩 Submit Custom Request</span>
+              <button type="submit" class="btn-accent" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg class="svg-icon icon-sm icon-white" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                <span>Submit Custom Request</span>
               </button>
+
             </form>
           </div>
 
@@ -161,7 +170,11 @@
 
           <!-- Other Groups' Pending Requests (Visibility Mode) -->
           <div class="card glass">
-            <h3>⏳ Pending Requests by Other Groups</h3>
+            <h3>
+              <svg class="svg-icon icon-md icon-warning" style="margin-right: 8px;" viewBox="0 0 24 24"><path d="M10 10V4a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v6h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h7Z"/></svg>
+              Pending Requests by Others
+            </h3>
+
             <p class="section-desc">Items currently requested by other groups and awaiting approval.</p>
             <div id="others-pending-list" class="list-container">
               <!-- Dynamically populated -->
