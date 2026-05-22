@@ -8,7 +8,9 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.layout.AnchorPane?>
+
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
@@ -23,7 +25,12 @@
 
             <!-- Top Header Bar -->
             <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: #1a5d1a; -fx-padding: 12 20;">
-                <Label style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" text="🔬 ChemLab Instructor Dashboard" />
+                <Label style="-fx-text-fill: white; -fx-font-size: 18; -fx-font-weight: bold;" text="ChemLab Instructor Dashboard">
+                    <graphic>
+                        <SVGPath content="M6 18h8M3 22h18M14 10a4 4 0 1 0-8 0v4h8v-4zM9 14h2M11 22v-4M7 22v-4M8 11V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7M12 7h2" fill="WHITE" scaleX="1.2" scaleY="1.2" />
+                    </graphic>
+                </Label>
+
                 <Region HBox.hgrow="ALWAYS" />
                 <Label fx:id="welcomeLabel" style="-fx-text-fill: white; -fx-font-size: 13;" text="Welcome, Instructor" />
                 <Button fx:id="logoutBtn" mnemonicParsing="false" onAction="#logoutClicked" style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-background-radius: 6;" text="Logout" />
@@ -39,7 +46,12 @@
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshStudentGroups" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="⟳ Refresh" />
+                             <Button mnemonicParsing="false" onAction="#refreshStudentGroups" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="Refresh">
+                                <graphic>
+                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
+                                </graphic>
+                             </Button>
+
                             <Label text="Search:" />
                             <TextField fx:id="studentSearchField" onKeyReleased="#filterStudents" promptText="Group name" />
                         </HBox>
@@ -61,7 +73,12 @@
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshPending" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="⟳ Refresh" />
+                             <Button mnemonicParsing="false" onAction="#refreshPending" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="Refresh">
+                                <graphic>
+                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
+                                </graphic>
+                             </Button>
+
                             <Label text="Search:" />
                             <TextField fx:id="pendingSearchField" onKeyReleased="#filterPending" promptText="ID or group" />
                         </HBox>
@@ -85,7 +102,12 @@
                             <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
                         </padding>
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshHistory" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="⟳ Refresh" />
+                             <Button mnemonicParsing="false" onAction="#refreshHistory" style="-fx-background-color: #2e7d32; -fx-text-fill: white; -fx-background-radius: 6;" text="Refresh">
+                                <graphic>
+                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
+                                </graphic>
+                             </Button>
+
                             <Label text="Search:" />
                             <TextField fx:id="historySearchField" onKeyReleased="#filterHistory" promptText="ID or group" />
                         </HBox>

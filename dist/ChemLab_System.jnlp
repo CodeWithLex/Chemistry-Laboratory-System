@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ChemLab_System.jar" size="440756" download="eager" />
+    <jar href="ChemLab_System.jar" size="441490" download="eager" />
     <jar href="lib\javax.mail-1.6.2.jar" size="659031" download="eager" />
     <jar href="lib\jbcrypt-0.4.jar" size="17429" download="eager" />
     <jar href="lib\postgresql-42.7.4.jar" size="1086687" download="eager" />

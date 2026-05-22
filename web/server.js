@@ -2,6 +2,9 @@
 require('dotenv').config();
 
 const express   = require('express');
+const https     = require('https');
+const http      = require('http');
+
 
 const session   = require('express-session');
 const { Pool }  = require('pg');
@@ -188,7 +191,13 @@ const requireAuth = (req, res, next) => {
 // API ENDPOINTS
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ─── Health Check (for Render Keep-Alive) ─────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Auth status check
+
 app.get('/api/auth/me', (req, res) => {
   if (req.session.groupId) {
     res.json({ loggedIn: true, groupId: req.session.groupId, groupName: req.session.groupName });
@@ -455,7 +464,30 @@ app.get('*', (req, res) => {
   app.listen(PORT, () => {
     console.log(`[SERVER] ChemLab Server running on port ${PORT}`);
     console.log(`[SERVER] Environment: ${isProduction ? 'production' : 'development'}`);
+
+    // ─── Render Keep-Alive Heartbeat ──────────────────────────────────────────
+    // On Render's Free tier, apps spin down after 15 mins of inactivity.
+    // This interval pings the public URL every 14 minutes to keep it awake.
+    const externalUrl = process.env.RENDER_EXTERNAL_URL;
+    if (isProduction && externalUrl) {
+      console.log(`[KEEP-ALIVE] Heartbeat initialized. Target: ${externalUrl}/api/health`);
+      setInterval(() => {
+        const protocol = externalUrl.startsWith('https') ? https : http;
+        protocol.get(`${externalUrl}/api/health`, (res) => {
+          if (res.statusCode === 200) {
+            console.log(`[KEEP-ALIVE] Heartbeat successful at ${new Date().toLocaleTimeString()}`);
+          } else {
+            console.warn(`[KEEP-ALIVE] Heartbeat returned status: ${res.statusCode}`);
+          }
+        }).on('error', (err) => {
+          console.error('[KEEP-ALIVE] Heartbeat failed:', err.message);
+        });
+      }, 14 * 60 * 1000); // 14 minutes
+    } else if (isProduction) {
+      console.warn('[KEEP-ALIVE] No RENDER_EXTERNAL_URL provided. Service may spin down.');
+    }
   });
+
 }
 
 
