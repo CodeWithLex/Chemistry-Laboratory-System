@@ -533,6 +533,8 @@ public class AdminDashboardController implements Initializable {
                 loadAllRequests(
                         allStartDatePicker != null ? allStartDatePicker.getValue() : null,
                         allEndDatePicker != null ? allEndDatePicker.getValue() : null);
+            } else if ("Apparatus Requests".equals(selectedTab)) {
+                loadApparatusRequests();
             }
         }));
         autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
@@ -583,10 +585,12 @@ public class AdminDashboardController implements Initializable {
             return;
 
         try {
-            // Pending count
+            // Pending count (standard + apparatus requests)
             try (java.sql.Statement st1 = conn.createStatement();
                     ResultSet rs1 = st1.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Pending'")) {
+                            "SELECT " +
+                                    "(SELECT COUNT(*) FROM requests WHERE status = 'Pending'::request_status) + " +
+                                    "(SELECT COUNT(*) FROM apparatus_requests WHERE status = 'Pending'::apparatus_request_status) AS cnt")) {
                 if (rs1.next())
                     pendingCountLabel.setText(String.valueOf(rs1.getInt("cnt")));
             }
@@ -594,7 +598,7 @@ public class AdminDashboardController implements Initializable {
             // Approved today count
             try (java.sql.Statement st2 = conn.createStatement();
                     ResultSet rs2 = st2.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved' AND DATE(updated_at) = CURRENT_DATE")) {
+                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved'::request_status AND DATE(updated_at) = CURRENT_DATE")) {
                 if (rs2.next())
                     approvedCountLabel.setText(String.valueOf(rs2.getInt("cnt")));
             }
@@ -641,7 +645,7 @@ public class AdminDashboardController implements Initializable {
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Pending'";
+                "WHERE r.status = 'Pending'::request_status";
 
         if (startDate != null) {
             sql += " AND DATE(r.created_at) >= ?";
@@ -750,7 +754,7 @@ public class AdminDashboardController implements Initializable {
         }
 
         String sql = "SELECT a.apparatus_id, a.item_name, a.current_quantity, " +
-                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending') THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
+                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved'::request_status,'Pending'::request_status) THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
                 +
                 "FROM apparatus a " +
                 "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id " +
@@ -826,12 +830,13 @@ public class AdminDashboardController implements Initializable {
                 "GREATEST(a.current_quantity - (" +
                 "  SELECT COALESCE(SUM(r2.qty), 0) " +
                 "  FROM requests r2 " +
-                "  WHERE r2.apparatus_id = r.apparatus_id AND r2.status IN ('Approved', 'Pending')" +
+                "  WHERE r2.apparatus_id = r.apparatus_id AND r2.status IN ('Approved'::request_status, 'Pending'::request_status)"
+                +
                 "), 0) AS remaining_qty " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Approved'";
+                "WHERE r.status = 'Approved'::request_status";
 
         if (startDate != null) {
             sql += " AND DATE(r.updated_at) >= ?";
@@ -1140,7 +1145,7 @@ public class AdminDashboardController implements Initializable {
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Returned' ";
+                "WHERE r.status = 'Returned'::request_status ";
 
         if (startDate != null) {
             sql += " AND DATE(r.updated_at) >= ?";

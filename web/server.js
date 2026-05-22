@@ -95,21 +95,68 @@ async function startServer() {
 
 
 // ─── Mail Transporter ─────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host:   requireEnv('MAIL_HOST'),
-  port:   parseInt(process.env.MAIL_PORT || '587'),
-  secure: false,
-  auth: {
-    user: requireEnv('MAIL_USERNAME'),
-    pass: requireEnv('MAIL_PASSWORD'),
-  },
-});
+const MAIL_HOST = requireEnv('MAIL_HOST');
+const MAIL_USERNAME = requireEnv('MAIL_USERNAME');
+const MAIL_PASSWORD = requireEnv('MAIL_PASSWORD');
+const primaryMailPort = parseInt(process.env.MAIL_PORT || '587', 10);
+const fallbackMailPort = primaryMailPort === 465 ? 587 : 465;
+
+function createMailTransporter(port) {
+  return nodemailer.createTransport({
+    host: MAIL_HOST,
+    port,
+    secure: port === 465,
+    auth: {
+      user: MAIL_USERNAME,
+      pass: MAIL_PASSWORD,
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    dnsTimeout: 10000,
+    family: 4,
+    requireTLS: port === 587,
+    tls: {
+      servername: MAIL_HOST,
+      rejectUnauthorized: false,
+    },
+  });
+}
+
+const mailTransports = [
+  { label: `primary:${primaryMailPort}`, transporter: createMailTransporter(primaryMailPort) },
+  { label: `fallback:${fallbackMailPort}`, transporter: createMailTransporter(fallbackMailPort) },
+];
 
 const MAIL_FROM      = process.env.MAIL_FROM      || process.env.MAIL_USERNAME;
 const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'ChemLab System';
 const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || process.env.MAIL_USERNAME;
 
 // ─── Email Helper ─────────────────────────────────────────────────────────────
+async function sendMailWithFallback(mailOptions, logLabel) {
+  let lastError;
+
+  for (const { label, transporter } of mailTransports) {
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`[MAIL] ${logLabel} sent via ${label} to ${ADMIN_EMAIL}. Message ID: ${info.messageId}`);
+      return true;
+    } catch (error) {
+      lastError = error;
+      console.error(`[MAIL] ${logLabel} failed via ${label}:`, {
+        code: error.code,
+        command: error.command,
+        error: error.message,
+      });
+    }
+  }
+
+  console.error(`[MAIL] ${logLabel} failed on all SMTP transports. Check Render outbound SMTP access and Gmail app password.`, {
+    error: lastError ? lastError.message : 'Unknown mail error',
+  });
+  return false;
+}
+
 async function sendAdminNotification(groupName, apparatusName, quantity) {
   const mailOptions = {
     from:    `"${MAIL_FROM_NAME}" <${MAIL_FROM}>`,
@@ -128,14 +175,28 @@ async function sendAdminNotification(groupName, apparatusName, quantity) {
       </div>`,
     text: `New Borrow Request\nGroup: ${groupName}\nApparatus: ${apparatusName}\nQuantity: ${quantity}`,
   };
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`[MAIL] Notification sent to ${ADMIN_EMAIL}`);
-    return true;
-  } catch (error) {
-    console.error('[MAIL] Failed to send notification:', { error: error.message });
-    return false;
-  }
+  return sendMailWithFallback(mailOptions, 'Borrow request notification');
+}
+
+async function sendUnlistedNotification(groupName, apparatus_name, reason) {
+  const mailOptions = {
+    from:    `"${MAIL_FROM_NAME}" <${MAIL_FROM}>`,
+    to:       ADMIN_EMAIL,
+    subject: 'Action Required: Unlisted Apparatus Request',
+    html: `
+      <div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;border:1px solid #e2e8f0;border-radius:8px;background:#fffaf0">
+        <h2 style="color:#b7791f;border-bottom:2px solid #b7791f;padding-bottom:8px">Unlisted Apparatus Request</h2>
+        <p>A student group is requesting an item not currently in the inventory:</p>
+        <table style="border-collapse:collapse;margin:20px 0;width:100%">
+          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold;width:30%">Group:</td><td style="padding:10px;border:1px solid #ddd">${groupName}</td></tr>
+          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Item Name:</td><td style="padding:10px;border:1px solid #ddd">${apparatus_name}</td></tr>
+          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Reason:</td><td style="padding:10px;border:1px solid #ddd">${reason || 'No reason provided'}</td></tr>
+        </table>
+        <p style="font-size:14px;color:#4a5568">Please review this in the "Apparatus Requests" tab of the ChemLab desktop application.</p>
+      </div>`,
+    text: `Unlisted Apparatus Request\nGroup: ${groupName}\nItem: ${apparatus_name}\nReason: ${reason}`,
+  };
+  return sendMailWithFallback(mailOptions, 'Unlisted apparatus notification');
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -351,7 +412,7 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
     // 1. Duplicate check
     const dupCheck = await pool.query(
       "SELECT COUNT(*) AS cnt FROM requests WHERE group_id = $1 AND apparatus_id = $2 AND status IN ('Pending','Approved')",
-      [req.session.groupId, apparatus_id]
+      [req.session.groupId, parseInt(apparatus_id)]
     );
     if (parseInt(dupCheck.rows[0].cnt) > 0) {
       return res.status(400).json({ code: 'duplicate', error: 'You already have a pending or approved request for this apparatus.' });
@@ -361,7 +422,7 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
     const availResult = await pool.query(
       `SELECT (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending')), 0))::int AS real_available
        FROM apparatus WHERE apparatus_id = $2`,
-      [apparatus_id, apparatus_id]
+      [parseInt(apparatus_id), parseInt(apparatus_id)]
     );
     if (availResult.rows.length === 0) {
       return res.status(404).json({ error: 'Apparatus not found.' });
@@ -373,8 +434,8 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
 
     // 3. Insert request
     await pool.query(
-      'INSERT INTO requests (group_id, apparatus_id, qty) VALUES ($1, $2, $3)',
-      [req.session.groupId, apparatus_id, quantity]
+      "INSERT INTO requests (group_id, apparatus_id, qty, status) VALUES ($1, $2, $3, 'Pending')",
+      [req.session.groupId, parseInt(apparatus_id), quantity]
     );
 
     // 4. Send admin notification (fire-and-forget — does not block response)
@@ -400,6 +461,10 @@ app.post('/api/requests/unlisted', requireAuth, async (req, res) => {
       'INSERT INTO apparatus_requests (group_id, apparatus_name, reason) VALUES ($1, $2, $3)',
       [req.session.groupId, apparatus_name.trim(), reason ? reason.trim() : '']
     );
+
+    // Send admin notification
+    sendUnlistedNotification(req.session.groupName, apparatus_name.trim(), reason);
+
     res.json({ success: true, message: 'Your apparatus request has been submitted for admin review.' });
   } catch (error) {
     console.error('[API] Unlisted request error:', error.message);
@@ -498,4 +563,3 @@ startServer().catch(err => {
   console.error('[FATAL STARTUP ERROR]', err);
   process.exit(1);
 });
-
