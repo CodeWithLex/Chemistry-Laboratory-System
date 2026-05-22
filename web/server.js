@@ -12,7 +12,6 @@ const { Pool }  = require('pg');
 const bcrypt    = require('bcryptjs');
 const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
-const nodemailer= require('nodemailer');
 const path      = require('path');
 const dns       = require('dns').promises; // Use promises version 
 
@@ -167,29 +166,49 @@ const MAIL_FROM      = process.env.MAIL_FROM      || process.env.MAIL_USERNAME;
 const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'ChemLab System';
 const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || process.env.MAIL_USERNAME;
 
-// ─── Email Helper ─────────────────────────────────────────────────────────────
-async function sendMailWithFallback(mailOptions, logLabel) {
-  let lastError;
-
-  for (const { label, transporter } of (global.mailTransports || [])) {
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`[MAIL] ${logLabel} sent via ${label} to ${ADMIN_EMAIL}. Message ID: ${info.messageId}`);
-      return true;
-    } catch (error) {
-      lastError = error;
-      console.error(`[MAIL] ${logLabel} failed via ${label}:`, {
-        code: error.code,
-        command: error.command,
-        error: error.message,
-      });
-    }
+// ─── Email Helper (Resend API Strategy) ───────────────────────────────────────
+// Because Render blocks standard SMTP ports on the free tier, we use the Resend 
+// HTTP API to reliably deliver emails via standard Port 443 HTTPS traffic.
+// 
+// When using a free Resend key with no verified domain:
+// - FROM must be: onboarding@resend.dev
+// - TO must be: the exact email address used to register the Resend account
+async function sendEmail(mailOptions, logLabel) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
+    console.error(`[MAIL FATAL] Missing RESEND_API_KEY! Please follow the 'resend_migration_guide.md' to activate notifications.`);
+    return false;
   }
 
-  console.error(`[MAIL] ${logLabel} failed on all SMTP transports. Check Render outbound SMTP access and Gmail app password.`, {
-    error: lastError ? lastError.message : 'Unknown mail error',
-  });
-  return false;
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: `ChemLab System <onboarding@resend.dev>`, 
+        to: [ADMIN_EMAIL], 
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+        text: mailOptions.text
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error(`[MAIL RESEND ERROR] ${logLabel} failed:`, data);
+      return false;
+    }
+
+    console.log(`[MAIL RESEND SUCCESS] ${logLabel} sent to ${ADMIN_EMAIL}. ID: ${data.id}`);
+    return true;
+  } catch (error) {
+    console.error(`[MAIL RESEND EXCEPTION] ${logLabel} failed due to network error:`, error.message);
+    return false;
+  }
 }
 
 async function sendAdminNotification(groupName, apparatusName, quantity) {
@@ -210,7 +229,7 @@ async function sendAdminNotification(groupName, apparatusName, quantity) {
       </div>`,
     text: `New Borrow Request\nGroup: ${groupName}\nApparatus: ${apparatusName}\nQuantity: ${quantity}`,
   };
-  return sendMailWithFallback(mailOptions, 'Borrow request notification');
+  return sendEmail(mailOptions, 'Borrow request notification');
 }
 
 async function sendUnlistedNotification(groupName, apparatus_name, reason) {
@@ -231,7 +250,7 @@ async function sendUnlistedNotification(groupName, apparatus_name, reason) {
       </div>`,
     text: `Unlisted Apparatus Request\nGroup: ${groupName}\nItem: ${apparatus_name}\nReason: ${reason}`,
   };
-  return sendMailWithFallback(mailOptions, 'Unlisted apparatus notification');
+  return sendEmail(mailOptions, 'Unlisted apparatus notification');
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
