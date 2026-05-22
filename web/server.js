@@ -100,58 +100,32 @@ async function startServer() {
     }
   }
 
-  // ─── SMTP Connectivity Diagnostics ───
-  console.log('[DIAGNOSTIC] Probing SMTP connectivity paths...');
-  const probeHosts = ['smtp.gmail.com', 'smtp.googlemail.com'];
-  const probePorts = [587, 465, 2525];
-  const openPaths = [];
-
-  for (const h of probeHosts) {
-    for (const p of probePorts) {
-      const isUp = await probeConnectivity(h, p);
-      if (isUp) {
-        console.log(`[DIAGNOSTIC] SUCCESS: ${h}:${p} is REACHABLE.`);
-        openPaths.push({ host: h, port: p });
-      } else {
-        console.log(`[DIAGNOSTIC] FAILED: ${h}:${p} is TIMED OUT or BLOCKED.`);
-      }
-    }
-  }
-
-  // Initialize Mail Transports
+  // ─── Super-Hardened SMTP (Port 465 + Googlemail) ───
+  // Removing complex diagnostics in favor of a single, strict-SSL path.
+  // Port 465 uses full encryption from the start, often bypassing cloud firewalls better than 587.
   const MAIL_USERNAME = requireEnv('MAIL_USERNAME');
   const MAIL_PASSWORD = requireEnv('MAIL_PASSWORD');
-  const primaryPort   = parseInt(process.env.MAIL_PORT || '587', 10);
   
   const createTransporter = (host, port) => nodemailer.createTransport({
-    host: host, 
+    host: host, // We use the hostname directly so SNI/TLS validates correctly against Google's certs
     port: port,
-    secure: port === 465,
+    secure: true, // MUST be true for port 465
     auth: { user: MAIL_USERNAME, pass: MAIL_PASSWORD },
     pool: true,
     maxConnections: 1,
     connectionTimeout: 30000,
     greetingTimeout: 30000,
     socketTimeout: 45000,
-    family: 4,
-    requireTLS: port === 587 || port === 2525,
-    tls: { servername: host, rejectUnauthorized: false }
+    family: 4, // Force IPv4 routing
+    tls: { 
+      servername: host,
+      rejectUnauthorized: false
+    }
   });
 
-  global.mailTransports = [];
-  
-  // 1. Prioritize open paths found by diagnostic
-  for (const path of openPaths) {
-    global.mailTransports.push({ label: `diag:${path.host}:${path.port}`, transporter: createTransporter(path.host, path.port) });
-  }
-
-  // 2. Always include hardcoded fallbacks if no paths were found
-  if (global.mailTransports.length === 0) {
-    console.warn('[STARTUP WARNING] No direct SMTP paths are reachable. Falling back to default transport rotation.');
-    const fallbackHost = resolvedMailHost.includes('googlemail') ? 'smtp.gmail.com' : 'smtp.googlemail.com';
-    global.mailTransports.push({ label: `primary:${primaryPort}`, transporter: createTransporter(resolvedMailHost, primaryPort) });
-    global.mailTransports.push({ label: `fallback:${fallbackHost}:587`, transporter: createTransporter(fallbackHost, 587) });
-  }
+  global.mailTransports = [
+    { label: 'hardened:googlemail:465', transporter: createTransporter('smtp.googlemail.com', 465) }
+  ];
 
   // ─── Database Pool ──────────────────────────────────────────────────────────
   pool = new Pool({
