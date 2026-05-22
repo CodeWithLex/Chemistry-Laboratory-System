@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -33,6 +35,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import chemlab_system.database.Connector_ChemSystem;
 import chemlab_system.model.BorrowRequest;
 import chemlab_system.util.EmailService;
@@ -236,6 +239,7 @@ public class AdminDashboardController implements Initializable {
 
     // Logged in admin name
     private String adminFullName = "Admin";
+    private Timeline autoRefreshTimeline;
 
     /**
      * Sets the admin's full name (called from LoginPageController after login).
@@ -509,6 +513,30 @@ public class AdminDashboardController implements Initializable {
                 loadStats();
             }
         });
+
+        startAutoRefresh();
+    }
+
+    private void startAutoRefresh() {
+        autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(8), event -> {
+            loadStats();
+            if (tabPane == null || tabPane.getSelectionModel().getSelectedItem() == null) {
+                return;
+            }
+
+            String selectedTab = tabPane.getSelectionModel().getSelectedItem().getText();
+            if ("Pending Requests".equals(selectedTab)) {
+                loadPendingRequests(
+                        pendingStartDatePicker != null ? pendingStartDatePicker.getValue() : null,
+                        pendingEndDatePicker != null ? pendingEndDatePicker.getValue() : null);
+            } else if ("All Requests".equals(selectedTab)) {
+                loadAllRequests(
+                        allStartDatePicker != null ? allStartDatePicker.getValue() : null,
+                        allEndDatePicker != null ? allEndDatePicker.getValue() : null);
+            }
+        }));
+        autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        autoRefreshTimeline.play();
     }
 
     /**
@@ -566,7 +594,7 @@ public class AdminDashboardController implements Initializable {
             // Approved today count
             try (java.sql.Statement st2 = conn.createStatement();
                     ResultSet rs2 = st2.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved' AND DATE(updated_at) = CURDATE()")) {
+                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved' AND DATE(updated_at) = CURRENT_DATE")) {
                 if (rs2.next())
                     approvedCountLabel.setText(String.valueOf(rs2.getInt("cnt")));
             }
@@ -1037,6 +1065,9 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void logoutClicked(ActionEvent event) {
         try {
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
             Parent root = loader.load();
