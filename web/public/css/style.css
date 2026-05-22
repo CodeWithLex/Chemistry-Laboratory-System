@@ -175,8 +175,8 @@ textarea:focus-visible {
 }
 
 .login-card {
-  width: min(100%, 440px);
-  padding: 34px;
+  width: min(100%, 468px);
+  padding: 36px 38px 38px;
   position: relative;
   overflow: hidden;
 }
@@ -189,23 +189,100 @@ textarea:focus-visible {
   background: linear-gradient(90deg, var(--green), var(--teal), var(--amber));
 }
 
+.login-card::after {
+  content: "H2SO4";
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  z-index: 0;
+  color: rgba(31, 91, 69, 0.065);
+  font-family: var(--font-display);
+  font-size: 4.8rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.login-card > * {
+  position: relative;
+  z-index: 1;
+}
+
 .logo-animation {
-  width: 58px;
-  height: 58px;
+  width: 66px;
+  height: 66px;
   display: grid;
   place-items: center;
   margin-bottom: 18px;
   color: var(--green);
-  background: var(--green-soft);
-  border: 1px solid #bdd3c4;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, #dceadf, #c8ddd0);
+  border: 1px solid #a8c3b2;
   border-radius: 6px;
+  box-shadow: inset 0 -12px 22px rgba(31, 91, 69, 0.08);
+}
+
+.lab-mark {
+  width: 46px;
+  height: 46px;
+  overflow: visible;
+}
+
+.mark-flask,
+.mark-bond,
+.mark-liquid {
+  fill: none;
+  stroke: var(--green-ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mark-flask {
+  stroke-width: 3;
+}
+
+.mark-liquid {
+  stroke: var(--teal);
+  stroke-width: 3;
+}
+
+.mark-bond {
+  stroke-width: 1.7;
+  opacity: 0.72;
+}
+
+.mark-node {
+  fill: var(--amber);
+  transform-origin: center;
+  animation: moleculePulse 3.4s ease-in-out infinite;
+}
+
+.node-b {
+  animation-delay: 0.4s;
+}
+
+.node-c {
+  animation-delay: 0.8s;
+}
+
+@keyframes moleculePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.78;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
 }
 
 .login-card h1 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 8vw, 3rem);
+  max-width: 390px;
+  font-size: clamp(1.95rem, 6vw, 2.55rem);
   font-weight: 700;
-  line-height: 0.95;
+  line-height: 1.02;
   letter-spacing: 0;
   color: var(--green-ink);
 }
@@ -227,9 +304,9 @@ form {
   display: block;
   margin-bottom: 7px;
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  color: #26372f;
   text-transform: uppercase;
 }
 
@@ -300,12 +377,40 @@ form {
   width: 100%;
   color: #fffdf8;
   background: var(--green);
+  box-shadow: 0 10px 22px rgba(31, 91, 69, 0.16);
 }
 
 .btn-primary:hover,
 .btn-accent:hover {
   background: var(--green-ink);
-  transform: translateY(-1px);
+  box-shadow: 0 15px 28px rgba(31, 91, 69, 0.22);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active,
+.btn-accent:active {
+  background: #102d25;
+  box-shadow: 0 6px 14px rgba(31, 91, 69, 0.18);
+  transform: translateY(0);
+}
+
+.btn-primary.is-loading,
+.btn-accent.is-loading {
+  cursor: wait;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent 40%, rgba(255, 255, 255, 0.14)),
+    var(--green-ink);
+  background-size: 180% 100%;
+  animation: buttonLoad 1.1s linear infinite;
+}
+
+@keyframes buttonLoad {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -180% 0;
+  }
 }
 
 .btn-shine {

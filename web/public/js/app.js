@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginBtn.disabled = true;
+    loginBtn.classList.add('is-loading');
     const originalText = loginBtn.innerHTML;
     loginBtn.innerHTML = '<span>Verifying...</span>';
 
@@ -172,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(err);
     } finally {
       loginBtn.disabled = false;
+      loginBtn.classList.remove('is-loading');
       loginBtn.innerHTML = originalText;
     }
   });
