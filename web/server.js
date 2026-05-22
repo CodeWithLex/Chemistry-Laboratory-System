@@ -4,6 +4,7 @@ require('dotenv').config();
 const express   = require('express');
 const https     = require('https');
 const http      = require('http');
+const net       = require('net');
 
 
 const session   = require('express-session');
@@ -43,22 +44,113 @@ function requireEnv(name) {
   return value.trim();
 }
 
+/**
+ * Raw Socket Connectivity Probe
+ * Tests if a host:port is reachable to bypass ETIMEDOUT guessing.
+ */
+function probeConnectivity(host, port, timeout = 5000) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let isHandled = false;
+
+    const cleanup = () => {
+      if (!isHandled) {
+        isHandled = true;
+        socket.destroy();
+      }
+    };
+
+    socket.setTimeout(timeout);
+    socket.on('connect', () => { cleanup(); resolve(true); });
+    socket.on('timeout', () => { cleanup(); resolve(false); });
+    socket.on('error',   () => { cleanup(); resolve(false); });
+
+    socket.connect(port, host);
+  });
+}
+
 // ─── Startup Logic ────────────────────────────────────────────────────────────
 // We wrap the startup in an async function to handle manual DNS resolution.
 // This is a definitive fix for IPv6 ENETUNREACH errors on Render/Free-Tier.
 async function startServer() {
   let dbHost = requireEnv('SUPABASE_HOST');
+  let resolvedMailHost = requireEnv('MAIL_HOST');
 
   // Manual DNS Resolution to force IPv4
   if (isProduction || dbHost.includes('supabase.co') || dbHost.includes('supabase.com')) {
     try {
-      console.log(`[STARTUP] Resolving IPv4 for host: ${dbHost}...`);
+      console.log(`[STARTUP] Resolving IPv4 for DB host: ${dbHost}...`);
       const { address } = await dns.lookup(dbHost, { family: 4 });
-      console.log(`[STARTUP] Resolved to IPv4: ${address}`);
+      console.log(`[STARTUP] DB resolved to IPv4: ${address}`);
       dbHost = address;
     } catch (dnsErr) {
-      console.warn(`[STARTUP WARNING] DNS resolution failed for ${dbHost}: ${dnsErr.message}. Falling back to hostname.`);
+      console.warn(`[STARTUP WARNING] DB DNS resolution failed: ${dnsErr.message}`);
     }
+  }
+
+  // Manual DNS Resolution for Mail Host (Fixes ETIMEDOUT on Render)
+  if (isProduction || resolvedMailHost.includes('google.com') || resolvedMailHost.includes('gmail.com')) {
+    try {
+      console.log(`[STARTUP] Resolving IPv4 for Mail host: ${resolvedMailHost}...`);
+      const { address } = await dns.lookup(resolvedMailHost, { family: 4 });
+      console.log(`[STARTUP] Mail resolved to IPv4: ${address}`);
+      resolvedMailHost = address;
+    } catch (dnsErr) {
+      console.warn(`[STARTUP WARNING] Mail DNS resolution failed: ${dnsErr.message}`);
+    }
+  }
+
+  // ─── SMTP Connectivity Diagnostics ───
+  console.log('[DIAGNOSTIC] Probing SMTP connectivity paths...');
+  const probeHosts = ['smtp.gmail.com', 'smtp.googlemail.com'];
+  const probePorts = [587, 465, 2525];
+  const openPaths = [];
+
+  for (const h of probeHosts) {
+    for (const p of probePorts) {
+      const isUp = await probeConnectivity(h, p);
+      if (isUp) {
+        console.log(`[DIAGNOSTIC] SUCCESS: ${h}:${p} is REACHABLE.`);
+        openPaths.push({ host: h, port: p });
+      } else {
+        console.log(`[DIAGNOSTIC] FAILED: ${h}:${p} is TIMED OUT or BLOCKED.`);
+      }
+    }
+  }
+
+  // Initialize Mail Transports
+  const MAIL_USERNAME = requireEnv('MAIL_USERNAME');
+  const MAIL_PASSWORD = requireEnv('MAIL_PASSWORD');
+  const primaryPort   = parseInt(process.env.MAIL_PORT || '587', 10);
+  
+  const createTransporter = (host, port) => nodemailer.createTransport({
+    host: host, 
+    port: port,
+    secure: port === 465,
+    auth: { user: MAIL_USERNAME, pass: MAIL_PASSWORD },
+    pool: true,
+    maxConnections: 1,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 45000,
+    family: 4,
+    requireTLS: port === 587 || port === 2525,
+    tls: { servername: host, rejectUnauthorized: false }
+  });
+
+  global.mailTransports = [];
+  
+  // 1. Prioritize open paths found by diagnostic
+  for (const path of openPaths) {
+    global.mailTransports.push({ label: `diag:${path.host}:${path.port}`, transporter: createTransporter(path.host, path.port) });
+  }
+
+  // 2. Always include hardcoded fallbacks if no paths were found
+  if (global.mailTransports.length === 0) {
+    console.warn('[STARTUP WARNING] No direct SMTP paths are reachable. Falling back to default transport rotation.');
+    const fallbackHost = resolvedMailHost.includes('googlemail') ? 'smtp.gmail.com' : 'smtp.googlemail.com';
+    global.mailTransports.push({ label: `primary:${primaryPort}`, transporter: createTransporter(resolvedMailHost, primaryPort) });
+    global.mailTransports.push({ label: `fallback:${fallbackHost}:587`, transporter: createTransporter(fallbackHost, 587) });
   }
 
   // ─── Database Pool ──────────────────────────────────────────────────────────
@@ -94,39 +186,8 @@ async function startServer() {
 
 
 
-// ─── Mail Transporter ─────────────────────────────────────────────────────────
-const MAIL_HOST = requireEnv('MAIL_HOST');
-const MAIL_USERNAME = requireEnv('MAIL_USERNAME');
-const MAIL_PASSWORD = requireEnv('MAIL_PASSWORD');
-const primaryMailPort = parseInt(process.env.MAIL_PORT || '587', 10);
-const fallbackMailPort = primaryMailPort === 465 ? 587 : 465;
 
-function createMailTransporter(port) {
-  return nodemailer.createTransport({
-    host: MAIL_HOST,
-    port,
-    secure: port === 465,
-    auth: {
-      user: MAIL_USERNAME,
-      pass: MAIL_PASSWORD,
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
-    dnsTimeout: 10000,
-    family: 4,
-    requireTLS: port === 587,
-    tls: {
-      servername: MAIL_HOST,
-      rejectUnauthorized: false,
-    },
-  });
-}
-
-const mailTransports = [
-  { label: `primary:${primaryMailPort}`, transporter: createMailTransporter(primaryMailPort) },
-  { label: `fallback:${fallbackMailPort}`, transporter: createMailTransporter(fallbackMailPort) },
-];
+// ─── Middleware ───────────────────────────────────────────────────────────────
 
 const MAIL_FROM      = process.env.MAIL_FROM      || process.env.MAIL_USERNAME;
 const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'ChemLab System';
@@ -136,7 +197,7 @@ const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || process.env.MAIL_USERNAME;
 async function sendMailWithFallback(mailOptions, logLabel) {
   let lastError;
 
-  for (const { label, transporter } of mailTransports) {
+  for (const { label, transporter } of (global.mailTransports || [])) {
     try {
       const info = await transporter.sendMail(mailOptions);
       console.log(`[MAIL] ${logLabel} sent via ${label} to ${ADMIN_EMAIL}. Message ID: ${info.messageId}`);
