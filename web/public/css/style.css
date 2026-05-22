@@ -485,12 +485,16 @@ form {
   justify-content: flex-end;
 }
 
+.nav-actions > * {
+  width: 112px;
+  min-height: 42px;
+}
+
 .welcome-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  min-height: 34px;
-  max-width: 240px;
   padding: 0 11px;
   color: var(--ink-soft);
   background: var(--surface-soft);
@@ -804,6 +808,7 @@ form {
   border-radius: 6px;
   box-shadow: var(--shadow);
   animation: toastIn 220ms ease-out both;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 @keyframes toastIn {
@@ -828,6 +833,7 @@ form {
 .toast-exit {
   opacity: 0;
   transform: translateY(-6px);
+  pointer-events: none;
 }
 
 .main-footer {

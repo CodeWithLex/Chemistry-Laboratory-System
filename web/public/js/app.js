@@ -111,15 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toast.innerHTML = `
       <svg class="svg-icon ${iconClass}" viewBox="0 0 24 24">${svgPath}</svg>
-      <span>${message}</span>
+      <span></span>
     `;
+    toast.querySelector('span').textContent = message;
 
     container.appendChild(toast);
 
     // Auto-remove after 4 seconds
     setTimeout(() => {
+      const removeToast = () => toast.remove();
+      toast.addEventListener('transitionend', removeToast, { once: true });
       toast.classList.add('toast-exit');
-      toast.addEventListener('transitionend', () => toast.remove());
+      setTimeout(removeToast, 350);
     }, 4000);
   }
 
