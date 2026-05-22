@@ -73,8 +73,6 @@ function probeConnectivity(host, port, timeout = 5000) {
 // This is a definitive fix for IPv6 ENETUNREACH errors on Render/Free-Tier.
 async function startServer() {
   let dbHost = requireEnv('SUPABASE_HOST');
-  let resolvedMailHost = requireEnv('MAIL_HOST');
-
   // Manual DNS Resolution to force IPv4
   if (isProduction || dbHost.includes('supabase.co') || dbHost.includes('supabase.com')) {
     try {
@@ -86,45 +84,6 @@ async function startServer() {
       console.warn(`[STARTUP WARNING] DB DNS resolution failed: ${dnsErr.message}`);
     }
   }
-
-  // Manual DNS Resolution for Mail Host (Fixes ETIMEDOUT on Render)
-  if (isProduction || resolvedMailHost.includes('google.com') || resolvedMailHost.includes('gmail.com')) {
-    try {
-      console.log(`[STARTUP] Resolving IPv4 for Mail host: ${resolvedMailHost}...`);
-      const { address } = await dns.lookup(resolvedMailHost, { family: 4 });
-      console.log(`[STARTUP] Mail resolved to IPv4: ${address}`);
-      resolvedMailHost = address;
-    } catch (dnsErr) {
-      console.warn(`[STARTUP WARNING] Mail DNS resolution failed: ${dnsErr.message}`);
-    }
-  }
-
-  // ─── Super-Hardened SMTP (Port 465 + Googlemail) ───
-  // Removing complex diagnostics in favor of a single, strict-SSL path.
-  // Port 465 uses full encryption from the start, often bypassing cloud firewalls better than 587.
-  const MAIL_USERNAME = requireEnv('MAIL_USERNAME');
-  const MAIL_PASSWORD = requireEnv('MAIL_PASSWORD');
-  
-  const createTransporter = (host, port) => nodemailer.createTransport({
-    host: host, // We use the hostname directly so SNI/TLS validates correctly against Google's certs
-    port: port,
-    secure: true, // MUST be true for port 465
-    auth: { user: MAIL_USERNAME, pass: MAIL_PASSWORD },
-    pool: true,
-    maxConnections: 1,
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 45000,
-    family: 4, // Force IPv4 routing
-    tls: { 
-      servername: host,
-      rejectUnauthorized: false
-    }
-  });
-
-  global.mailTransports = [
-    { label: 'hardened:googlemail:465', transporter: createTransporter('smtp.googlemail.com', 465) }
-  ];
 
   // ─── Database Pool ──────────────────────────────────────────────────────────
   pool = new Pool({
