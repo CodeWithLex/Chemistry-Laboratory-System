@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
@@ -29,8 +29,8 @@
           <div class="logo-animation">
             <svg class="svg-icon icon-lg icon-primary" viewBox="0 0 24 24"><path d="M6 18h8M3 22h18M14 10a4 4 0 1 0-8 0v4h8v-4zM9 14h2M11 22v-4M7 22v-4M8 11V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7M12 7h2"/></svg>
           </div>
-          <h1>ChemLab System</h1>
-          <p>Laboratory Borrowing Portal</p>
+          <h1>ChemLab Ledger</h1>
+          <p>Laboratory borrowing and apparatus availability.</p>
 
 
         <form id="login-form">
@@ -52,7 +52,7 @@
               <span class="input-icon">
                 <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
-              <input type="password" id="password" name="password" placeholder="••••••••" required
+              <input type="password" id="password" name="password" placeholder="Enter password" required
                 autocomplete="current-password">
             </div>
 
@@ -77,7 +77,7 @@
         </div>
 
         <div class="nav-actions">
-          <span id="group-welcome-badge" class="welcome-badge">👤 Loading...</span>
+          <span id="group-welcome-badge" class="welcome-badge">Loading group...</span>
           <button id="toggle-members-btn" class="btn-secondary">
             <svg class="svg-icon icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span>Members</span>
@@ -97,8 +97,8 @@
 
           <!-- Welcome card -->
           <div class="welcome-card glass">
-            <h1>Welcome back, <span id="group-name-title">Student Group</span>!</h1>
-            <p>Access inventory details and submit apparatus borrowing requests instantly.</p>
+            <h1>Borrowing desk for <span id="group-name-title">Student Group</span></h1>
+            <p>Check availability, submit requests, and keep your group record current.</p>
           </div>
 
           <!-- Currently Borrowing -->
@@ -172,10 +172,10 @@
           <div class="card glass">
             <h3>
               <svg class="svg-icon icon-md icon-warning" style="margin-right: 8px;" viewBox="0 0 24 24"><path d="M10 10V4a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v6h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h7Z"/></svg>
-              Pending Requests by Others
+              Borrowing Queue
             </h3>
 
-            <p class="section-desc">Items currently requested by other groups and awaiting approval.</p>
+            <p class="section-desc">Items requested by other groups and awaiting laboratory review.</p>
             <div id="others-pending-list" class="list-container">
               <!-- Dynamically populated -->
             </div>
@@ -183,8 +183,8 @@
 
           <!-- All Request History -->
           <div class="card glass">
-            <h3>All Requests</h3>
-            <p class="section-desc">The complete log of requests submitted by your group.</p>
+            <h3>Request Log</h3>
+            <p class="section-desc">The complete borrowing record for your group.</p>
             <div id="requests-history-list" class="list-container">
               <!-- Dynamically populated -->
             </div>
@@ -202,7 +202,7 @@
   <div id="members-modal" class="modal-overlay">
     <div class="modal-card glass">
       <div class="modal-header">
-        <h2>👥 Manage Group Members</h2>
+        <h2>Manage Group Members</h2>
         <button id="close-modal-btn" class="close-btn">&times;</button>
       </div>
       <div class="modal-body">

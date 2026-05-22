@@ -61,10 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showDashboard(groupData) {
     currentGroup = groupData;
-    groupWelcomeBadge.innerHTML = `
-      <svg class="svg-icon icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span>${groupData.groupName}</span>
-    `;
+    groupWelcomeBadge.textContent = groupData.groupName;
     groupNameTitle.textContent = groupData.groupName;
 
     
@@ -379,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Toggle Collapse on Unlisted Request Form
   unlistedToggle.addEventListener('click', () => {
     const isHidden = unlistedForm.classList.toggle('hidden');
-    unlistedToggle.querySelector('span').textContent = isHidden ? '▶ Request Unlisted Apparatus' : '▼ Request Unlisted Apparatus';
+    unlistedToggle.querySelector('span').textContent = isHidden ? 'Request Unlisted Apparatus' : 'Close Unlisted Apparatus';
   });
 
   // ==========================================
@@ -419,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
           div.className = 'member-row';
           div.innerHTML = `
             <span class="member-row-name">${escapeHtml(m.member_name)}</span>
-            <button class="btn-remove-member" data-id="${m.member_id}">✕ Remove</button>
+            <button class="btn-remove-member" data-id="${m.member_id}">Remove</button>
           `;
           membersListContainer.appendChild(div);
         });
