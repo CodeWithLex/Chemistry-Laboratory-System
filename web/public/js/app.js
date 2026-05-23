@@ -55,10 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const receiptGroupName = document.getElementById('receipt-group-name');
   const receiptDate = document.getElementById('receipt-date');
   const receiptActivityTitle = document.getElementById('receipt-activity-title');
+  const receiptQuickSelect = document.getElementById('receipt-quick-select');
 
   // Application State
   let currentGroup = null;
   let requestCart = [];
+  let currentGroupHistoryGroups = {};
 
 
   // Initialize App: check authentication
@@ -271,6 +273,16 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!groups[act]) groups[act] = [];
           groups[act].push(r);
         });
+        currentGroupHistoryGroups = groups;
+
+        // Populate Quick Select
+        receiptQuickSelect.innerHTML = '<option value="">Quick Select Activity...</option>';
+        Object.keys(groups).sort().forEach(actTitle => {
+          const opt = document.createElement('option');
+          opt.value = actTitle;
+          opt.textContent = actTitle;
+          receiptQuickSelect.appendChild(opt);
+        });
 
         Object.keys(groups).forEach(actTitle => {
           const items = groups[actTitle];
@@ -343,6 +355,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   closeReceiptModalBtn.addEventListener('click', () => receiptModal.classList.remove('active'));
   
+  // Quick Select Activity Event
+  receiptQuickSelect.addEventListener('change', (e) => {
+    const actTitle = e.target.value;
+    if (actTitle && currentGroupHistoryGroups && currentGroupHistoryGroups[actTitle]) {
+      openReceipt(actTitle, currentGroupHistoryGroups[actTitle]);
+      receiptQuickSelect.value = ''; // Reset select
+    }
+  });
+
   printReceiptBtn.addEventListener('click', () => {
     const originalTitle = document.title;
     const activityName = receiptActivityTitle.textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase();

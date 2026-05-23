@@ -223,8 +223,15 @@
 
           <!-- All Request History -->
           <div class="card glass">
-            <h3>Request Log</h3>
-            <p class="section-desc">The complete borrowing record for your group.</p>
+            <div class="card-header-flex">
+              <h3>Request Log</h3>
+              <div class="receipt-select-wrapper">
+                <select id="receipt-quick-select">
+                  <option value="">Quick Select Activity...</option>
+                </select>
+              </div>
+            </div>
+            <p class="section-desc">The complete borrowing record and receipts.</p>
             <div id="requests-history-list" class="list-container"></div>
           </div>
 

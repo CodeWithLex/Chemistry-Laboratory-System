@@ -622,7 +622,29 @@ form {
   background: var(--red);
 }
 
-/* Dashboard */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.receipt-select-wrapper select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: var(--green-soft);
+  color: var(--green-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.receipt-select-wrapper select:hover {
+  border-color: var(--green);
+}
 
 #dashboard-view {
   width: min(100%, 1220px);
