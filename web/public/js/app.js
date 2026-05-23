@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const othersPendingList = document.getElementById('others-pending-list');
   const requestsHistoryList = document.getElementById('requests-history-list');
   
+  // Bulk Request Cart Elements
+  const labActivityTitle = document.getElementById('lab-activity-title');
+  const requestCartContainer = document.getElementById('request-cart-container');
+  const requestCartItems = document.getElementById('request-cart-items');
+  const clearCartBtn = document.getElementById('clear-cart-btn');
+  const submitBulkBtn = document.getElementById('submit-bulk-request-btn');
+
   // Modal Elements
   const membersModal = document.getElementById('members-modal');
   const closeModalBtn = document.getElementById('close-modal-btn');
@@ -42,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Application State
   let currentGroup = null;
+  let requestCart = [];
+
 
   // Initialize App: check authentication
   checkAuth();
@@ -316,38 +325,105 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 7. Submit Normal Borrow Request
-  borrowForm.addEventListener('submit', async (e) => {
+  // 7. Bulk Request Cart Logic
+  borrowForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const submitBtn = borrowForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
+    const aid = apparatusSelect.value;
+    const qty = parseInt(borrowQty.value);
+    
+    if (!aid || isNaN(qty) || qty < 1) return;
 
-    const apparatus_id = apparatusSelect.value;
-    const qty = borrowQty.value;
+    // Get item name for the cart UI
+    const selectedOption = apparatusSelect.options[apparatusSelect.selectedIndex];
+    const appName = selectedOption.textContent.split(' (')[0];
+
+    // Check if already in cart
+    const existing = requestCart.find(item => item.apparatus_id === aid);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      requestCart.push({ apparatus_id: aid, qty, name: appName });
+    }
+
+    renderCart();
+    borrowForm.reset();
+  });
+
+  function renderCart() {
+    if (requestCart.length === 0) {
+      requestCartContainer.classList.add('hidden');
+      return;
+    }
+
+    requestCartContainer.classList.remove('hidden');
+    requestCartItems.innerHTML = '';
+
+    requestCart.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <div class="cart-item-info">
+          <span class="cart-item-name">${escapeHtml(item.name)}</span>
+          <span class="cart-item-qty">Quantity: ${item.qty}</span>
+        </div>
+        <button class="remove-item-btn" data-index="${index}">
+          <svg class="svg-icon icon-sm" viewBox="0 0 24 24">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      `;
+      requestCartItems.appendChild(div);
+    });
+
+    // Bind remove buttons
+    document.querySelectorAll('.remove-item-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(e.currentTarget.getAttribute('data-index'));
+        requestCart.splice(index, 1);
+        renderCart();
+      });
+    });
+  }
+
+  clearCartBtn.addEventListener('click', () => {
+    requestCart = [];
+    renderCart();
+  });
+
+  submitBulkBtn.addEventListener('click', async () => {
+    if (requestCart.length === 0) return;
+    
+    submitBulkBtn.disabled = true;
+    const activityTitle = labActivityTitle.value.trim();
 
     try {
       const res = await fetch('/api/requests/borrow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apparatus_id, qty })
+        body: JSON.stringify({ 
+          lab_activity: activityTitle,
+          items: requestCart 
+        })
       });
       const data = await res.json();
 
       if (res.ok && data.success) {
         showToast(data.message, 'success');
-        borrowForm.reset();
+        requestCart = [];
+        labActivityTitle.value = '';
+        renderCart();
         loadDashboardData();
       } else {
-        showToast(data.error || 'Failed to submit borrow request', 'error');
+        showToast(data.error || 'Failed to submit batch requests', 'error');
       }
     } catch (err) {
       showToast('Network error, please try again.', 'error');
     } finally {
-      submitBtn.disabled = false;
+      submitBulkBtn.disabled = false;
     }
   });
 
-  // 8. Submit Request for Unlisted Apparatus
+  // 8. Submit Request for Unlisted Apparatus (Updated for lab_activity)
   unlistedForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = unlistedForm.querySelector('button[type="submit"]');
@@ -355,12 +431,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const apparatus_name = unlistedName.value;
     const reason = unlistedReason.value;
+    const lab_activity = labActivityTitle.value.trim(); // Shared field
 
     try {
       const res = await fetch('/api/requests/unlisted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apparatus_name, reason })
+        body: JSON.stringify({ apparatus_name, reason, lab_activity })
       });
       const data = await res.json();
 

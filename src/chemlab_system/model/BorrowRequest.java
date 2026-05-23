@@ -11,6 +11,7 @@ public class BorrowRequest {
     private String apparatusName;
     private int qty;
     private String status;
+    private String labActivity;
     private Timestamp createdAt;
     private Timestamp approvedAt;
     private Timestamp updatedAt;
@@ -62,6 +63,14 @@ public class BorrowRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getLabActivity() {
+        return labActivity;
+    }
+
+    public void setLabActivity(String labActivity) {
+        this.labActivity = labActivity;
     }
 
     public Timestamp getCreatedAt() {

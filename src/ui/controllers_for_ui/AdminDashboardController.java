@@ -77,6 +77,8 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableColumn<BorrowRequest, String> colGroupName;
     @FXML
+    private TableColumn<BorrowRequest, String> colLabActivity;
+    @FXML
     private TableColumn<BorrowRequest, String> colApparatus;
     @FXML
     private TableColumn<BorrowRequest, Integer> colQty;
@@ -100,6 +102,8 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<BorrowRequest, Integer> colAllId;
     @FXML
     private TableColumn<BorrowRequest, String> colAllGroup;
+    @FXML
+    private TableColumn<BorrowRequest, String> colAllLabActivity;
     @FXML
     private TableColumn<BorrowRequest, String> colAllApparatus;
     @FXML
@@ -140,6 +144,8 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<BorrowRequest, Integer> colInUseId;
     @FXML
     private TableColumn<BorrowRequest, String> colInUseGroup;
+    @FXML
+    private TableColumn<BorrowRequest, String> colInUseLabActivity;
     @FXML
     private TableColumn<BorrowRequest, String> colInUseApparatus;
     @FXML
@@ -200,6 +206,8 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableColumn<ApparatusRequestItem, String> colArGroup;
     @FXML
+    private TableColumn<ApparatusRequestItem, String> colArLabActivity;
+    @FXML
     private TableColumn<ApparatusRequestItem, String> colArApparatus;
     @FXML
     private TableColumn<ApparatusRequestItem, String> colArReason;
@@ -216,6 +224,8 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<BorrowRequest, Integer> colHistId;
     @FXML
     private TableColumn<BorrowRequest, String> colHistGroup;
+    @FXML
+    private TableColumn<BorrowRequest, String> colHistLabActivity;
     @FXML
     private TableColumn<BorrowRequest, String> colHistApparatus;
     @FXML
@@ -278,6 +288,7 @@ public class AdminDashboardController implements Initializable {
 
         colRequestId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
         colGroupName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+        colLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
         colApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
@@ -289,6 +300,7 @@ public class AdminDashboardController implements Initializable {
         // Setup All Requests Table columns
         colAllId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
         colAllGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+        colAllLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
         colAllApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colAllQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colAllStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
@@ -316,6 +328,7 @@ public class AdminDashboardController implements Initializable {
         // Setup Currently In Use Table columns
         colInUseId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
         colInUseGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+        colInUseLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
         colInUseApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colInUseQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colInUseDate.setCellValueFactory(data -> {
@@ -330,6 +343,7 @@ public class AdminDashboardController implements Initializable {
         if (colHistId != null) {
             colHistId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
             colHistGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+            colHistLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
             colHistApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
             colHistQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
             colHistBorrowed.setCellValueFactory(data -> {
@@ -350,8 +364,9 @@ public class AdminDashboardController implements Initializable {
         }
 
         // Apply cell style to ensure text is visible (fix for CSS inheritance issues)
-        applyTextCellStyle(colRequestId, colGroupName, colApparatus, colQty, colStatus, colDate);
-        applyTextCellStyle(colAllId, colAllGroup, colAllApparatus, colAllQty, colAllStatus, colAllDate);
+        applyTextCellStyle(colRequestId, colGroupName, colLabActivity, colApparatus, colQty, colStatus, colDate);
+        applyTextCellStyle(colAllId, colAllGroup, colAllLabActivity, colAllApparatus, colAllQty, colAllStatus,
+                colAllDate);
         if (colAppRemaining != null) {
             applyTextCellStyle(colAppId, colAppName, colAppQty, colAppRemaining);
         } else {
@@ -362,9 +377,11 @@ public class AdminDashboardController implements Initializable {
         } else {
             applyTextCellStyle(colGroupId, colGrpName, colGrpUsername);
         }
-        applyTextCellStyle(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate, colInUseRemaining);
+        applyTextCellStyle(colInUseId, colInUseGroup, colInUseLabActivity, colInUseApparatus, colInUseQty, colInUseDate,
+                colInUseRemaining);
         if (colHistId != null) {
-            applyTextCellStyle(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed, colHistReturned,
+            applyTextCellStyle(colHistId, colHistGroup, colHistLabActivity, colHistApparatus, colHistQty,
+                    colHistBorrowed, colHistReturned,
                     colHistDuration);
         }
 
@@ -379,8 +396,9 @@ public class AdminDashboardController implements Initializable {
         }
 
         // Disable column reordering and sorting on all columns
-        disableReorderAndSort(colRequestId, colGroupName, colApparatus, colQty, colStatus, colDate);
-        disableReorderAndSort(colAllId, colAllGroup, colAllApparatus, colAllQty, colAllStatus, colAllDate);
+        disableReorderAndSort(colRequestId, colGroupName, colLabActivity, colApparatus, colQty, colStatus, colDate);
+        disableReorderAndSort(colAllId, colAllGroup, colAllLabActivity, colAllApparatus, colAllQty, colAllStatus,
+                colAllDate);
         if (colAppRemaining != null) {
             disableReorderAndSort(colAppId, colAppName, colAppQty, colAppRemaining);
         } else {
@@ -391,10 +409,12 @@ public class AdminDashboardController implements Initializable {
         } else {
             disableReorderAndSort(colGroupId, colGrpName, colGrpUsername);
         }
-        disableReorderAndSort(colInUseId, colInUseGroup, colInUseApparatus, colInUseQty, colInUseDate,
+        disableReorderAndSort(colInUseId, colInUseGroup, colInUseLabActivity, colInUseApparatus, colInUseQty,
+                colInUseDate,
                 colInUseRemaining);
         if (colHistId != null) {
-            disableReorderAndSort(colHistId, colHistGroup, colHistApparatus, colHistQty, colHistBorrowed,
+            disableReorderAndSort(colHistId, colHistGroup, colHistLabActivity, colHistApparatus, colHistQty,
+                    colHistBorrowed,
                     colHistReturned, colHistDuration);
         }
 
@@ -449,15 +469,18 @@ public class AdminDashboardController implements Initializable {
         // Setup Apparatus Requests Table columns
         if (apparatusRequestsTable != null && colArId != null) {
             colArId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
-            colArGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
-            colArApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
-            colArReason.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getReason()));
-            colArStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-            colArDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getCreatedAt()));
+            colArGroup.setCellValueFactory(new PropertyValueFactory<>("groupName"));
+            colArLabActivity.setCellValueFactory(new PropertyValueFactory<>("labActivity"));
+            colArApparatus.setCellValueFactory(new PropertyValueFactory<>("apparatusName"));
+            colArReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
+            colArStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+            colArDate.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
 
             apparatusRequestsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-            applyTextCellStyle(colArId, colArGroup, colArApparatus, colArReason, colArStatus, colArDate);
-            disableReorderAndSort(colArId, colArGroup, colArApparatus, colArReason, colArStatus, colArDate);
+            applyTextCellStyle(colArId, colArGroup, colArLabActivity, colArApparatus, colArReason, colArStatus,
+                    colArDate);
+            disableReorderAndSort(colArId, colArGroup, colArLabActivity, colArApparatus, colArReason, colArStatus,
+                    colArDate);
         }
 
         // Load initial data
@@ -641,7 +664,7 @@ public class AdminDashboardController implements Initializable {
         String sql = "SELECT r.request_id AS rid, " +
                 "g.group_name AS gname, " +
                 "a.item_name AS aname, " +
-                "r.qty AS rqty, r.status AS rstatus, r.created_at AS rdate " +
+                "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
@@ -673,6 +696,7 @@ public class AdminDashboardController implements Initializable {
                     req.setQty(rs.getInt("rqty"));
                     req.setStatus(rs.getString("rstatus"));
                     req.setCreatedAt(rs.getTimestamp("rdate"));
+                    req.setLabActivity(rs.getString("lactivity"));
                     list.add(req);
                 }
             }
@@ -701,7 +725,7 @@ public class AdminDashboardController implements Initializable {
         String sql = "SELECT r.request_id AS rid, " +
                 "g.group_name AS gname, " +
                 "a.item_name AS aname, " +
-                "r.qty AS rqty, r.status AS rstatus, r.created_at AS rdate " +
+                "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
@@ -733,6 +757,7 @@ public class AdminDashboardController implements Initializable {
                     req.setQty(rs.getInt("rqty"));
                     req.setStatus(rs.getString("rstatus"));
                     req.setCreatedAt(rs.getTimestamp("rdate"));
+                    req.setLabActivity(rs.getString("lactivity"));
                     list.add(req);
                 }
             }
@@ -826,7 +851,7 @@ public class AdminDashboardController implements Initializable {
         String sql = "SELECT r.request_id AS rid, " +
                 "g.group_name AS gname, " +
                 "a.item_name AS aname, " +
-                "r.qty AS rqty, r.updated_at AS rdate, " +
+                "r.qty AS rqty, r.updated_at AS rdate, r.lab_activity AS lactivity, " +
                 "GREATEST(a.current_quantity - (" +
                 "  SELECT COALESCE(SUM(r2.qty), 0) " +
                 "  FROM requests r2 " +
@@ -863,6 +888,7 @@ public class AdminDashboardController implements Initializable {
                     req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
                     req.setQty(rs.getInt("rqty"));
                     req.setUpdatedAt(rs.getTimestamp("rdate"));
+                    req.setLabActivity(rs.getString("lactivity"));
                     // store remaining in status temporarily for display column
                     req.setStatus("Remaining: " + rs.getInt("remaining_qty"));
                     list.add(req);
@@ -1141,7 +1167,7 @@ public class AdminDashboardController implements Initializable {
             return;
 
         String sql = "SELECT r.request_id AS rid, g.group_name AS gname, a.item_name AS aname, " +
-                "r.qty AS rqty, r.created_at AS created_at, r.updated_at AS updated_at " +
+                "r.qty AS rqty, r.created_at AS created_at, r.updated_at AS updated_at, r.lab_activity AS lactivity " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
@@ -1172,6 +1198,7 @@ public class AdminDashboardController implements Initializable {
                     req.setQty(rs.getInt("rqty"));
                     req.setCreatedAt(rs.getTimestamp("created_at"));
                     req.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    req.setLabActivity(rs.getString("lactivity"));
                     req.setStatus("Returned");
                     list.add(req);
                 }
@@ -1366,7 +1393,9 @@ public class AdminDashboardController implements Initializable {
         ObservableList<BorrowRequest> filteredList = pendingRequestsMaster.filtered(request -> {
             return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
                     request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
-                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword) ||
+                    (request.getLabActivity() != null
+                            && request.getLabActivity().toLowerCase().contains(lowerCaseKeyword));
         });
         requestsTable.setItems(filteredList);
     }
@@ -1383,7 +1412,9 @@ public class AdminDashboardController implements Initializable {
             return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
                     request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
                     request.getApparatusName().toLowerCase().contains(lowerCaseKeyword) ||
-                    request.getStatus().toLowerCase().contains(lowerCaseKeyword);
+                    request.getStatus().toLowerCase().contains(lowerCaseKeyword) ||
+                    (request.getLabActivity() != null
+                            && request.getLabActivity().toLowerCase().contains(lowerCaseKeyword));
         });
         allRequestsTable.setItems(filteredList);
     }
@@ -1399,7 +1430,9 @@ public class AdminDashboardController implements Initializable {
         ObservableList<BorrowRequest> filteredList = inUseMaster.filtered(request -> {
             return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
                     request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
-                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword) ||
+                    (request.getLabActivity() != null
+                            && request.getLabActivity().toLowerCase().contains(lowerCaseKeyword));
         });
         inUseTable.setItems(filteredList);
     }
@@ -1447,7 +1480,9 @@ public class AdminDashboardController implements Initializable {
         ObservableList<BorrowRequest> filteredList = historyMaster.filtered(request -> {
             return String.valueOf(request.getRequestId()).contains(lowerCaseKeyword) ||
                     request.getGroupName().toLowerCase().contains(lowerCaseKeyword) ||
-                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword);
+                    request.getApparatusName().toLowerCase().contains(lowerCaseKeyword) ||
+                    (request.getLabActivity() != null
+                            && request.getLabActivity().toLowerCase().contains(lowerCaseKeyword));
         });
         historyTable.setItems(filteredList);
     }
@@ -1531,15 +1566,18 @@ public class AdminDashboardController implements Initializable {
     public static class ApparatusRequestItem {
         private final int id;
         private final String groupName;
+        private final String labActivity;
         private final String apparatusName;
         private final String reason;
         private final String status;
         private final String createdAt;
 
-        public ApparatusRequestItem(int id, String groupName, String apparatusName, String reason, String status,
+        public ApparatusRequestItem(int id, String groupName, String labActivity, String apparatusName, String reason,
+                String status,
                 String createdAt) {
             this.id = id;
             this.groupName = groupName;
+            this.labActivity = labActivity;
             this.apparatusName = apparatusName;
             this.reason = reason;
             this.status = status;
@@ -1552,6 +1590,10 @@ public class AdminDashboardController implements Initializable {
 
         public String getGroupName() {
             return groupName;
+        }
+
+        public String getLabActivity() {
+            return labActivity;
         }
 
         public String getApparatusName() {
@@ -1659,7 +1701,8 @@ public class AdminDashboardController implements Initializable {
         if (conn == null)
             return;
 
-        String sql = "SELECT ar.ar_id, g.group_name, ar.apparatus_name, ar.reason, ar.status, ar.created_at " +
+        String sql = "SELECT ar.ar_id, g.group_name, ar.apparatus_name, ar.lab_activity, ar.reason, ar.status, ar.created_at "
+                +
                 "FROM apparatus_requests ar " +
                 "LEFT JOIN student_groups g ON ar.group_id = g.group_id " +
                 "ORDER BY ar.created_at DESC";
@@ -1670,6 +1713,7 @@ public class AdminDashboardController implements Initializable {
                 list.add(new ApparatusRequestItem(
                         rs.getInt("ar_id"),
                         rs.getString("group_name") != null ? rs.getString("group_name") : "Unknown",
+                        rs.getString("lab_activity") != null ? rs.getString("lab_activity") : "",
                         rs.getString("apparatus_name"),
                         rs.getString("reason") != null ? rs.getString("reason") : "",
                         rs.getString("status"),

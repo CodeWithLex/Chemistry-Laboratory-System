@@ -170,44 +170,56 @@ async function sendEmail(mailOptions, logLabel) {
   }
 }
 
-async function sendAdminNotification(groupName, apparatusName, quantity) {
+async function sendAdminNotification(groupName, items, labActivity) {
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding:10px;border:1px solid #ddd">${item.name}</td>
+      <td style="padding:10px;border:1px solid #ddd;text-align:center">${item.qty}</td>
+    </tr>
+  `).join('');
+
   const mailOptions = {
     from:    `"${MAIL_FROM_NAME}" <${MAIL_FROM}>`,
     to:       ADMIN_EMAIL,
-    subject: 'New Apparatus Borrow Request',
+    subject: `New Borrow Request: ${labActivity || 'General Laboratory'}`,
     html: `
       <div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;border:1px solid #e2e8f0;border-radius:8px;background:#f7fafc">
-        <h2 style="color:#2f855a;border-bottom:2px solid #2f855a;padding-bottom:8px">New Borrow Request</h2>
-        <p>A new apparatus borrow request has been submitted:</p>
-        <table style="border-collapse:collapse;margin:20px 0;width:100%">
-          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold;width:30%">Group:</td><td style="padding:10px;border:1px solid #ddd">${groupName}</td></tr>
-          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Apparatus:</td><td style="padding:10px;border:1px solid #ddd">${apparatusName}</td></tr>
-          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Quantity:</td><td style="padding:10px;border:1px solid #ddd">${quantity}</td></tr>
+        <h2 style="color:#2f855a;border-bottom:2px solid #2f855a;padding-bottom:8px">New Bulk Request</h2>
+        <p><strong>Group:</strong> ${groupName}</p>
+        ${labActivity ? `<p><strong>Activity:</strong> ${labActivity}</p>` : ''}
+        
+        <table style="border-collapse:collapse;margin:20px 0;width:100%;background:#ffffff">
+          <thead>
+            <tr style="background:#edf2f7"><th style="padding:10px;border:1px solid #ddd;text-align:left">Apparatus</th><th style="padding:10px;border:1px solid #ddd;width:80px">Qty</th></tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
         </table>
-        <p style="font-size:14px;color:#4a5568">Please review and approve/reject this request in the ChemLab desktop application.</p>
+        <p style="font-size:14px;color:#4a5568">Please review these requests in the ChemLab desktop application.</p>
       </div>`,
-    text: `New Borrow Request\nGroup: ${groupName}\nApparatus: ${apparatusName}\nQuantity: ${quantity}`,
+    text: `New Borrow Request\nGroup: ${groupName}\nActivity: ${labActivity || 'None'}\nItems:\n${items.map(i => `- ${i.name}: ${i.qty}`).join('\n')}`,
   };
-  return sendEmail(mailOptions, 'Borrow request notification');
+  return sendEmail(mailOptions, 'Bulk borrow request notification');
 }
 
-async function sendUnlistedNotification(groupName, apparatus_name, reason) {
+async function sendUnlistedNotification(groupName, apparatus_name, reason, labActivity) {
   const mailOptions = {
     from:    `"${MAIL_FROM_NAME}" <${MAIL_FROM}>`,
     to:       ADMIN_EMAIL,
-    subject: 'Action Required: Unlisted Apparatus Request',
+    subject: `Unlisted Apparatus Request: ${labActivity || 'General Laboratory'}`,
     html: `
       <div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;border:1px solid #e2e8f0;border-radius:8px;background:#fffaf0">
         <h2 style="color:#b7791f;border-bottom:2px solid #b7791f;padding-bottom:8px">Unlisted Apparatus Request</h2>
-        <p>A student group is requesting an item not currently in the inventory:</p>
+        <p><strong>Group:</strong> ${groupName}</p>
+        ${labActivity ? `<p><strong>Activity:</strong> ${labActivity}</p>` : ''}
         <table style="border-collapse:collapse;margin:20px 0;width:100%">
-          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold;width:30%">Group:</td><td style="padding:10px;border:1px solid #ddd">${groupName}</td></tr>
-          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Item Name:</td><td style="padding:10px;border:1px solid #ddd">${apparatus_name}</td></tr>
+          <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold;width:30%">Item Name:</td><td style="padding:10px;border:1px solid #ddd">${apparatus_name}</td></tr>
           <tr><td style="padding:10px;border:1px solid #ddd;font-weight:bold">Reason:</td><td style="padding:10px;border:1px solid #ddd">${reason || 'No reason provided'}</td></tr>
         </table>
-        <p style="font-size:14px;color:#4a5568">Please review this in the "Apparatus Requests" tab of the ChemLab desktop application.</p>
+        <p style="font-size:14px;color:#4a5568">Please review this in the apparatus requests tab of the ChemLab desktop application.</p>
       </div>`,
-    text: `Unlisted Apparatus Request\nGroup: ${groupName}\nItem: ${apparatus_name}\nReason: ${reason}`,
+    text: `Unlisted Apparatus Request\nGroup: ${groupName}\nActivity: ${labActivity || 'None'}\nItem: ${apparatus_name}\nReason: ${reason}`,
   };
   return sendEmail(mailOptions, 'Unlisted apparatus notification');
 }
@@ -412,76 +424,84 @@ app.get('/api/requests/others-pending', requireAuth, async (req, res) => {
   }
 });
 
-// Submit a borrow request
+// Submit bulk borrow requests
 app.post('/api/requests/borrow', requireAuth, async (req, res) => {
-  const { apparatus_id, qty } = req.body;
-  const quantity = parseInt(qty);
+  const { lab_activity, items } = req.body;
 
-  if (!apparatus_id || isNaN(quantity) || quantity < 1) {
-    return res.status(400).json({ error: 'Invalid apparatus or quantity.' });
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'No items provided in request.' });
   }
 
+  const client = await pool.connect();
   try {
-    // 1. Duplicate check
-    const dupCheck = await pool.query(
-      "SELECT COUNT(*) AS cnt FROM requests WHERE group_id = $1 AND apparatus_id = $2 AND status IN ('Pending','Approved')",
-      [req.session.groupId, parseInt(apparatus_id)]
-    );
-    if (parseInt(dupCheck.rows[0].cnt) > 0) {
-      return res.status(400).json({ code: 'duplicate', error: 'You already have a pending or approved request for this apparatus.' });
+    await client.query('BEGIN');
+    const insertedItems = [];
+
+    for (const item of items) {
+      const aid = parseInt(item.apparatus_id);
+      const quantity = parseInt(item.qty);
+
+      if (isNaN(aid) || isNaN(quantity) || quantity < 1) {
+        throw new Error(`Invalid data for item correctly formatted.`);
+      }
+
+      // Check current availability
+      const availRes = await client.query(
+        `SELECT item_name, (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending')),0))::int AS available
+         FROM apparatus WHERE apparatus_id = $1`,
+        [aid]
+      );
+
+      if (availRes.rows.length === 0) {
+        throw new Error(`Apparatus ID ${aid} not found.`);
+      }
+
+      const { item_name, available } = availRes.rows[0];
+      if (quantity > available) {
+        throw new Error(`Quantity ${quantity} for ${item_name} exceeds availability (${available}).`);
+      }
+
+      // Insert
+      await client.query(
+        "INSERT INTO requests (group_id, apparatus_id, qty, status, lab_activity) VALUES ($1, $2, $3, 'Pending', $4)",
+        [req.session.groupId, aid, quantity, lab_activity ? lab_activity.trim() : null]
+      );
+      
+      insertedItems.push({ name: item_name, qty: quantity });
     }
 
-    // 2. Availability check
-    const availResult = await pool.query(
-      `SELECT (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending')), 0))::int AS real_available
-       FROM apparatus WHERE apparatus_id = $2`,
-      [parseInt(apparatus_id), parseInt(apparatus_id)]
-    );
-    if (availResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Apparatus not found.' });
-    }
-    const realAvailable = availResult.rows[0].real_available;
-    if (quantity > realAvailable) {
-      return res.status(400).json({ code: 'exceeds_qty', error: `Cannot request that many. Only ${realAvailable} items are available.` });
-    }
+    await client.query('COMMIT');
+    
+    // Notify admin
+    sendAdminNotification(req.session.groupName, insertedItems, lab_activity);
 
-    // 3. Insert request
-    await pool.query(
-      "INSERT INTO requests (group_id, apparatus_id, qty, status) VALUES ($1, $2, $3, 'Pending')",
-      [req.session.groupId, parseInt(apparatus_id), quantity]
-    );
-
-    // 4. Send admin notification (fire-and-forget — does not block response)
-    const appResult = await pool.query('SELECT item_name FROM apparatus WHERE apparatus_id = $1', [apparatus_id]);
-    sendAdminNotification(req.session.groupName, appResult.rows[0].item_name, quantity);
-
-    res.json({ success: true, message: 'Request submitted! Wait for approval.' });
-
+    res.json({ success: true, message: 'All requests submitted successfully!' });
   } catch (error) {
-    console.error('[API] Borrow request error:', error.message);
-    res.status(500).json({ error: 'An error occurred while submitting your request.' });
+    await client.query('ROLLBACK');
+    console.error('[API] Bulk borrow error:', error.message);
+    res.status(400).json({ error: error.message || 'Failed to submit batch requests.' });
+  } finally {
+    client.release();
   }
 });
 
-// Submit a request for unlisted apparatus
+// Update unlisted to support lab_activity
 app.post('/api/requests/unlisted', requireAuth, async (req, res) => {
-  const { apparatus_name, reason } = req.body;
+  const { apparatus_name, reason, lab_activity } = req.body;
   if (!apparatus_name || !apparatus_name.trim()) {
     return res.status(400).json({ error: 'Apparatus name is required.' });
   }
   try {
     await pool.query(
-      'INSERT INTO apparatus_requests (group_id, apparatus_name, reason) VALUES ($1, $2, $3)',
-      [req.session.groupId, apparatus_name.trim(), reason ? reason.trim() : '']
+      'INSERT INTO apparatus_requests (group_id, apparatus_name, reason, lab_activity) VALUES ($1, $2, $3, $4)',
+      [req.session.groupId, apparatus_name.trim(), reason ? reason.trim() : '', lab_activity ? lab_activity.trim() : null]
     );
 
-    // Send admin notification
-    sendUnlistedNotification(req.session.groupName, apparatus_name.trim(), reason);
-
-    res.json({ success: true, message: 'Your apparatus request has been submitted for admin review.' });
+    sendUnlistedNotification(req.session.groupName, apparatus_name.trim(), reason, lab_activity);
+    res.json({ success: true, message: 'Unlisted request submitted.' });
   } catch (error) {
-    console.error('[API] Unlisted request error:', error.message);
-    res.status(500).json({ error: 'Failed to submit request.' });
+    console.error('[API] Unlisted error:', error.message);
+    res.status(500).json({ error: 'Database error.' });
   }
 });
 

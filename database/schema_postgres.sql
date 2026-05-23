@@ -46,6 +46,7 @@ CREATE TABLE requests (
     apparatus_id INT REFERENCES apparatus(apparatus_id),
     qty         INT,
     status      request_status DEFAULT 'Pending',
+    lab_activity VARCHAR(255) NULL,
     created_at  TIMESTAMP DEFAULT NOW(),
     approved_at TIMESTAMP NULL,
     updated_at  TIMESTAMP DEFAULT NOW()
@@ -78,6 +79,7 @@ CREATE TABLE apparatus_requests (
     apparatus_name VARCHAR(200) NOT NULL,
     reason         TEXT,
     status         apparatus_request_status DEFAULT 'Pending',
+    lab_activity   VARCHAR(255) NULL,
     created_at     TIMESTAMP DEFAULT NOW()
 );
 

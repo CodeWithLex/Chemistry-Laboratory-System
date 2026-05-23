@@ -10,7 +10,7 @@ public class RequestDAO {
     // Get all pending requests
     public static List<BorrowRequest> getPendingRequests() {
         List<BorrowRequest> list = new ArrayList<>();
-        String sql = "SELECT r.request_id, g.group_name, a.item_name, r.qty, r.status, r.created_at " +
+        String sql = "SELECT r.request_id, g.group_name, a.item_name, r.qty, r.status, r.lab_activity, r.created_at " +
                 "FROM requests r " +
                 "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
                 "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
@@ -27,6 +27,7 @@ public class RequestDAO {
                 req.setApparatusName(rs.getString("item_name"));
                 req.setQty(rs.getInt("qty"));
                 req.setStatus(rs.getString("status"));
+                req.setLabActivity(rs.getString("lab_activity"));
                 req.setCreatedAt(rs.getTimestamp("created_at"));
                 list.add(req);
             }
