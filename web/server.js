@@ -387,7 +387,7 @@ app.get('/api/apparatus', requireAuth, async (req, res) => {
 app.get('/api/requests/my', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT r.request_id, r.qty, r.status, r.created_at, a.item_name
+      `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, a.item_name
        FROM requests r
        JOIN apparatus a ON r.apparatus_id = a.apparatus_id
        WHERE r.group_id = $1

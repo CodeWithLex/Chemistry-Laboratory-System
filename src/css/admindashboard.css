@@ -1,288 +1,330 @@
-/* Admin Dashboard Styles */
+/* Admin Dashboard - Premium Design System */
 
-/* Root */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 .dashboard-root {
-    -fx-background-color: #f0f2f5;
+    -fx-background-color: #f8fafc; /* Modern off-white */
+    -fx-font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui;
 }
 
-/* Header Bar */
+/* --- Colors --- */
+/* Primary Green: #1a5d1a */
+/* Secondary: #64748b (Slate) */
+/* Border: #e2e8f0 */
+
+/* --- Sidebar --- */
+.sidebar {
+    -fx-background-color: #0f2e0f; /* Even darker, deeper forest green for better depth */
+    -fx-min-width: 250;
+    -fx-max-width: 250;
+    -fx-padding: 0;
+}
+
+.sidebar-header {
+    -fx-padding: 30 24;
+    -fx-alignment: center-left;
+}
+
+.sidebar-logo-text {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+}
+
+.sidebar-nav-container {
+    -fx-padding: 10 16;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94a3b8; /* Slate light */
+    -fx-alignment: center-left;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-width: 218;
+    -fx-border-color: transparent transparent transparent transparent;
+    -fx-border-width: 0 0 0 4;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-text-fill: #f8fafc;
+}
+
+.nav-button-active {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: transparent transparent transparent #10b981; /* Emerald indicator */
+    -fx-font-weight: 600;
+}
+
+.sidebar-footer {
+    -fx-padding: 20;
+    -fx-alignment: bottom-center;
+}
+
+/* --- Top Header / Workspace Area --- */
+.main-workspace {
+    -fx-background-color: transparent;
+}
+
 .header-bar {
-    -fx-background-color: linear-gradient(to right, #1a5d1a, #2e7d32);
-    -fx-min-height: 55;
+    -fx-background-color: white;
+    -fx-min-height: 64;
+    -fx-padding: 0 32;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 1, 0, 0, 1);
 }
 
 .header-title {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
 }
 
 .welcome-label {
-    -fx-text-fill: #c8e6c9;
-    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 14px;
 }
 
 .logout-button {
-    -fx-background-color: rgba(255,255,255,0.15);
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-padding: 8 18;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-cursor: hand;
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #ef4444;
+    -fx-padding: 8 16;
+    -fx-background-radius: 8;
+    -fx-font-weight: 600;
 }
 
 .logout-button:hover {
-    -fx-background-color: rgba(255,255,255,0.3);
+    -fx-background-color: #fecaca;
 }
 
-/* Stats Row */
+/* --- Content Content Area --- */
+.content-area {
+    -fx-padding: 32;
+}
+
+/* --- Stat Cards --- */
 .stats-row {
-    -fx-background-color: #f0f2f5;
+    -fx-padding: 0 0 32 0;
 }
 
-/* Stats Cards */
-.stat-card, .stat-card-green, .stat-card-blue, .stat-card-purple {
-    -fx-background-color: #ffffff;
-    -fx-background-radius: 10;
-    -fx-padding: 15;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
-    -fx-min-width: 180;
-    -fx-min-height: 90;
-}
-
-.stat-card {
-    -fx-border-color: #ff9800;
-    -fx-border-width: 0 0 3 0;
-    -fx-border-radius: 10;
-}
-
-.stat-card-green {
-    -fx-border-color: #4caf50;
-    -fx-border-width: 0 0 3 0;
-    -fx-border-radius: 10;
-}
-
-.stat-card-blue {
-    -fx-border-color: #2196f3;
-    -fx-border-width: 0 0 3 0;
-    -fx-border-radius: 10;
-}
-
-.stat-card-purple {
-    -fx-border-color: #9c27b0;
-    -fx-border-width: 0 0 3 0;
-    -fx-border-radius: 10;
-}
-
-.stat-number {
-    -fx-text-fill: #333333;
-    -fx-font-size: 32px;
-    -fx-font-weight: bold;
-}
-
-.stat-label {
-    -fx-text-fill: #888888;
-    -fx-font-size: 12px;
-}
-
-/* Tabs */
-.dashboard-tabs .tab-header-area .tab-header-background {
-    -fx-background-color: #ffffff;
-}
-
-.dashboard-tabs .tab {
-    -fx-background-color: #e8e8e8;
-    -fx-padding: 8 20;
-}
-
-.dashboard-tabs .tab:selected {
-    -fx-background-color: #2e7d32;
-}
-
-.dashboard-tabs .tab .tab-label {
-    -fx-text-fill: #666666;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-}
-
-.dashboard-tabs .tab:selected .tab-label {
-    -fx-text-fill: #ffffff;
-}
-
-/* Action Buttons */
-.action-button {
-    -fx-background-color: #f5f5f5;
-    -fx-border-color: #cccccc;
+.stat-card-base {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 10, 0, 0, 4);
+    -fx-min-width: 220;
+    -fx-border-color: #f1f5f9;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
-    -fx-background-radius: 5;
-    -fx-padding: 8 16;
-    -fx-font-size: 12px;
-    -fx-cursor: hand;
+    -fx-border-radius: 16;
+    -fx-transition: 0.3s;
 }
 
-.action-button:hover {
-    -fx-background-color: #e0e0e0;
+.stat-card-base:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 15, 0, 0, 6);
+    -fx-translate-y: -2;
 }
 
-.approve-button {
-    -fx-background-color: #4caf50;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    -fx-padding: 8 18;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-cursor: hand;
-}
-
-.approve-button:hover {
-    -fx-background-color: #388e3c;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 6, 0, 0, 2);
-}
-
-.reject-button {
-    -fx-background-color: #f44336;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    -fx-padding: 8 18;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-cursor: hand;
-}
-
-.reject-button:hover {
-    -fx-background-color: #d32f2f;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 6, 0, 0, 2);
-}
-
-.returned-button {
-    -fx-background-color: #2196f3;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    -fx-padding: 8 18;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-cursor: hand;
-}
-
-.returned-button:hover {
-    -fx-background-color: #1976d2;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 6, 0, 0, 2);
-}
-
-/* Table View */
-.table-view {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #e0e0e0;
-    -fx-border-radius: 5;
-    -fx-background-radius: 5;
-}
-
-.table-view .column-header {
-    -fx-background-color: #f5f5f5;
-    -fx-border-color: #e0e0e0;
-    -fx-padding: 8;
-}
-
-.table-view .column-header .label {
-    -fx-text-fill: #333333;
-    -fx-font-weight: bold;
-    -fx-font-size: 12px;
-}
-
-.table-row-cell {
-    -fx-border-color: transparent transparent #f0f0f0 transparent;
-    -fx-padding: 2 0;
-    -fx-cell-size: 40;
-}
-
-.table-row-cell:selected {
-    -fx-background-color: #e8f5e9;
-}
-
-.table-row-cell:selected .text {
-    -fx-fill: #333333;
-}
-
-/* Table Cell Text - ensure text is visible */
-.table-cell {
-    -fx-text-fill: #333333;
-    -fx-font-size: 13px;
-    -fx-alignment: CENTER-LEFT;
-    -fx-padding: 4 8;
-    -fx-text-overrun: ellipsis;
-}
-
-.table-cell .text {
-    -fx-fill: #333333;
-    -fx-font-size: 13px;
-}
-
-.table-view .table-row-cell .table-cell {
-    -fx-text-fill: #333333;
-    -fx-font-size: 13px;
-}
-
-/* Add Group Button */
-.add-group-button {
-    -fx-background-color: #2e7d32;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    -fx-font-size: 12px;
-    -fx-padding: 8 18;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-cursor: hand;
-}
-
-.add-group-button:hover {
-    -fx-background-color: #1a5d1a;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 6, 0, 0, 2);
-}
-
-/* Feature 4: Date filter controls */
-.table-date-picker {
-    -fx-background-radius: 5;
-}
-
-.table-date-picker .text-field {
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
-    -fx-border-color: #cccccc;
-    -fx-padding: 6 10;
-}
-
-.clear-filter-button {
-    -fx-background-color: #f5f5f5;
-    -fx-border-color: #cccccc;
-    -fx-border-width: 1;
-    -fx-border-radius: 5;
-    -fx-background-radius: 5;
-    -fx-padding: 8 14;
-    -fx-font-size: 12px;
-    -fx-cursor: hand;
-}
-
-.clear-filter-button:hover {
-    -fx-background-color: #e0e0e0;
-}
-
-/* Empty-state placeholder shown when a TableView has no rows */
-.table-placeholder {
-    -fx-text-fill: #9e9e9e;
-    -fx-font-size: 14px;
-    -fx-font-style: italic;
-    -fx-padding: 30;
+.stat-icon-bg {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-radius: 12;
     -fx-alignment: center;
 }
 
-/* SVG Graphics Styling */
-.button .graphic, .label .graphic {
-    -fx-padding: 0 8 0 0;
+.icon-pending { -fx-background-color: #fff7ed; }
+.icon-approved { -fx-background-color: #f0fdf4; }
+.icon-inventory { -fx-background-color: #eff6ff; }
+.icon-users { -fx-background-color: #faf5ff; }
+
+.stat-number {
+    -fx-text-fill: #0f172a;
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
 }
 
-SVGPath {
-    -fx-smooth: true;
+.stat-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+}
+
+.stat-trend {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.trend-up { -fx-text-fill: #10b981; }
+
+/* --- Table Styling - The Notion Look --- */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-padding: 12 8;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+    -fx-alignment: center-left;
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0;
+    -fx-cell-size: 52;
+    -fx-border-color: transparent transparent #f1f5f9 transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #fafafa;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f1f5f9;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #f0f9ff;
+}
+
+.table-cell {
+    -fx-border-color: transparent;
+    -fx-text-fill: #334155;
+    -fx-font-size: 14px;
+    -fx-padding: 0 12;
+}
+
+/* --- Modern Tabs (Content Switcher) --- */
+.dashboard-tabs {
+    -fx-tab-max-height: 0;
+}
+
+.dashboard-tabs .tab-header-area {
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+    -fx-opacity: 0;
+    -fx-visibility: hidden;
+}
+
+/* --- Filter Bar --- */
+.filter-bar {
+    -fx-background-color: white;
+    -fx-padding: 16 24;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 1 0 1;
+}
+
+/* --- Forms & Controls --- */
+.text-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+    -fx-transition: 0.2s;
+}
+
+.text-field:focused {
+    -fx-border-color: #2e7d32;
+    -fx-effect: dropshadow(gaussian, rgba(46,125,50,0.1), 4, 0, 0, 0);
+}
+
+.action-button {
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-font-weight: 600;
+}
+
+.approve-button {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+}
+
+.reject-button {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+}
+
+/* Graphics and Icons */
+.button .graphic {
+    -fx-padding: 0 6 0 0;
+}
+
+/* --- Charts & Analytics --- */
+.chart {
+    -fx-padding: 10;
+}
+
+.chart-content {
+    -fx-padding: 10;
+}
+
+.chart-title {
+    -fx-text-fill: #1e293b;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.axis {
+    -fx-tick-label-fill: #64748b;
+    -fx-tick-label-font-size: 11px;
+}
+
+.axis-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 10 0 0 0;
+}
+
+.chart-legend-item {
+    -fx-text-fill: #475569;
+    -fx-font-size: 12px;
+}
+
+/* Bar Chart Colors (Emerald Theme) */
+.default-color0.chart-bar { -fx-bar-fill: #10b981; }
+.default-color1.chart-bar { -fx-bar-fill: #3b82f6; }
+.default-color2.chart-bar { -fx-bar-fill: #a855f7; }
+
+/* Line Chart Colors */
+.default-color0.chart-series-line { -fx-stroke: #10b981; }
+.default-color0.chart-line-symbol { -fx-background-color: #10b981, white; }
+
+/* Pie Chart Colors */
+.default-color0.chart-pie { -fx-pie-color: #3b82f6; } /* In Use */
+.default-color1.chart-pie { -fx-pie-color: #10b981; } /* Available */
+.default-color2.chart-pie { -fx-pie-color: #f59e0b; } /* Damaged/Service */
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
+    -fx-stroke: #f1f5f9;
 }

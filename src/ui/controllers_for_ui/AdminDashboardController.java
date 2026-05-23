@@ -16,6 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.shape.SVGPath;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
@@ -39,6 +46,13 @@ import javafx.util.Duration;
 import chemlab_system.database.Connector_ChemSystem;
 import chemlab_system.model.BorrowRequest;
 import chemlab_system.util.EmailService;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.shape.SVGPath;
 
 /**
  * FXML Controller class for Admin Dashboard
@@ -54,6 +68,31 @@ public class AdminDashboardController implements Initializable {
     private Button logoutBtn;
 
     // Stats
+    @FXML
+    private Label headerTitleLabel;
+
+    // Sidebar Navigation Buttons
+    @FXML
+    private Button sideNavDashboard;
+    @FXML
+    private Button sideNavPending;
+    @FXML
+    private Button sideNavClaim;
+    @FXML
+    private Button sideNavInUse;
+    @FXML
+    private Button sideNavHistory;
+    @FXML
+    private Button sideNavInventory;
+    @FXML
+    private Button sideNavGroups;
+    @FXML
+    private Button sideNavSpecial;
+    @FXML
+    private Button sideNavAnalytics;
+
+    private List<Button> navButtons;
+
     @FXML
     private Label pendingCountLabel;
     @FXML
@@ -124,6 +163,26 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<ApparatusItem, Integer> colAppQty;
     @FXML
     private TableColumn<ApparatusItem, Integer> colAppRemaining;
+
+    // Analytics Components
+    @FXML
+    private Label mostRequestedLabel;
+    @FXML
+    private Label leastRequestedLabel;
+    @FXML
+    private Label peakActivityLabel;
+    @FXML
+    private BarChart<String, Number> apparatusUsageChart;
+    @FXML
+    private PieChart stockPieChart;
+    @FXML
+    private LineChart<String, Number> activityLineChart;
+    @FXML
+    private DatePicker analyticsStartDatePicker;
+    @FXML
+    private DatePicker analyticsEndDatePicker;
+    @FXML
+    private Label lastUpdatedLabel;
 
     // Student Groups Table
     @FXML
@@ -278,6 +337,7 @@ public class AdminDashboardController implements Initializable {
     // Logged in admin name
     private String adminFullName = "Admin";
     private Timeline autoRefreshTimeline;
+    private Timeline heartbeatTimeline;
 
     /**
      * Sets the admin's full name (called from LoginPageController after login).
@@ -291,6 +351,12 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Initialize Navigation Buttons List
+        navButtons = java.util.Arrays.asList(
+                sideNavDashboard, sideNavPending, sideNavClaim, sideNavInUse,
+                sideNavHistory, sideNavInventory, sideNavGroups, sideNavSpecial,
+                sideNavAnalytics);
+
         // Setup Pending Requests Table columns
         // Checkbox column for batch selection
         if (colSelect != null) {
@@ -601,6 +667,11 @@ public class AdminDashboardController implements Initializable {
             }
         });
 
+        // Initialize Data
+        loadPendingRequests();
+
+        // Start Auto-Activity Heartbeat (Keep Supabase Active)
+        startHeartbeat();
         startAutoRefresh();
     }
 
@@ -1507,6 +1578,55 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
+    private void switchTab(ActionEvent event) {
+        Button clickedBtn = (Button) event.getSource();
+        String text = clickedBtn.getText();
+
+        headerTitleLabel.setText(text);
+
+        // Update active button styling
+        for (Button btn : navButtons) {
+            btn.getStyleClass().remove("nav-button-active");
+        }
+        clickedBtn.getStyleClass().add("nav-button-active");
+
+        // Switch TabPane selection
+        if (tabPane == null)
+            return;
+        switch (text) {
+            case "Overview":
+                // Map Overview to All Requests (Index 2) for a broader visual summary
+                tabPane.getSelectionModel().select(2);
+                break;
+            case "Pending Requests":
+                tabPane.getSelectionModel().select(0);
+                break;
+            case "To Be Claimed":
+                tabPane.getSelectionModel().select(1);
+                break;
+            case "Currently In Use":
+                tabPane.getSelectionModel().select(3);
+                break;
+            case "Borrowing History":
+                tabPane.getSelectionModel().select(4);
+                break;
+            case "Apparatus Inventory":
+                tabPane.getSelectionModel().select(6);
+                break;
+            case "Student Groups":
+                tabPane.getSelectionModel().select(5);
+                break;
+            case "System Analytics":
+                tabPane.getSelectionModel().select(8); // Index of System Analytics tab
+                loadAnalyticsData();
+                break;
+            case "Apparatus Requests":
+                tabPane.getSelectionModel().select(7);
+                break;
+        }
+    }
+
+    @FXML
     public void clearInUseSearch(ActionEvent event) {
         if (inUseSearchField != null) {
             inUseSearchField.clear();
@@ -2059,5 +2179,131 @@ public class AdminDashboardController implements Initializable {
         if (ts == null)
             return "";
         return new java.text.SimpleDateFormat("MMM dd, yyyy hh:mm a").format(ts);
+    }
+
+    @FXML
+    private void refreshAnalytics(ActionEvent event) {
+        loadAnalyticsData();
+        lastUpdatedLabel
+                .setText("Last updated: " + new java.text.SimpleDateFormat("hh:mm:ss a").format(new java.util.Date()));
+    }
+
+    private void loadAnalyticsData() {
+        if (apparatusUsageChart == null)
+            return;
+
+        LocalDate start = analyticsStartDatePicker.getValue();
+        LocalDate end = analyticsEndDatePicker.getValue();
+
+        String dateFilter = "";
+        if (start != null && end != null) {
+            dateFilter = " WHERE created_at::date BETWEEN '" + start + "' AND '" + end + "' ";
+        } else if (start != null) {
+            dateFilter = " WHERE created_at::date >= '" + start + "' ";
+        } else if (end != null) {
+            dateFilter = " WHERE created_at::date <= '" + end + "' ";
+        }
+
+        // 1. Load Apparatus Usage Chart (Top 8)
+        XYChart.Series<String, Number> usageSeries = new XYChart.Series<>();
+        usageSeries.setName("Requests");
+
+        String usageSql = "SELECT a.item_name, COUNT(*) as count FROM requests r " +
+                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                dateFilter +
+                " GROUP BY a.item_name ORDER BY count DESC LIMIT 8";
+
+        try (Connection conn = Connector_ChemSystem.getConnection();
+                PreparedStatement ps = conn.prepareStatement(usageSql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                usageSeries.getData().add(new XYChart.Data<>(rs.getString("item_name"), rs.getInt("count")));
+            }
+            apparatusUsageChart.getData().clear();
+            apparatusUsageChart.getData().add(usageSeries);
+
+            if (!usageSeries.getData().isEmpty()) {
+                mostRequestedLabel.setText(usageSeries.getData().get(0).getXValue());
+            } else {
+                mostRequestedLabel.setText("No Data");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 2. Load Stock Composition Pie Chart
+        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+        String invSql = "SELECT SUM(current_quantity) as available FROM apparatus";
+        String inUseSql = "SELECT SUM(qty) as in_use FROM requests WHERE status = 'Approved'";
+
+        try (Connection conn = Connector_ChemSystem.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(invSql);
+                    ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    pieData.add(new PieChart.Data("Available", rs.getInt("available")));
+            }
+            try (PreparedStatement ps = conn.prepareStatement(inUseSql);
+                    ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    pieData.add(new PieChart.Data("In Use", rs.getInt("in_use")));
+            }
+            stockPieChart.setData(pieData);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 3. Activity Trends
+        XYChart.Series<String, Number> trendSeries = new XYChart.Series<>();
+        String trendSql = "SELECT created_at::date as day, COUNT(*) as count FROM requests " +
+                (dateFilter.isEmpty() ? " WHERE created_at > NOW() - INTERVAL '30 days' " : dateFilter) +
+                " GROUP BY day ORDER BY day ASC";
+
+        try (Connection conn = Connector_ChemSystem.getConnection();
+                PreparedStatement ps = conn.prepareStatement(trendSql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                trendSeries.getData().add(new XYChart.Data<>(rs.getString("day"), rs.getInt("count")));
+            }
+            activityLineChart.getData().clear();
+            activityLineChart.getData().add(trendSeries);
+            peakActivityLabel.setText(usageSeries.getData().isEmpty() ? "None" : "Active");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Least Requested
+        String leastSql = "SELECT a.item_name, COUNT(*) as count FROM requests r " +
+                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                dateFilter +
+                " GROUP BY a.item_name ORDER BY count ASC LIMIT 1";
+        try (Connection conn = Connector_ChemSystem.getConnection();
+                PreparedStatement ps = conn.prepareStatement(leastSql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next())
+                leastRequestedLabel.setText(rs.getString("item_name"));
+            else
+                leastRequestedLabel.setText("No Data");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    private void startHeartbeat() {
+        heartbeatTimeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> {
+            new Thread(() -> {
+                try (Connection conn = Connector_ChemSystem.getConnection();
+                        PreparedStatement ps = conn.prepareStatement("SELECT record_heartbeat()")) {
+                    ps.executeQuery();
+                    System.out.println("Auto-Activity: Heartbeat recorded.");
+                } catch (SQLException ex) {
+                    System.err.println("Auto-Activity Error: " + ex.getMessage());
+                }
+            }).start();
+        }));
+        heartbeatTimeline.setCycleCount(Timeline.INDEFINITE);
+        heartbeatTimeline.play();
+
+        // Initial heartbeat
+        refreshAnalytics(null);
     }
 }

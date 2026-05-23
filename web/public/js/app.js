@@ -47,6 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const membersCountText = document.getElementById('members-count');
   const membersListContainer = document.getElementById('members-list');
 
+  // Receipt Modal Elements
+  const receiptModal = document.getElementById('receipt-modal');
+  const closeReceiptModalBtn = document.getElementById('close-receipt-modal-btn');
+  const printReceiptBtn = document.getElementById('print-receipt-btn');
+  const receiptItemsBody = document.getElementById('receipt-items-body');
+  const receiptGroupName = document.getElementById('receipt-group-name');
+  const receiptDate = document.getElementById('receipt-date');
+  const receiptActivityTitle = document.getElementById('receipt-activity-title');
+
   // Application State
   let currentGroup = null;
   let requestCart = [];
@@ -251,26 +260,59 @@ document.addEventListener('DOMContentLoaded', () => {
         borrowingCard.classList.add('hidden');
       }
 
-      // Populate Request History
+      // Populate Request History (Grouped by Lab Activity)
       if (data.length > 0) {
         requestsHistoryList.innerHTML = '';
+        
+        // Grouping logic
+        const groups = {};
         data.forEach(r => {
-          const div = document.createElement('div');
-          div.className = `list-item ${r.status}`;
-          
-          const date = new Date(r.created_at).toLocaleDateString(undefined, { 
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-          });
-
-          div.innerHTML = `
-            <div class="item-info">
-              <span class="item-title">${escapeHtml(r.item_name)} x${r.qty}</span>
-              <span class="item-subtitle">Requested on ${date}</span>
-            </div>
-            <span class="status-badge ${r.status}">${r.status}</span>
-          `;
-          requestsHistoryList.appendChild(div);
+          const act = r.lab_activity || 'General Laboratory Activity';
+          if (!groups[act]) groups[act] = [];
+          groups[act].push(r);
         });
+
+        Object.keys(groups).forEach(actTitle => {
+          const items = groups[actTitle];
+          
+          // Header for the group
+          const header = document.createElement('div');
+          header.className = 'history-group-header';
+          header.innerHTML = `
+            <h4>${escapeHtml(actTitle)}</h4>
+            <button class="btn-receipt-small" data-activity="${escapeHtml(actTitle)}">
+              View Receipt
+            </button>
+          `;
+          requestsHistoryList.appendChild(header);
+
+          items.forEach(r => {
+            const div = document.createElement('div');
+            div.className = `list-item ${r.status}`;
+            const date = new Date(r.created_at).toLocaleDateString(undefined, { 
+              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+
+            div.innerHTML = `
+              <div class="item-info">
+                <span class="item-title">${escapeHtml(r.item_name)} x${r.qty}</span>
+                <span class="item-subtitle">Requested on ${date}</span>
+              </div>
+              <span class="status-badge ${r.status}">${r.status}</span>
+            `;
+            requestsHistoryList.appendChild(div);
+          });
+        });
+
+        // Bind Receipt Buttons
+        document.querySelectorAll('.btn-receipt-small').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const actTitle = e.target.getAttribute('data-activity');
+            const itemsToPopulate = groups[actTitle];
+            openReceipt(actTitle, itemsToPopulate);
+          });
+        });
+
       } else {
         requestsHistoryList.innerHTML = '<p class="empty-text">No requests submitted yet.</p>';
       }
@@ -278,6 +320,29 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Fetch requests history error:', err);
     }
   }
+
+  function openReceipt(title, items) {
+    receiptActivityTitle.textContent = title;
+    receiptGroupName.textContent = currentGroup ? currentGroup.groupName : 'Student Group';
+    receiptDate.textContent = new Date().toLocaleDateString(undefined, {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    receiptItemsBody.innerHTML = '';
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(item.item_name)}</td>
+        <td style="text-align: center;">${item.qty}</td>
+      `;
+      receiptItemsBody.appendChild(tr);
+    });
+
+    receiptModal.classList.add('active');
+  }
+
+  closeReceiptModalBtn.addEventListener('click', () => receiptModal.classList.remove('active'));
+  printReceiptBtn.addEventListener('click', () => window.print());
 
   // 6. Fetch Other Groups' Pending Requests
   async function fetchOthersPendingRequests() {

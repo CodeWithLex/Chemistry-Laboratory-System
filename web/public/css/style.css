@@ -161,6 +161,187 @@ textarea:focus-visible {
   box-shadow: var(--shadow);
 }
 
+/* ==========================================
+   RECEIPT MODAL & PRINT STYLES
+   ========================================== */
+
+.receipt-modal .modal-card {
+  max-width: 500px;
+  background: white;
+  color: #0f172a;
+}
+
+.receipt-content {
+  padding: 40px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+#receipt-printable-area {
+  padding: 20px;
+}
+
+.receipt-header {
+  text-align: center;
+  border-bottom: 2px solid #1a4d1a;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.receipt-header h2 {
+  font-family: Fraunces, serif;
+  color: #1a4d1a;
+  margin: 0;
+  font-size: 24px;
+}
+
+.receipt-header p {
+  color: #64748b;
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.receipt-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 30px;
+  font-size: 13px;
+}
+
+.receipt-meta-item span:first-child {
+  color: #94a3b8;
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.receipt-meta-item span:last-child {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+}
+
+.receipt-table th {
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 0;
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.receipt-table td {
+  padding: 12px 0;
+  border-bottom: 1px dashed #f1f5f9;
+  font-size: 14px;
+}
+
+.receipt-footer {
+  margin-top: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.signature-box {
+  text-align: center;
+}
+
+.signature-line {
+  border-top: 1px solid #1e293b;
+  width: 180px;
+  padding-top: 8px;
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+.btn-print {
+  background: #1a4d1a;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* Grouped history styles */
+.history-group-header {
+  margin-top: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-group-header h4 {
+  margin: 0;
+  color: #1a4d1a;
+  font-size: 15px;
+}
+
+.btn-receipt-small {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #475569;
+}
+
+.btn-receipt-small:hover {
+  background: #e2e8f0;
+}
+
+/* Print Overrides */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #receipt-printable-area, #receipt-printable-area * {
+    visibility: visible;
+  }
+  #receipt-printable-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+  .receipt-actions, .close-btn, .modal-overlay::before {
+    display: none !important;
+  }
+  .modal-overlay {
+    background: none !important;
+  }
+}
+
 /* Login */
 
 #login-view {

@@ -259,6 +259,63 @@
     </div>
   </div>
 
+  <!-- 4. ACTIVITY RECEIPT MODAL -->
+  <div id="receipt-modal" class="modal-overlay receipt-modal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h2>Activity Receipt</h2>
+        <button id="close-receipt-modal-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="receipt-printable-area" class="receipt-content">
+          <div class="receipt-header">
+            <h2>CHEMLAB SYSTEM</h2>
+            <p>Laboratory Activity Receipt</p>
+          </div>
+          <div class="receipt-meta">
+            <div class="receipt-meta-item">
+              <span>Student Group</span>
+              <span id="receipt-group-name">Loading...</span>
+            </div>
+            <div class="receipt-meta-item">
+              <span>Date Generated</span>
+              <span id="receipt-date">--/--/--</span>
+            </div>
+            <div class="receipt-meta-item" style="grid-column: span 2;">
+              <span>Laboratory Activity</span>
+              <strong id="receipt-activity-title" style="font-size: 16px; color: #1a4d1a;">General Laboratory Activity</strong>
+            </div>
+          </div>
+          <table class="receipt-table">
+            <thead>
+              <tr>
+                <th>Apparatus Item</th>
+                <th style="text-align: center; width: 60px;">Qty</th>
+              </tr>
+            </thead>
+            <tbody id="receipt-items-body">
+              <!-- Rows injected via JS -->
+            </tbody>
+          </table>
+          <div class="receipt-footer">
+            <div class="signature-box">
+              <div class="signature-line">Student Representative</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line">Instructor / Custodian</div>
+            </div>
+          </div>
+        </div>
+        <div class="receipt-actions">
+          <button id="print-receipt-btn" class="btn-print">
+            <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            <span>Print or Save PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="main-footer">
     <p>&copy; 2026 ChemLab System.</p>

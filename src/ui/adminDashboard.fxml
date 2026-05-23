@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -12,407 +13,423 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.layout.AnchorPane?>
-
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane id="AnchorPane" prefHeight="650.0" prefWidth="1100.0" styleClass="dashboard-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AdminDashboardController">
+<BorderPane prefHeight="720.0" prefWidth="1280.0" styleClass="dashboard-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AdminDashboardController">
     <stylesheets>
         <URL value="@/css/admindashboard.css" />
     </stylesheets>
-    <children>
-        <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
-            <!-- Top Header Bar -->
-            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="header-bar">
-                <padding>
-                    <Insets bottom="12.0" left="20.0" right="20.0" top="12.0" />
-                </padding>
-                <Label styleClass="header-title" text="ChemLab Admin Dashboard">
-                    <graphic>
-                        <javafx.scene.shape.SVGPath content="M6 18h8M3 22h18M14 10a4 4 0 1 0-8 0v4h8v-4zM9 14h2M11 22v-4M7 22v-4M8 11V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v7M12 7h2" fill="WHITE" scaleX="1.2" scaleY="1.2" />
-                    </graphic>
-                    <font>
-                        <Font name="System Bold" size="18.0" />
-                    </font>
-                </Label>
+    <!-- LEFT SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar">
+            <VBox styleClass="sidebar-header" spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <SVGPath content="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="WHITE" scaleX="1.2" scaleY="1.2" />
+                    <Label styleClass="sidebar-logo-text" text="ChemLab System" />
+                </HBox>
+                <Label text="MANAGEMENT SYSTEM" style="-fx-text-fill: #4caf50; -fx-font-size: 10px; -fx-font-weight: bold; -fx-character-spacing: 1;" />
+            </VBox>
 
-                <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome, Admin">
-                    <font>
-                        <Font size="13.0" />
-                    </font>
-                </Label>
-                <Button fx:id="logoutBtn" mnemonicParsing="false" onAction="#logoutClicked" styleClass="logout-button" text="Logout">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
+            <VBox VBox.vgrow="ALWAYS" spacing="4" styleClass="sidebar-nav-container">
+                <Button fx:id="sideNavDashboard" onAction="#switchTab" styleClass="nav-button, nav-button-active" text="Overview">
+                    <graphic><SVGPath content="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
                 </Button>
-            </HBox>
 
-            <!-- Stats Cards Row -->
-            <HBox alignment="CENTER" spacing="20.0" styleClass="stats-row">
-                <padding>
-                    <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                </padding>
-                <VBox alignment="CENTER" styleClass="stat-card" HBox.hgrow="ALWAYS">
-                    <Label fx:id="pendingCountLabel" styleClass="stat-number" text="0">
-                        <font><Font name="System Bold" size="32.0" /></font>
-                    </Label>
-                    <Label styleClass="stat-label" text="Pending Requests" />
-                </VBox>
-                <VBox alignment="CENTER" styleClass="stat-card-green" HBox.hgrow="ALWAYS">
-                    <Label fx:id="approvedCountLabel" styleClass="stat-number" text="0">
-                        <font><Font name="System Bold" size="32.0" /></font>
-                    </Label>
-                    <Label styleClass="stat-label" text="Approved Today" />
-                </VBox>
-                <VBox alignment="CENTER" styleClass="stat-card-blue" HBox.hgrow="ALWAYS">
-                    <Label fx:id="totalApparatusLabel" styleClass="stat-number" text="0">
-                        <font><Font name="System Bold" size="32.0" /></font>
-                    </Label>
-                    <Label styleClass="stat-label" text="Total Apparatus" />
-                </VBox>
-                <VBox alignment="CENTER" styleClass="stat-card-purple" HBox.hgrow="ALWAYS">
-                    <Label fx:id="totalUsersLabel" styleClass="stat-number" text="0">
-                        <font><Font name="System Bold" size="32.0" /></font>
-                    </Label>
-                    <Label styleClass="stat-label" text="Total Users" />
-                </VBox>
-            </HBox>
+                <Label text="BORROWING" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
+                
+                <Button fx:id="sideNavPending" onAction="#switchTab" styleClass="nav-button" text="Pending Requests">
+                    <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+                <Button fx:id="sideNavClaim" onAction="#switchTab" styleClass="nav-button" text="To Be Claimed">
+                   <graphic><SVGPath content="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+                <Button fx:id="sideNavInUse" onAction="#switchTab" styleClass="nav-button" text="Currently In Use">
+                   <graphic><SVGPath content="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+                <Button fx:id="sideNavHistory" onAction="#switchTab" styleClass="nav-button" text="Borrowing History">
+                   <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
 
-            <!-- Tabs: Requests | Apparatus -->
-            <TabPane fx:id="tabPane" styleClass="dashboard-tabs" VBox.vgrow="ALWAYS">
+                <Label text="INVENTORY &amp; USERS" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
+                
+                <Button fx:id="sideNavInventory" onAction="#switchTab" styleClass="nav-button" text="Apparatus Inventory">
+                   <graphic><SVGPath content="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.675.27a6 6 0 01-3.86.517l-2.387-.477a2 2 0 00-1.022.547l-1.162 1.162a2 2 0 00.597 3.321l2.43.797a6 6 0 004.032 0l2.43-.797a2 2 0 00.597-3.321l-1.162-1.162z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+                <Button fx:id="sideNavGroups" onAction="#switchTab" styleClass="nav-button" text="Student Groups">
+                   <graphic><SVGPath content="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+                <Button fx:id="sideNavSpecial" onAction="#switchTab" styleClass="nav-button" text="Apparatus Requests">
+                    <graphic><SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
 
-                <!-- Pending Requests Tab -->
-                <Tab closable="false" text="Pending Requests">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                             <Button fx:id="refreshBtn" mnemonicParsing="false" onAction="#refreshRequests" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.9" scaleY="0.9" />
-                                </graphic>
-                             </Button>
+                <Label text="INSIGHTS" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
+                
+                <Button fx:id="sideNavAnalytics" onAction="#switchTab" styleClass="nav-button" text="System Analytics">
+                    <graphic><SVGPath content="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                </Button>
+            </VBox>
 
-                            <DatePicker fx:id="pendingStartDatePicker" onAction="#filterPendingByDate" promptText="From date" styleClass="table-date-picker" />
-                            <DatePicker fx:id="pendingEndDatePicker" onAction="#filterPendingByDate" promptText="To date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearPendingFilter" styleClass="clear-filter-button" text="Clear Dates" />
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="pendingSearchField" onKeyReleased="#filterPendingBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearPendingSearch" styleClass="clear-filter-button" text="Clear" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <CheckBox fx:id="selectAllCheckBox" onAction="#toggleSelectAll" text="Select All" />
-                            <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#batchApproveSelected" styleClass="approve-button" text="Approve">
-                                <graphic>
-                                    <SVGPath content="M20 6 9 17l-5-5" fill="WHITE" />
-                                </graphic>
-                            </Button>
-                            <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#batchRejectSelected" styleClass="reject-button" text="Reject">
-                                <graphic>
-                                    <SVGPath content="M18 6 6 18M6 6l12 12" fill="WHITE" />
-                                </graphic>
-                            </Button>
-
-                        </HBox>
-                        <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colSelect" prefWidth="50" text="✓" />
-                                <TableColumn fx:id="colRequestId" prefWidth="70" text="ID" />
-                                <TableColumn fx:id="colGroupName" prefWidth="150" text="Group Name" />
-                                <TableColumn fx:id="colLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colApparatus" prefWidth="150" text="Apparatus" />
-                                <TableColumn fx:id="colQty" prefWidth="60" text="Qty" />
-                                <TableColumn fx:id="colStatus" prefWidth="100" text="Status" />
-                                <TableColumn fx:id="colDate" prefWidth="180" text="Requested At" />
-                            </columns>
-                            <placeholder>
-                                <VBox alignment="CENTER" spacing="10.0">
-                                    <SVGPath content="M20 6 9 17l-5-5" fill="#2e7d32" scaleX="1.5" scaleY="1.5" />
-                                    <Label styleClass="table-placeholder" text="No pending requests. All caught up!" />
-                                </VBox>
-                            </placeholder>
-
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Pending Claim (To Be Claimed) Tab -->
-                <Tab closable="false" text="To Be Claimed">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshClaiming" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="claimingSearchField" onKeyReleased="#filterClaimingBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearClaimingSearch" styleClass="clear-filter-button" text="Clear" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <Button fx:id="confirmReceiptBtn" mnemonicParsing="false" onAction="#batchReleasedSelected" styleClass="approve-button" text="Confirm Student Received">
-                                <graphic>
-                                    <SVGPath content="M20 6 9 17l-5-5" fill="WHITE" />
-                                </graphic>
-                            </Button>
-                        </HBox>
-                        <TableView fx:id="claimingTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colClaimSelect" prefWidth="50" text="✓" />
-                                <TableColumn fx:id="colClaimId" prefWidth="70" text="ID" />
-                                <TableColumn fx:id="colClaimGroup" prefWidth="150" text="Group Name" />
-                                <TableColumn fx:id="colClaimLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colClaimApparatus" prefWidth="150" text="Apparatus" />
-                                <TableColumn fx:id="colClaimQty" prefWidth="60" text="Qty" />
-                                <TableColumn fx:id="colClaimDate" prefWidth="180" text="Approved At" />
-                            </columns>
-                            <placeholder>
-                                <VBox alignment="CENTER" spacing="10.0">
-                                    <SVGPath content="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="#555555" scaleX="1.2" scaleY="1.2" />
-                                    <Label styleClass="table-placeholder" text="No apparatus waiting to be claimed." />
-                                </VBox>
-                            </placeholder>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- All Requests Tab -->
-                <Tab closable="false" text="All Requests">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshAllRequests" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <DatePicker fx:id="allStartDatePicker" onAction="#filterAllByDate" promptText="From date" styleClass="table-date-picker" />
-                            <DatePicker fx:id="allEndDatePicker" onAction="#filterAllByDate" promptText="To date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearAllFilter" styleClass="clear-filter-button" text="Clear Dates" />
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="allSearchField" onKeyReleased="#filterAllBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearAllSearch" styleClass="clear-filter-button" text="Clear" />
-                        </HBox>
-                        <TableView fx:id="allRequestsTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colAllId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colAllGroup" prefWidth="160" text="Group Name" />
-                                <TableColumn fx:id="colAllLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colAllApparatus" prefWidth="180" text="Apparatus" />
-                                <TableColumn fx:id="colAllQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colAllStatus" prefWidth="120" text="Status" />
-                                <TableColumn fx:id="colAllDate" prefWidth="200" text="Requested At" />
-                            </columns>
-                            <placeholder>
-                                <VBox alignment="CENTER" spacing="10.0">
-                                    <SVGPath content="M22 12h-6l-2 3h-4l-2-3H2" fill="#555555" scaleX="1.5" scaleY="1.5" />
-                                    <Label styleClass="table-placeholder" text="No requests found for the selected filters." />
-                                </VBox>
-                            </placeholder>
-
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Currently In Use Tab -->
-                <Tab closable="false" text="Currently In Use">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshInUse" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <DatePicker fx:id="inUseStartDatePicker" onAction="#filterInUseByDate" promptText="From date" styleClass="table-date-picker" />
-                            <DatePicker fx:id="inUseEndDatePicker" onAction="#filterInUseByDate" promptText="To date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearInUseFilter" styleClass="clear-filter-button" text="Clear Dates" />
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="inUseSearchField" onKeyReleased="#filterInUseBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearInUseSearch" styleClass="clear-filter-button" text="Clear" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <CheckBox fx:id="selectAllInUseCheckBox" onAction="#toggleSelectAllInUse" text="Select All" />
-                            <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="Mark Returned">
-                                <graphic>
-                                    <SVGPath content="M9 14 4 9l5-5M4 9h10a5 5 0 0 1 5 5v1" fill="WHITE" />
-                                </graphic>
-                            </Button>
-
-                        </HBox>
-                        <TableView fx:id="inUseTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colInUseSelect" prefWidth="50" text="✓" />
-                                <TableColumn fx:id="colInUseId" prefWidth="70" text="ID" />
-                                <TableColumn fx:id="colInUseGroup" prefWidth="150" text="Group Name" />
-                                <TableColumn fx:id="colInUseLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colInUseApparatus" prefWidth="150" text="Apparatus" />
-                                <TableColumn fx:id="colInUseQty" prefWidth="60" text="Qty" />
-                                <TableColumn fx:id="colInUseCollected" prefWidth="180" text="Collected At" />
-                                <TableColumn fx:id="colInUseRemaining" prefWidth="150" text="Inventory Rem." />
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- History Tab -->
-                <Tab closable="false" text="History">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshHistory" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <DatePicker fx:id="historyStartDatePicker" onAction="#filterHistoryByDate" promptText="From date" styleClass="table-date-picker" />
-                            <DatePicker fx:id="historyEndDatePicker" onAction="#filterHistoryByDate" promptText="To date" styleClass="table-date-picker" />
-                            <Button mnemonicParsing="false" onAction="#clearHistoryFilter" styleClass="clear-filter-button" text="Clear Dates" />
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="historySearchField" onKeyReleased="#filterHistoryBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearHistorySearch" styleClass="clear-filter-button" text="Clear" />
-                        </HBox>
-                        <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colHistId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colHistGroup" prefWidth="160" text="Group Name" />
-                                <TableColumn fx:id="colHistLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colHistApparatus" prefWidth="180" text="Apparatus" />
-                                <TableColumn fx:id="colHistQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colHistBorrowed" prefWidth="200" text="Date Approved" />
-                                <TableColumn fx:id="colHistReturned" prefWidth="200" text="Date Returned" />
-                                <TableColumn fx:id="colHistDuration" prefWidth="160" text="Duration" />
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Student Groups Tab -->
-                <Tab closable="false" text="Student Groups">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshGroups" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="groupsSearchField" onKeyReleased="#filterGroupsBySearch" promptText="ID or group" />
-                            <Button mnemonicParsing="false" onAction="#clearGroupsSearch" styleClass="clear-filter-button" text="Clear" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <Button fx:id="showGroupHistoryBtn" mnemonicParsing="false" onAction="#showGroupHistorySelected" styleClass="action-button" text="Show History">
-                                <graphic>
-                                    <SVGPath content="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 2h6M8 11h8M8 15h8" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <Button mnemonicParsing="false" onAction="#openAddGroupDialog" styleClass="add-group-button" text="+ Add Group" />
-                        </HBox>
-                        <TableView fx:id="groupsTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colGroupId" prefWidth="60" text="ID" />
-                                <TableColumn fx:id="colGrpName" prefWidth="220" text="Group Name" />
-                                <TableColumn fx:id="colGrpUsername" prefWidth="180" text="Username" />
-                                <TableColumn fx:id="colGrpDepartment" prefWidth="180" text="Department" />
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Apparatus Inventory Tab -->
-                <Tab closable="false" text="Apparatus Inventory">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshApparatus" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <Label text="Search:" />
-                            <javafx.scene.control.TextField fx:id="apparatusSearchField" onKeyReleased="#filterApparatusBySearch" promptText="ID or item" />
-                            <Button mnemonicParsing="false" onAction="#clearApparatusSearch" styleClass="clear-filter-button" text="Clear" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <Button mnemonicParsing="false" onAction="#openAddApparatusDialog" styleClass="add-group-button" text="+ Add Apparatus" />
-                        </HBox>
-                        <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colAppName" prefWidth="350" text="Item Name" />
-                                <TableColumn fx:id="colAppQty" prefWidth="200" text="Current Quantity" />
-                                <TableColumn fx:id="colAppRemaining" prefWidth="200" text="Remaining Available" />
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-                <!-- Apparatus Requests Tab (Feature 3: admin reviews student requests for unlisted items) -->
-                <Tab closable="false" text="Apparatus Requests">
-                    <VBox spacing="10.0">
-                        <padding>
-                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                        </padding>
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Button mnemonicParsing="false" onAction="#refreshApparatusRequests" styleClass="action-button" text="Refresh">
-                                <graphic>
-                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
-                                </graphic>
-                            </Button>
-
-                            <Region HBox.hgrow="ALWAYS" />
-                            <Button mnemonicParsing="false" onAction="#markApparatusRequestReviewed" styleClass="approve-button" text="Mark Reviewed">
-                                <graphic>
-                                    <SVGPath content="M20 6 9 17l-5-5" fill="WHITE" />
-                                </graphic>
-                            </Button>
-
-                        </HBox>
-                        <TableView fx:id="apparatusRequestsTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="colArId" prefWidth="60" text="ID" />
-                                <TableColumn fx:id="colArGroup" prefWidth="150" text="Group Name" />
-                                <TableColumn fx:id="colArLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colArApparatus" prefWidth="180" text="Requested Apparatus" />
-                                <TableColumn fx:id="colArReason" prefWidth="280" text="Reason" />
-                                <TableColumn fx:id="colArStatus" prefWidth="100" text="Status" />
-                                <TableColumn fx:id="colArDate" prefWidth="180" text="Requested At" />
-                            </columns>
-                            <placeholder>
-                                <VBox alignment="CENTER" spacing="10.0">
-                                    <SVGPath content="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 2h6M8 11h8M8 15h8" fill="#555555" scaleX="1.2" scaleY="1.2" />
-                                    <Label styleClass="table-placeholder" text="No apparatus requests at this time." />
-                                </VBox>
-                            </placeholder>
-
-                        </TableView>
-                    </VBox>
-                </Tab>
-
-            </TabPane>
-
+            <VBox styleClass="sidebar-footer">
+                <Button onAction="#logoutClicked" styleClass="logout-button" text="Sign Out" maxWidth="Infinity">
+                    <graphic><SVGPath content="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" fill="transparent" stroke="#ef4444" strokeWidth="2" /></graphic>
+                </Button>
+            </VBox>
         </VBox>
-    </children>
-</AnchorPane>
+    </left>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <VBox styleClass="main-workspace">
+            <!-- Top Header Bar -->
+            <HBox alignment="CENTER_LEFT" styleClass="header-bar">
+                <Label fx:id="headerTitleLabel" styleClass="header-title" text="Overview" />
+                <Region HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER" spacing="12">
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome, Admin" />
+                        <Label text="Laboratory Manager" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;" />
+                    </VBox>
+                    <Region prefWidth="10" />
+                    <VBox alignment="CENTER" style="-fx-background-color: #f1f5f9; -fx-background-radius: 100; -fx-min-width: 40; -fx-min-height: 40; -fx-max-width: 40; -fx-max-height: 40;">
+                        <Label text="A" style="-fx-text-fill: #10b981; -fx-font-weight: bold; -fx-font-size: 16px;" />
+                    </VBox>
+                </HBox>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                <VBox styleClass="content-area" spacing="24">
+                    
+                    <!-- Stats Section (visible on all tabs or just dashboard? Let's keep it visible for now as a top bar) -->
+                    <HBox spacing="24" styleClass="stats-row">
+                        <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" spacing="15">
+                                <StackPane styleClass="stat-icon-bg, icon-pending">
+                                    <SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#f97316" strokeWidth="2" />
+                                </StackPane>
+                                <VBox spacing="2">
+                                    <Label fx:id="pendingCountLabel" styleClass="stat-number" text="0" />
+                                    <Label styleClass="stat-label" text="Pending Requests" />
+                                    <Label text="↑ 2 from yesterday" styleClass="stat-trend, trend-up" />
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" spacing="15">
+                                <StackPane styleClass="stat-icon-bg, icon-approved">
+                                    <SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#10b981" strokeWidth="2" />
+                                </StackPane>
+                                <VBox spacing="2">
+                                    <Label fx:id="approvedCountLabel" styleClass="stat-number" text="0" />
+                                    <Label styleClass="stat-label" text="Approved Today" />
+                                    <Label text="Normal Flow" styleClass="stat-trend" style="-fx-text-fill: #64748b;" />
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" spacing="15">
+                                <StackPane styleClass="stat-icon-bg, icon-inventory">
+                                    <SVGPath content="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" fill="transparent" stroke="#3b82f6" strokeWidth="2" />
+                                </StackPane>
+                                <VBox spacing="2">
+                                    <Label fx:id="totalApparatusLabel" styleClass="stat-number" text="0" />
+                                    <Label styleClass="stat-label" text="Total Apparatus" />
+                                    <Label text="Stock Stable" styleClass="stat-trend" style="-fx-text-fill: #64748b;" />
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" spacing="15">
+                                <StackPane styleClass="stat-icon-bg, icon-users">
+                                    <SVGPath content="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8z" fill="transparent" stroke="#a855f7" strokeWidth="2" />
+                                </StackPane>
+                                <VBox spacing="2">
+                                    <Label fx:id="totalUsersLabel" styleClass="stat-number" text="0" />
+                                    <Label styleClass="stat-label" text="Total Active Users" />
+                                    <Label text="+1 new this week" styleClass="stat-trend, trend-up" />
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Main Dynamic Content Area -->
+                    <TabPane fx:id="tabPane" styleClass="dashboard-tabs" VBox.vgrow="ALWAYS">
+                        <!-- Pending Requests Tab -->
+                        <Tab closable="false" text="Pending Requests">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button fx:id="refreshBtn" onAction="#refreshRequests" styleClass="action-button" text="Refresh" />
+                                    <DatePicker fx:id="pendingStartDatePicker" promptText="Start Date" onAction="#filterPendingByDate" />
+                                    <DatePicker fx:id="pendingEndDatePicker" promptText="End Date" onAction="#filterPendingByDate" />
+                                    <TextField fx:id="pendingSearchField" promptText="Search ID or group..." onKeyReleased="#filterPendingBySearch" prefWidth="200" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <CheckBox fx:id="selectAllCheckBox" onAction="#toggleSelectAll" text="Select All" />
+                                    <Button fx:id="approveBtn" onAction="#batchApproveSelected" styleClass="action-button, approve-button" text="Approve" />
+                                    <Button fx:id="rejectBtn" onAction="#batchRejectSelected" styleClass="action-button, reject-button" text="Reject" />
+                                </HBox>
+                                <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colSelect" prefWidth="40" text="" />
+                                        <TableColumn fx:id="colRequestId" prefWidth="60" text="ID" />
+                                        <TableColumn fx:id="colGroupName" prefWidth="180" text="STUDENT GROUP" />
+                                        <TableColumn fx:id="colLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colApparatus" prefWidth="180" text="APPARATUS" />
+                                        <TableColumn fx:id="colQty" prefWidth="60" text="QTY" />
+                                        <TableColumn fx:id="colStatus" prefWidth="100" text="STATUS" />
+                                        <TableColumn fx:id="colDate" prefWidth="180" text="REQUESTED AT" />
+                                    </columns>
+                                    <placeholder>
+                                        <VBox alignment="CENTER" spacing="12">
+                                            <SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#10b981" strokeWidth="2" scaleX="2" scaleY="2" />
+                                            <Label text="No pending requests" style="-fx-font-size: 16px; -fx-text-fill: #64748b; -fx-font-weight: 500;" />
+                                            <Label text="Relax! All requests have been processed." style="-fx-font-size: 12px; -fx-text-fill: #94a3b8;" />
+                                        </VBox>
+                                    </placeholder>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- To Be Claimed Tab -->
+                        <Tab closable="false" text="To Be Claimed">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshClaiming" styleClass="action-button" text="Refresh" />
+                                    <TextField fx:id="claimingSearchField" promptText="Search ID or group..." onKeyReleased="#filterClaimingBySearch" prefWidth="200" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#batchReleasedSelected" styleClass="action-button, approve-button" text="Confirm Student Received" />
+                                </HBox>
+                                <TableView fx:id="claimingTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colClaimSelect" prefWidth="40" text="" />
+                                        <TableColumn fx:id="colClaimId" prefWidth="60" text="ID" />
+                                        <TableColumn fx:id="colClaimGroup" prefWidth="180" text="STUDENT GROUP" />
+                                        <TableColumn fx:id="colClaimLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colClaimApparatus" prefWidth="180" text="APPARATUS" />
+                                        <TableColumn fx:id="colClaimQty" prefWidth="60" text="QTY" />
+                                        <TableColumn fx:id="colClaimDate" prefWidth="180" text="APPROVED AT" />
+                                    </columns>
+                                    <placeholder>
+                                        <VBox alignment="CENTER" spacing="12">
+                                            <SVGPath content="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" fill="transparent" stroke="#64748b" strokeWidth="2" scaleX="2" scaleY="2" />
+                                            <Label text="Nothing to claim" style="-fx-font-size: 16px; -fx-text-fill: #64748b; -fx-font-weight: 500;" />
+                                        </VBox>
+                                    </placeholder>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- All Requests Tab -->
+                        <Tab closable="false" text="All Requests">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshAllRequests" styleClass="action-button" text="Refresh" />
+                                    <DatePicker fx:id="allStartDatePicker" promptText="Start Date" onAction="#filterAllByDate" />
+                                    <DatePicker fx:id="allEndDatePicker" promptText="End Date" onAction="#filterAllByDate" />
+                                    <TextField fx:id="allSearchField" promptText="Search..." onKeyReleased="#filterAllBySearch" prefWidth="200" />
+                                </HBox>
+                                <TableView fx:id="allRequestsTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colAllId" prefWidth="80" text="ID" />
+                                        <TableColumn fx:id="colAllGroup" prefWidth="180" text="GROUP" />
+                                        <TableColumn fx:id="colAllLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colAllApparatus" prefWidth="200" text="APPARATUS" />
+                                        <TableColumn fx:id="colAllQty" prefWidth="80" text="QTY" />
+                                        <TableColumn fx:id="colAllStatus" prefWidth="120" text="STATUS" />
+                                        <TableColumn fx:id="colAllDate" prefWidth="200" text="REQUESTED AT" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- Currently In Use Tab -->
+                        <Tab closable="false" text="Currently In Use">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshInUse" styleClass="action-button" text="Refresh" />
+                                    <TextField fx:id="inUseSearchField" promptText="Search..." onKeyReleased="#filterInUseBySearch" prefWidth="200" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <CheckBox fx:id="selectAllInUseCheckBox" onAction="#toggleSelectAllInUse" text="Select All" />
+                                    <Button fx:id="returnedBtn" onAction="#markReturnedSelected" styleClass="action-button" style="-fx-background-color: #3b82f6; -fx-text-fill: white;" text="Mark Returned" />
+                                </HBox>
+                                <TableView fx:id="inUseTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colInUseSelect" prefWidth="40" text="" />
+                                        <TableColumn fx:id="colInUseId" prefWidth="60" text="ID" />
+                                        <TableColumn fx:id="colInUseGroup" prefWidth="180" text="GROUP" />
+                                        <TableColumn fx:id="colInUseLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colInUseApparatus" prefWidth="180" text="APPARATUS" />
+                                        <TableColumn fx:id="colInUseQty" prefWidth="60" text="QTY" />
+                                        <TableColumn fx:id="colInUseCollected" prefWidth="180" text="COLLECTED AT" />
+                                        <TableColumn fx:id="colInUseRemaining" prefWidth="150" text="INV. REMAINING" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- History Tab -->
+                        <Tab closable="false" text="History">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshHistory" styleClass="action-button" text="Refresh" />
+                                    <DatePicker fx:id="historyStartDatePicker" promptText="Start Date" onAction="#filterHistoryByDate" />
+                                    <DatePicker fx:id="historyEndDatePicker" promptText="End Date" onAction="#filterHistoryByDate" />
+                                    <TextField fx:id="historySearchField" promptText="Search..." onKeyReleased="#filterHistoryBySearch" prefWidth="200" />
+                                </HBox>
+                                <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colHistId" prefWidth="80" text="ID" />
+                                        <TableColumn fx:id="colHistGroup" prefWidth="180" text="GROUP" />
+                                        <TableColumn fx:id="colHistLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colHistApparatus" prefWidth="200" text="APPARATUS" />
+                                        <TableColumn fx:id="colHistQty" prefWidth="80" text="QTY" />
+                                        <TableColumn fx:id="colHistBorrowed" prefWidth="180" text="BORROWED" />
+                                        <TableColumn fx:id="colHistReturned" prefWidth="180" text="RETURNED" />
+                                        <TableColumn fx:id="colHistDuration" prefWidth="140" text="DURATION" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- Student Groups Tab -->
+                        <Tab closable="false" text="Student Groups">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshGroups" styleClass="action-button" text="Refresh" />
+                                    <TextField fx:id="groupsSearchField" promptText="Search groups..." onKeyReleased="#filterGroupsBySearch" prefWidth="200" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#showGroupHistorySelected" styleClass="action-button" text="View History" />
+                                    <Button onAction="#openAddGroupDialog" styleClass="action-button" style="-fx-background-color: #1a4d1a; -fx-text-fill: white;" text="+ Add New Group" />
+                                </HBox>
+                                <TableView fx:id="groupsTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colGroupId" prefWidth="80" text="ID" />
+                                        <TableColumn fx:id="colGrpName" prefWidth="250" text="GROUP NAME" />
+                                        <TableColumn fx:id="colGrpUsername" prefWidth="200" text="USERNAME" />
+                                        <TableColumn fx:id="colGrpDepartment" prefWidth="200" text="DEPARTMENT" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- Apparatus Inventory Tab -->
+                        <Tab closable="false" text="Apparatus Inventory">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshApparatus" styleClass="action-button" text="Refresh" />
+                                    <TextField fx:id="apparatusSearchField" promptText="Search items..." onKeyReleased="#filterApparatusBySearch" prefWidth="200" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#openAddApparatusDialog" styleClass="action-button" style="-fx-background-color: #1a4d1a; -fx-text-fill: white;" text="+ Add Apparatus" />
+                                </HBox>
+                                <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
+                                        <TableColumn fx:id="colAppName" prefWidth="350" text="ITEM NAME" />
+                                        <TableColumn fx:id="colAppQty" prefWidth="200" text="CURRENT STOCK" />
+                                        <TableColumn fx:id="colAppRemaining" prefWidth="200" text="AVAIL. TO BORROW" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- Special Requests Tab -->
+                        <Tab closable="false" text="Apparatus Requests">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                                    <Button onAction="#refreshApparatusRequests" styleClass="action-button" text="Refresh" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#markApparatusRequestReviewed" styleClass="action-button, approve-button" text="Mark as Reviewed" />
+                                </HBox>
+                                <TableView fx:id="apparatusRequestsTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colArId" prefWidth="60" text="ID" />
+                                        <TableColumn fx:id="colArGroup" prefWidth="180" text="GROUP" />
+                                        <TableColumn fx:id="colArLabActivity" prefWidth="180" text="ACTIVITY" />
+                                        <TableColumn fx:id="colArApparatus" prefWidth="200" text="REQUESTED ITEM" />
+                                        <TableColumn fx:id="colArReason" prefWidth="300" text="PURPOSE / REASON" />
+                                        <TableColumn fx:id="colArStatus" prefWidth="120" text="STATUS" />
+                                        <TableColumn fx:id="colArDate" prefWidth="180" text="REQUESTED AT" />
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </Tab>
+
+                        <!-- System Analytics Tab -->
+                        <Tab closable="false" text="System Analytics">
+                            <VBox spacing="0">
+                                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+                                    <Label text="Data Range:" style="-fx-font-weight: bold; -fx-text-fill: #1a4d1a;" />
+                                    <DatePicker fx:id="analyticsStartDatePicker" promptText="Start Date" onAction="#refreshAnalytics" />
+                                    <DatePicker fx:id="analyticsEndDatePicker" promptText="End Date" onAction="#refreshAnalytics" />
+                                    <Button onAction="#refreshAnalytics" styleClass="action-button" text="Refresh Insights">
+                                        <graphic><SVGPath content="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" fill="transparent" stroke="white" strokeWidth="2" /></graphic>
+                                    </Button>
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Label fx:id="lastUpdatedLabel" text="Last updated: Just now" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;" />
+                                </HBox> 
+                                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                                    <VBox spacing="24" style="-fx-padding: 24;">
+                                        <!-- Analytics Cards Row -->
+                                        <HBox spacing="20">
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS" style="-fx-background-color: #f8fafc;">
+                                                <Label text="Most Requested" styleClass="stat-label" />
+                                                <Label fx:id="mostRequestedLabel" text="Loading..." style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0f172a; -fx-padding: 8 0 0 0;" />
+                                                <Label text="Top used item" styleClass="stat-trend" style="-fx-text-fill: #64748b;" />
+                                            </VBox>
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS" style="-fx-background-color: #f8fafc;">
+                                                <Label text="Least Requested" styleClass="stat-label" />
+                                                <Label fx:id="leastRequestedLabel" text="Loading..." style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0f172a; -fx-padding: 8 0 0 0;" />
+                                                <Label text="Rarely tracked" styleClass="stat-trend" style="-fx-text-fill: #64748b;" />
+                                            </VBox>
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS" style="-fx-background-color: #f8fafc;">
+                                                <Label text="System Traffic" styleClass="stat-label" />
+                                                <Label fx:id="peakActivityLabel" text="Normal" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0f172a; -fx-padding: 8 0 0 0;" />
+                                                <Label text="Current Load" styleClass="stat-trend" style="-fx-text-fill: #3b82f6;" />
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Main Charts Row -->
+                                        <HBox spacing="24" maxHeight="400">
+                                            <!-- Apparatus Usage Chart -->
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS" spacing="15">
+                                                <Label text="Popular Apparatus Usage" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                                <javafx.scene.chart.BarChart fx:id="apparatusUsageChart" animated="false" legendVisible="false" prefHeight="350">
+                                                    <xAxis><javafx.scene.chart.CategoryAxis label="Apparatus" /></xAxis>
+                                                    <yAxis><javafx.scene.chart.NumberAxis label="Requests" /></yAxis>
+                                                </javafx.scene.chart.BarChart>
+                                            </VBox>
+
+                                            <!-- Stock Distribution Pie Chart -->
+                                            <VBox styleClass="stat-card-base" spacing="15" prefWidth="350">
+                                                <Label text="Inventory Composition" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                                <javafx.scene.chart.PieChart fx:id="stockPieChart" animated="false" prefHeight="350" />
+                                            </VBox>
+                                        </HBox>
+
+                                        <!-- Activity Trend Chart -->
+                                        <VBox styleClass="stat-card-base" spacing="15">
+                                            <Label text="System Activity Over Time" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                            <javafx.scene.chart.LineChart fx:id="activityLineChart" animated="false" legendVisible="false" prefHeight="300" style="-fx-padding: 10 20 10 0;">
+                                                <xAxis><javafx.scene.chart.CategoryAxis label="Timeline" /></xAxis>
+                                                <yAxis><javafx.scene.chart.NumberAxis label="Daily Count" /></yAxis>
+                                            </javafx.scene.chart.LineChart>
+                                        </VBox>
+                                    </VBox>
+                                </ScrollPane>
+                            </VBox>
+                        </Tab>
+                    </TabPane>
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </center>
+    
+</BorderPane>
