@@ -108,12 +108,12 @@
                             <Button mnemonicParsing="false" onAction="#clearPendingSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
                             <CheckBox fx:id="selectAllCheckBox" onAction="#toggleSelectAll" text="Select All" />
-                            <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#approveSelected" styleClass="approve-button" text="Approve">
+                            <Button fx:id="approveBtn" mnemonicParsing="false" onAction="#batchApproveSelected" styleClass="approve-button" text="Approve">
                                 <graphic>
                                     <SVGPath content="M20 6 9 17l-5-5" fill="WHITE" />
                                 </graphic>
                             </Button>
-                            <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#rejectSelected" styleClass="reject-button" text="Reject">
+                            <Button fx:id="rejectBtn" mnemonicParsing="false" onAction="#batchRejectSelected" styleClass="reject-button" text="Reject">
                                 <graphic>
                                     <SVGPath content="M18 6 6 18M6 6l12 12" fill="WHITE" />
                                 </graphic>
@@ -138,6 +138,48 @@
                                 </VBox>
                             </placeholder>
 
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- Pending Claim (To Be Claimed) Tab -->
+                <Tab closable="false" text="To Be Claimed">
+                    <VBox spacing="10.0">
+                        <padding>
+                            <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                        </padding>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Button mnemonicParsing="false" onAction="#refreshClaiming" styleClass="action-button" text="Refresh">
+                                <graphic>
+                                    <SVGPath content="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5m13 4a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m0 0v5m0-5h5" fill="WHITE" scaleX="0.8" scaleY="0.8" />
+                                </graphic>
+                            </Button>
+                            <Label text="Search:" />
+                            <javafx.scene.control.TextField fx:id="claimingSearchField" onKeyReleased="#filterClaimingBySearch" promptText="ID or group" />
+                            <Button mnemonicParsing="false" onAction="#clearClaimingSearch" styleClass="clear-filter-button" text="Clear" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button fx:id="confirmReceiptBtn" mnemonicParsing="false" onAction="#batchReleasedSelected" styleClass="approve-button" text="Confirm Student Received">
+                                <graphic>
+                                    <SVGPath content="M20 6 9 17l-5-5" fill="WHITE" />
+                                </graphic>
+                            </Button>
+                        </HBox>
+                        <TableView fx:id="claimingTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colClaimSelect" prefWidth="50" text="✓" />
+                                <TableColumn fx:id="colClaimId" prefWidth="70" text="ID" />
+                                <TableColumn fx:id="colClaimGroup" prefWidth="150" text="Group Name" />
+                                <TableColumn fx:id="colClaimLabActivity" prefWidth="150" text="Lab Activity" />
+                                <TableColumn fx:id="colClaimApparatus" prefWidth="150" text="Apparatus" />
+                                <TableColumn fx:id="colClaimQty" prefWidth="60" text="Qty" />
+                                <TableColumn fx:id="colClaimDate" prefWidth="180" text="Approved At" />
+                            </columns>
+                            <placeholder>
+                                <VBox alignment="CENTER" spacing="10.0">
+                                    <SVGPath content="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="#555555" scaleX="1.2" scaleY="1.2" />
+                                    <Label styleClass="table-placeholder" text="No apparatus waiting to be claimed." />
+                                </VBox>
+                            </placeholder>
                         </TableView>
                     </VBox>
                 </Tab>
@@ -203,6 +245,7 @@
                             <javafx.scene.control.TextField fx:id="inUseSearchField" onKeyReleased="#filterInUseBySearch" promptText="ID or group" />
                             <Button mnemonicParsing="false" onAction="#clearInUseSearch" styleClass="clear-filter-button" text="Clear" />
                             <Region HBox.hgrow="ALWAYS" />
+                            <CheckBox fx:id="selectAllInUseCheckBox" onAction="#toggleSelectAllInUse" text="Select All" />
                             <Button fx:id="returnedBtn" mnemonicParsing="false" onAction="#markReturnedSelected" styleClass="returned-button" text="Mark Returned">
                                 <graphic>
                                     <SVGPath content="M9 14 4 9l5-5M4 9h10a5 5 0 0 1 5 5v1" fill="WHITE" />
@@ -212,13 +255,14 @@
                         </HBox>
                         <TableView fx:id="inUseTable" VBox.vgrow="ALWAYS">
                             <columns>
-                                <TableColumn fx:id="colInUseId" prefWidth="80" text="ID" />
-                                <TableColumn fx:id="colInUseGroup" prefWidth="160" text="Group Name" />
+                                <TableColumn fx:id="colInUseSelect" prefWidth="50" text="✓" />
+                                <TableColumn fx:id="colInUseId" prefWidth="70" text="ID" />
+                                <TableColumn fx:id="colInUseGroup" prefWidth="150" text="Group Name" />
                                 <TableColumn fx:id="colInUseLabActivity" prefWidth="150" text="Lab Activity" />
-                                <TableColumn fx:id="colInUseApparatus" prefWidth="180" text="Apparatus" />
-                                <TableColumn fx:id="colInUseQty" prefWidth="80" text="Qty" />
-                                <TableColumn fx:id="colInUseDate" prefWidth="200" text="Approved At" />
-                                <TableColumn fx:id="colInUseRemaining" prefWidth="180" text="Remaining Available" />
+                                <TableColumn fx:id="colInUseApparatus" prefWidth="150" text="Apparatus" />
+                                <TableColumn fx:id="colInUseQty" prefWidth="60" text="Qty" />
+                                <TableColumn fx:id="colInUseCollected" prefWidth="180" text="Collected At" />
+                                <TableColumn fx:id="colInUseRemaining" prefWidth="150" text="Inventory Rem." />
                             </columns>
                         </TableView>
                     </VBox>

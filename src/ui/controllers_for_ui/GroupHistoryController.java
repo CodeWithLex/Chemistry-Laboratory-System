@@ -37,7 +37,7 @@ public class GroupHistoryController {
     private TableColumn<BorrowRequest, String> colRequested;
 
     private int groupId;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy hh:mm a");
 
     @FXML
     public void initialize() {

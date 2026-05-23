@@ -114,10 +114,8 @@ public class InstructorDashboardController implements Initializable {
         colPendApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colPendQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colPendStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        colPendDate.setCellValueFactory(data -> {
-            Timestamp ts = data.getValue().getCreatedAt();
-            return new SimpleStringProperty(ts != null ? ts.toString() : "");
-        });
+        colPendDate
+                .setCellValueFactory(data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
 
         // History columns
         colHistId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
@@ -125,10 +123,8 @@ public class InstructorDashboardController implements Initializable {
         colHistApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colHistQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colHistStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        colHistDate.setCellValueFactory(data -> {
-            Timestamp ts = data.getValue().getCreatedAt();
-            return new SimpleStringProperty(ts != null ? ts.toString() : "");
-        });
+        colHistDate
+                .setCellValueFactory(data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
 
         // Column resize policy
         studentGroupsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -347,5 +343,11 @@ public class InstructorDashboardController implements Initializable {
         public String getDepartment() {
             return department;
         }
+    }
+
+    private String formatTimestamp(Timestamp ts) {
+        if (ts == null)
+            return "";
+        return new java.text.SimpleDateFormat("MMM dd, yyyy hh:mm a").format(ts);
     }
 }

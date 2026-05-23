@@ -367,9 +367,9 @@ app.get('/api/apparatus', requireAuth, async (req, res) => {
   try {
     const queryStr = `
       SELECT a.apparatus_id, a.item_name, a.current_quantity,
-        (a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending') THEN r.qty ELSE 0 END), 0))::int AS real_available
+        (a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending','Released') THEN r.qty ELSE 0 END), 0))::int AS real_available
       FROM apparatus a
-      LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending')
+      LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending','Released')
       WHERE a.current_quantity > 0
         AND (a.deleted_at IS NULL OR a.deleted_at > NOW())
       GROUP BY a.apparatus_id, a.item_name, a.current_quantity
@@ -447,7 +447,7 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
 
       // Check current availability
       const availRes = await client.query(
-        `SELECT item_name, (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending')),0))::int AS available
+        `SELECT item_name, (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending', 'Released')),0))::int AS available
          FROM apparatus WHERE apparatus_id = $1`,
         [aid]
       );

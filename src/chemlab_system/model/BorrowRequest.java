@@ -8,6 +8,7 @@ public class BorrowRequest {
     private int requestId;
     private int groupId;
     private String groupName;
+    private int apparatusId;
     private String apparatusName;
     private int qty;
     private String status;
@@ -15,7 +16,23 @@ public class BorrowRequest {
     private Timestamp createdAt;
     private Timestamp approvedAt;
     private Timestamp updatedAt;
+    private int apparatusRemaining;
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
+
+    public BorrowRequest() {
+    }
+
+    public BorrowRequest(int requestId, int groupId, String groupName, int apparatusId, String apparatusName, int qty,
+            String status, Timestamp updatedAt) {
+        this.requestId = requestId;
+        this.groupId = groupId;
+        this.groupName = groupName;
+        this.apparatusId = apparatusId;
+        this.apparatusName = apparatusName;
+        this.qty = qty;
+        this.status = status;
+        this.updatedAt = updatedAt;
+    }
 
     public int getRequestId() {
         return requestId;
@@ -107,5 +124,21 @@ public class BorrowRequest {
 
     public BooleanProperty selectedProperty() {
         return selected;
+    }
+
+    public int getApparatusId() {
+        return apparatusId;
+    }
+
+    public void setApparatusId(int apparatusId) {
+        this.apparatusId = apparatusId;
+    }
+
+    public int getApparatusRemaining() {
+        return apparatusRemaining;
+    }
+
+    public void setApparatusRemaining(int apparatusRemaining) {
+        this.apparatusRemaining = apparatusRemaining;
     }
 }

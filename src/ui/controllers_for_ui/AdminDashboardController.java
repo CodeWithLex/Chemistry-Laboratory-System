@@ -153,7 +153,35 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableColumn<BorrowRequest, String> colInUseDate;
     @FXML
-    private TableColumn<BorrowRequest, String> colInUseRemaining;
+    private TableColumn<BorrowRequest, String> colInUseCollected;
+    @FXML
+    private TableColumn<BorrowRequest, Integer> colInUseRemaining;
+    @FXML
+    private TableColumn<BorrowRequest, Boolean> colInUseSelect;
+    @FXML
+    private CheckBox selectAllInUseCheckBox;
+
+    // Claiming Table
+    @FXML
+    private TableView<BorrowRequest> claimingTable;
+    @FXML
+    private TableColumn<BorrowRequest, Boolean> colClaimSelect;
+    @FXML
+    private TableColumn<BorrowRequest, Integer> colClaimId;
+    @FXML
+    private TableColumn<BorrowRequest, String> colClaimGroup;
+    @FXML
+    private TableColumn<BorrowRequest, String> colClaimLabActivity;
+    @FXML
+    private TableColumn<BorrowRequest, String> colClaimApparatus;
+    @FXML
+    private TableColumn<BorrowRequest, Integer> colClaimQty;
+    @FXML
+    private TableColumn<BorrowRequest, String> colClaimDate;
+    @FXML
+    private TextField claimingSearchField;
+    @FXML
+    private Button confirmReceiptBtn;
 
     // Date filters
     @FXML
@@ -292,10 +320,7 @@ public class AdminDashboardController implements Initializable {
         colApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        colDate.setCellValueFactory(data -> {
-            Timestamp ts = data.getValue().getCreatedAt();
-            return new SimpleStringProperty(ts != null ? ts.toString() : "");
-        });
+        colDate.setCellValueFactory(data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
 
         // Setup All Requests Table columns
         colAllId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
@@ -304,10 +329,8 @@ public class AdminDashboardController implements Initializable {
         colAllApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colAllQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
         colAllStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        colAllDate.setCellValueFactory(data -> {
-            Timestamp ts = data.getValue().getCreatedAt();
-            return new SimpleStringProperty(ts != null ? ts.toString() : "");
-        });
+        colAllDate
+                .setCellValueFactory(data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
 
         // Setup Apparatus Table columns
         colAppId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -325,18 +348,57 @@ public class AdminDashboardController implements Initializable {
             colGrpDepartment.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDepartment()));
         }
 
-        // Setup Currently In Use Table columns
+        // Setup Claiming Table columns
+        colClaimSelect.setCellValueFactory(new PropertyValueFactory<>("selected"));
+        colClaimSelect.setCellFactory(CheckBoxTableCell.forTableColumn(colClaimSelect));
+        colClaimSelect.setEditable(true);
+        claimingTable.setEditable(true);
+
+        colClaimId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
+        colClaimGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+        colClaimLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
+        colClaimApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
+        colClaimQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
+        colClaimDate.setCellValueFactory(
+                data -> new SimpleStringProperty(formatTimestamp(data.getValue().getApprovedAt())));
+
+        colClaimId.setMinWidth(60);
+        colClaimGroup.setMinWidth(130);
+        colClaimLabActivity.setMinWidth(150);
+        colClaimApparatus.setMinWidth(150);
+        colClaimQty.setMinWidth(50);
+        colClaimDate.setMinWidth(170);
+
+        applyTextCellStyle(colClaimId, colClaimGroup, colClaimLabActivity, colClaimApparatus, colClaimQty,
+                colClaimDate);
+        disableReorderAndSort(colClaimSelect, colClaimId, colClaimGroup, colClaimLabActivity, colClaimApparatus,
+                colClaimQty, colClaimDate);
+        claimingTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        if (colInUseSelect != null) {
+            colInUseSelect.setCellValueFactory(new PropertyValueFactory<>("selected"));
+            colInUseSelect.setCellFactory(CheckBoxTableCell.forTableColumn(colInUseSelect));
+            colInUseSelect.setEditable(true);
+            inUseTable.setEditable(true);
+        }
+
         colInUseId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
         colInUseGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
         colInUseLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
         colInUseApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
         colInUseQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
-        colInUseDate.setCellValueFactory(data -> {
-            Timestamp ts = data.getValue().getUpdatedAt();
-            return new SimpleStringProperty(ts != null ? ts.toString() : "");
-        });
+        if (colInUseDate != null) {
+            colInUseDate.setCellValueFactory(
+                    data -> new SimpleStringProperty(formatTimestamp(data.getValue().getUpdatedAt())));
+        }
+        if (colInUseCollected != null) {
+            colInUseCollected.setCellValueFactory(
+                    data -> new SimpleStringProperty(formatTimestamp(data.getValue().getUpdatedAt())));
+        }
+
         if (colInUseRemaining != null) {
-            colInUseRemaining.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
+            colInUseRemaining.setCellValueFactory(
+                    data -> new SimpleIntegerProperty(data.getValue().getApparatusRemaining()).asObject());
         }
 
         // Setup History Table columns
@@ -346,15 +408,11 @@ public class AdminDashboardController implements Initializable {
             colHistLabActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
             colHistApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
             colHistQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
-            colHistBorrowed.setCellValueFactory(data -> {
-                // Show created_at as "Date Borrowed"
-                Timestamp ts = data.getValue().getCreatedAt();
-                return new SimpleStringProperty(ts != null ? ts.toString() : "");
-            });
-            colHistReturned.setCellValueFactory(data -> {
-                Timestamp ts = data.getValue().getUpdatedAt();
-                return new SimpleStringProperty(ts != null ? ts.toString() : "");
-            });
+            colHistBorrowed.setCellValueFactory(
+                    data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
+            colHistReturned.setCellValueFactory(
+                    data -> new SimpleStringProperty(formatTimestamp(data.getValue().getUpdatedAt())));
+
             // Duration: from request creation to return time
             colHistDuration.setCellValueFactory(data -> {
                 Timestamp start = data.getValue().getCreatedAt();
@@ -377,8 +435,10 @@ public class AdminDashboardController implements Initializable {
         } else {
             applyTextCellStyle(colGroupId, colGrpName, colGrpUsername);
         }
-        applyTextCellStyle(colInUseId, colInUseGroup, colInUseLabActivity, colInUseApparatus, colInUseQty, colInUseDate,
+        applyTextCellStyle(colInUseId, colInUseGroup, colInUseLabActivity, colInUseApparatus, colInUseQty,
+                colInUseCollected,
                 colInUseRemaining);
+
         if (colHistId != null) {
             applyTextCellStyle(colHistId, colHistGroup, colHistLabActivity, colHistApparatus, colHistQty,
                     colHistBorrowed, colHistReturned,
@@ -410,8 +470,9 @@ public class AdminDashboardController implements Initializable {
             disableReorderAndSort(colGroupId, colGrpName, colGrpUsername);
         }
         disableReorderAndSort(colInUseId, colInUseGroup, colInUseLabActivity, colInUseApparatus, colInUseQty,
-                colInUseDate,
+                colInUseCollected,
                 colInUseRemaining);
+
         if (colHistId != null) {
             disableReorderAndSort(colHistId, colHistGroup, colHistLabActivity, colHistApparatus, colHistQty,
                     colHistBorrowed,
@@ -451,7 +512,10 @@ public class AdminDashboardController implements Initializable {
         colInUseGroup.setMinWidth(130);
         colInUseApparatus.setMinWidth(150);
         colInUseQty.setMinWidth(50);
-        colInUseDate.setMinWidth(170);
+        if (colInUseCollected != null) {
+            colInUseCollected.setMinWidth(170);
+        }
+
         if (colInUseRemaining != null) {
             colInUseRemaining.setMinWidth(150);
         }
@@ -570,7 +634,9 @@ public class AdminDashboardController implements Initializable {
     @SafeVarargs
     private final void disableReorderAndSort(TableColumn<?, ?>... columns) {
         for (TableColumn<?, ?> col : columns) {
-            col.setSortable(false);
+            if (col != null) {
+                col.setSortable(false);
+            }
         }
     }
 
@@ -580,7 +646,10 @@ public class AdminDashboardController implements Initializable {
     @SafeVarargs
     private final void applyTextCellStyle(TableColumn<?, ?>... columns) {
         for (TableColumn col : columns) {
+            if (col == null)
+                continue;
             col.setCellFactory(column -> {
+
                 return new javafx.scene.control.TableCell<Object, Object>() {
                     @Override
                     protected void updateItem(Object item, boolean empty) {
@@ -836,74 +905,6 @@ public class AdminDashboardController implements Initializable {
         applyGroupsSearchFilter();
     }
 
-    private void loadCurrentlyInUse() {
-        loadCurrentlyInUse(null, null);
-    }
-
-    private void loadCurrentlyInUse(LocalDate startDate, LocalDate endDate) {
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null) {
-            System.err.println("loadCurrentlyInUse: Connection is null!");
-            return;
-        }
-
-        String sql = "SELECT r.request_id AS rid, " +
-                "g.group_name AS gname, " +
-                "a.item_name AS aname, " +
-                "r.qty AS rqty, r.updated_at AS rdate, r.lab_activity AS lactivity, " +
-                "GREATEST(a.current_quantity - (" +
-                "  SELECT COALESCE(SUM(r2.qty), 0) " +
-                "  FROM requests r2 " +
-                "  WHERE r2.apparatus_id = r.apparatus_id AND r2.status IN ('Approved'::request_status, 'Pending'::request_status)"
-                +
-                "), 0) AS remaining_qty " +
-                "FROM requests r " +
-                "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
-                "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Approved'::request_status";
-
-        if (startDate != null) {
-            sql += " AND DATE(r.updated_at) >= ?";
-        }
-        if (endDate != null) {
-            sql += " AND DATE(r.updated_at) <= ?";
-        }
-        sql += " ORDER BY r.updated_at DESC";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int paramIndex = 1;
-            if (startDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(startDate));
-            }
-            if (endDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(endDate));
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest();
-                    req.setRequestId(rs.getInt("rid"));
-                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                    req.setQty(rs.getInt("rqty"));
-                    req.setUpdatedAt(rs.getTimestamp("rdate"));
-                    req.setLabActivity(rs.getString("lactivity"));
-                    // store remaining in status temporarily for display column
-                    req.setStatus("Remaining: " + rs.getInt("remaining_qty"));
-                    list.add(req);
-                }
-            }
-
-            System.out.println("loadCurrentlyInUse: Loaded " + list.size() + " in-use items");
-        } catch (SQLException e) {
-            System.err.println("loadCurrentlyInUse SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        inUseMaster = list;
-        applyInUseSearchFilter();
-    }
-
     // ==================== ACTION HANDLERS ====================
 
     @FXML
@@ -933,7 +934,11 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private void refreshInUse(ActionEvent event) {
         loadCurrentlyInUse();
-        loadStats();
+    }
+
+    @FXML
+    private void refreshClaiming(ActionEvent event) {
+        loadClaimingRequests();
     }
 
     @FXML
@@ -1056,15 +1061,60 @@ public class AdminDashboardController implements Initializable {
 
     @FXML
     private void markReturnedSelected(ActionEvent event) {
-        BorrowRequest selected = requestsTable.getSelectionModel().getSelectedItem();
-        if (selected == null && inUseTable != null) {
-            selected = inUseTable.getSelectionModel().getSelectedItem();
+        // Collect checked items first
+        List<BorrowRequest> checked = new ArrayList<>();
+        for (BorrowRequest req : inUseTable.getItems()) {
+            if (req.isSelected()) {
+                checked.add(req);
+            }
         }
-        if (selected == null) {
-            showAlert(AlertType.WARNING, "No Selection", "Please select a request to mark as returned.");
+
+        if (!checked.isEmpty()) {
+            processInUseBatchAction("Returned", checked);
+        } else {
+            BorrowRequest selected = inUseTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                showAlert(AlertType.WARNING, "No Selection", "Please select or check request(s) to mark as returned.");
+                return;
+            }
+            updateRequestStatus(selected.getRequestId(), "Returned");
+        }
+    }
+
+    private void processInUseBatchAction(String newStatus, List<BorrowRequest> items) {
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
             return;
+
+        int count = 0;
+        try {
+            conn.setAutoCommit(false);
+            String sql = "UPDATE requests SET status = ?::request_status WHERE request_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (BorrowRequest req : items) {
+                    stmt.setString(1, newStatus);
+                    stmt.setInt(2, req.getRequestId());
+                    stmt.addBatch();
+                    count++;
+                }
+                stmt.executeBatch();
+            }
+            conn.commit();
+            conn.setAutoCommit(true);
+
+            showAlert(AlertType.INFORMATION, "Success", count + " items marked as returned.");
+            loadCurrentlyInUse();
+            loadStats();
+            loadApparatus(); // Update remaining counts
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            showAlert(AlertType.ERROR, "Error", "Batch update failed: " + e.getMessage());
         }
-        updateRequestStatus(selected.getRequestId(), "Returned");
     }
 
     private void updateRequestStatus(int requestId, String newStatus) {
@@ -1072,7 +1122,13 @@ public class AdminDashboardController implements Initializable {
         if (conn == null)
             return;
 
-        String sql = "UPDATE requests SET status = ?::request_status WHERE request_id = ?";
+        String sql;
+        if ("Approved".equalsIgnoreCase(newStatus)) {
+            sql = "UPDATE requests SET status = ?::request_status, approved_at = NOW() WHERE request_id = ?";
+        } else {
+            sql = "UPDATE requests SET status = ?::request_status WHERE request_id = ?";
+        }
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newStatus);
             stmt.setInt(2, requestId);
@@ -1184,10 +1240,10 @@ public class AdminDashboardController implements Initializable {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int paramIndex = 1;
             if (startDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+                stmt.setDate(paramIndex++, java.sql.Date.valueOf(startDate));
             }
             if (endDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(endDate));
+                stmt.setDate(paramIndex++, java.sql.Date.valueOf(endDate));
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -1210,6 +1266,108 @@ public class AdminDashboardController implements Initializable {
 
         historyMaster = list;
         applyHistorySearchFilter();
+    }
+
+    public void loadCurrentlyInUse() {
+        loadCurrentlyInUse(null, null);
+    }
+
+    public void loadCurrentlyInUse(LocalDate startDate, LocalDate endDate) {
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
+            return;
+
+        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+        String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, a.current_quantity "
+                +
+                "FROM requests r " +
+                "JOIN student_groups g ON r.group_id = g.group_id " +
+                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                "WHERE r.status = 'Released'::request_status";
+
+        if (startDate != null && endDate != null) {
+            sql += " AND DATE(r.updated_at) BETWEEN ? AND ?";
+        }
+        sql += " ORDER BY r.updated_at DESC";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (startDate != null && endDate != null) {
+                stmt.setDate(1, java.sql.Date.valueOf(startDate));
+                stmt.setDate(2, java.sql.Date.valueOf(endDate));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BorrowRequest req = new BorrowRequest(
+                            rs.getInt("request_id"),
+                            rs.getInt("group_id"),
+                            rs.getString("group_name"),
+                            rs.getInt("apparatus_id"),
+                            rs.getString("item_name"),
+                            rs.getInt("qty"),
+                            rs.getString("status"),
+                            rs.getTimestamp("updated_at"));
+                    req.setLabActivity(rs.getString("lab_activity"));
+                    req.setApprovedAt(rs.getTimestamp("approved_at"));
+                    req.setApparatusRemaining(rs.getInt("current_quantity"));
+                    list.add(req);
+                }
+            }
+            inUseTable.setItems(list);
+            inUseTable.refresh();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void loadClaimingRequests() {
+        loadClaimingRequests(null);
+    }
+
+    public void loadClaimingRequests(String search) {
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
+            return;
+
+        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+        String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, g.email "
+                +
+                "FROM requests r " +
+                "JOIN student_groups g ON r.group_id = g.group_id " +
+                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                "WHERE r.status = 'Approved'::request_status";
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql += " AND (g.group_name ILIKE ? OR r.request_id::text ILIKE ? OR r.lab_activity ILIKE ?)";
+        }
+        sql += " ORDER BY r.updated_at DESC";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (search != null && !search.trim().isEmpty()) {
+                String p = "%" + search + "%";
+                stmt.setString(1, p);
+                stmt.setString(2, p);
+                stmt.setString(3, p);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BorrowRequest req = new BorrowRequest(
+                            rs.getInt("request_id"),
+                            rs.getInt("group_id"),
+                            rs.getString("group_name"),
+                            rs.getInt("apparatus_id"),
+                            rs.getString("item_name"),
+                            rs.getInt("qty"),
+                            rs.getString("status"),
+                            rs.getTimestamp("updated_at"));
+                    req.setLabActivity(rs.getString("lab_activity"));
+                    req.setApprovedAt(rs.getTimestamp("approved_at"));
+                    list.add(req);
+                }
+            }
+            claimingTable.setItems(list);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private String calculateDurationText(Timestamp start, Timestamp end) {
@@ -1648,45 +1806,172 @@ public class AdminDashboardController implements Initializable {
             return;
         }
 
-        // Build confirmation message listing all selected apparatus
+        // Build confirmation message
         StringBuilder sb = new StringBuilder();
-        sb.append("You are about to " + newStatus.toLowerCase() + " the following ");
+        sb.append("You are about to ").append(newStatus.toLowerCase()).append(" the following ");
         sb.append(selected.size()).append(" request(s):\n\n");
         for (BorrowRequest req : selected) {
             sb.append("  • #").append(req.getRequestId())
                     .append(" - ").append(req.getGroupName())
                     .append(" → ").append(req.getApparatusName())
-                    .append(" x").append(req.getQty())
                     .append("\n");
         }
-        sb.append("\nAre you sure?");
 
-        // Show confirmation dialog
         Alert confirm = new Alert(AlertType.CONFIRMATION);
-        confirm.setTitle("Batch " + newStatus);
-        confirm.setHeaderText("Confirm Batch " + newStatus);
+        confirm.setTitle("Confirm Batch " + newStatus);
+        confirm.setHeaderText(null);
         confirm.setContentText(sb.toString());
-        confirm.getDialogPane().setMinWidth(500);
-        confirm.getDialogPane().setMinHeight(300);
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            int successCount = 0;
-            for (BorrowRequest req : selected) {
-                updateRequestStatus(req.getRequestId(), newStatus);
-                successCount++;
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
+
+            try {
+                conn.setAutoCommit(false);
+                String sql = "UPDATE requests SET status = ?::request_status, updated_at = NOW() WHERE request_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    for (BorrowRequest req : selected) {
+                        stmt.setString(1, newStatus);
+                        stmt.setInt(2, req.getRequestId());
+                        stmt.addBatch();
+                    }
+                    stmt.executeBatch();
+                }
+                conn.commit();
+
+                // --- Grouped Email Notifications ---
+                if ("Approved".equalsIgnoreCase(newStatus)) {
+                    groupAndSendEmails(selected, newStatus);
+                } else if ("Rejected".equalsIgnoreCase(newStatus)) {
+                    // Rejection can still be individual or grouped, but grouping is better
+                    groupAndSendEmails(selected, newStatus);
+                }
+
+                loadPendingRequests();
+                loadClaimingRequests();
+                loadCurrentlyInUse();
+                loadStats();
+                showAlert(AlertType.INFORMATION, "Success", "Selected requests updated to " + newStatus);
+            } catch (SQLException ex) {
+                try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                }
+                showAlert(AlertType.ERROR, "Database Error", "Failed to update requests: " + ex.getMessage());
             }
-            // Reset selection
-            if (selectAllCheckBox != null) {
-                selectAllCheckBox.setSelected(false);
-            }
-            showAlert(AlertType.INFORMATION, "Batch " + newStatus,
-                    successCount + " request(s) have been " + newStatus.toLowerCase() + ".");
-            loadPendingRequests();
-            loadCurrentlyInUse();
-            loadApparatus();
-            loadStats();
         }
+    }
+
+    /**
+     * Groups requests by Group and Lab Activity to send consolidated emails.
+     */
+    private void groupAndSendEmails(List<BorrowRequest> requests, String status) {
+        // Map<GroupId, Map<LabActivity, List<BorrowRequest>>>
+        java.util.Map<Integer, java.util.Map<String, List<BorrowRequest>>> groups = new java.util.HashMap<>();
+
+        for (BorrowRequest req : requests) {
+            groups.computeIfAbsent(req.getGroupId(), k -> new java.util.HashMap<>())
+                    .computeIfAbsent(req.getLabActivity() != null ? req.getLabActivity() : "", k -> new ArrayList<>())
+                    .add(req);
+        }
+
+        // For each group, get their email and send
+        for (Integer groupId : groups.keySet()) {
+            String groupEmail = getGroupEmail(groupId);
+            if (groupEmail == null)
+                continue;
+
+            java.util.Map<String, List<BorrowRequest>> activities = groups.get(groupId);
+            for (String activity : activities.keySet()) {
+                List<BorrowRequest> items = activities.get(activity);
+                String gname = items.get(0).getGroupName();
+
+                java.util.List<EmailService.ApparatusInfo> emailItems = new ArrayList<>();
+                for (BorrowRequest item : items) {
+                    emailItems.add(new EmailService.ApparatusInfo(item.getApparatusName(), item.getQty()));
+                }
+
+                EmailService.sendBatchStatusNotification(groupEmail, gname, emailItems, activity, status);
+            }
+        }
+    }
+
+    private String getGroupEmail(int groupId) {
+        Connection conn = Connector_ChemSystem.getConnection();
+        if (conn == null)
+            return null;
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT email FROM student_groups WHERE group_id = ?")) {
+            stmt.setInt(1, groupId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next())
+                    return rs.getString("email");
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @FXML
+    private void batchReleasedSelected(ActionEvent event) {
+        List<BorrowRequest> selected = new ArrayList<>();
+        for (BorrowRequest req : claimingTable.getItems()) {
+            if (req.isSelected()) {
+                selected.add(req);
+            }
+        }
+
+        if (selected.isEmpty()) {
+            showAlert(AlertType.WARNING, "No Selection", "Please check at least one request to confirm receipt.");
+            return;
+        }
+
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Receipt");
+        confirm.setHeaderText("Tracking Releasing Time");
+        confirm.setContentText("Confirm that students have received " + selected.size()
+                + " item(s)? This will set the releasing time to now.");
+
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
+            try {
+                conn.setAutoCommit(false);
+                String sql = "UPDATE requests SET status = 'Released'::request_status, updated_at = NOW() WHERE request_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    for (BorrowRequest req : selected) {
+                        stmt.setInt(1, req.getRequestId());
+                        stmt.addBatch();
+                    }
+                    stmt.executeBatch();
+                }
+                conn.commit();
+                refreshClaiming(null);
+                refreshInUse(null);
+                loadStats();
+                showAlert(AlertType.INFORMATION, "Success", "Items marked as Released. Tracking started.");
+            } catch (SQLException ex) {
+                try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                }
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    @FXML
+    private void filterClaimingBySearch(KeyEvent event) {
+        loadClaimingRequests(claimingSearchField.getText());
+    }
+
+    @FXML
+    private void clearClaimingSearch(ActionEvent event) {
+        claimingSearchField.clear();
+        loadClaimingRequests();
     }
 
     // ==================== APPARATUS REQUESTS (Feature 3 admin side)
@@ -1717,7 +2002,7 @@ public class AdminDashboardController implements Initializable {
                         rs.getString("apparatus_name"),
                         rs.getString("reason") != null ? rs.getString("reason") : "",
                         rs.getString("status"),
-                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toString() : ""));
+                        formatTimestamp(rs.getTimestamp("created_at"))));
             }
         } catch (SQLException e) {
             System.err.println("loadApparatusRequests SQL error: " + e.getMessage());
@@ -1759,5 +2044,20 @@ public class AdminDashboardController implements Initializable {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Error", "Failed to update apparatus request: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void toggleSelectAllInUse(ActionEvent event) {
+        boolean selected = selectAllInUseCheckBox.isSelected();
+        for (BorrowRequest req : inUseTable.getItems()) {
+            req.setSelected(selected);
+        }
+        inUseTable.refresh();
+    }
+
+    private String formatTimestamp(Timestamp ts) {
+        if (ts == null)
+            return "";
+        return new java.text.SimpleDateFormat("MMM dd, yyyy hh:mm a").format(ts);
     }
 }
