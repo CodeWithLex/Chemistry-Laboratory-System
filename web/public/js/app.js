@@ -342,7 +342,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   closeReceiptModalBtn.addEventListener('click', () => receiptModal.classList.remove('active'));
-  printReceiptBtn.addEventListener('click', () => window.print());
+  
+  printReceiptBtn.addEventListener('click', () => {
+    const originalTitle = document.title;
+    const activityName = receiptActivityTitle.textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    document.title = `Receipt_${activityName}`;
+    
+    window.print();
+    
+    // Restore title after a short delay (printing is usually synchronous in blocking the UI, 
+    // but some browsers might need a moment)
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  });
 
   // 6. Fetch Other Groups' Pending Requests
   async function fetchOthersPendingRequests() {
