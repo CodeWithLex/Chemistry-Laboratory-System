@@ -106,6 +106,48 @@
       <!-- Main Layout Grid -->
       <main class="dashboard-grid">
 
+        <!-- NEW: System Insights Bar -->
+        <div class="stats-row full-width">
+          <div class="stat-bubble glass">
+            <div class="stat-bubble-icon amber">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M10 10V4a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v6h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h7Z"/></svg>
+            </div>
+            <div class="stat-bubble-info">
+              <span class="label">Pending Review</span>
+              <span id="stat-pending-count" class="value">0</span>
+            </div>
+          </div>
+          <div class="stat-bubble glass">
+            <div class="stat-bubble-icon blue">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+            </div>
+            <div class="stat-bubble-info">
+              <span class="label">Items Borrowed</span>
+              <span id="stat-borrowed-count" class="value">0</span>
+            </div>
+          </div>
+          <div class="stat-bubble glass">
+            <div class="stat-bubble-icon green">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-11 11.01-3-3"/></svg>
+            </div>
+            <div class="stat-bubble-info">
+              <span class="label">Inventory Health</span>
+              <span id="stat-inventory-health" class="value">Good</span>
+            </div>
+          </div>
+          <div class="stat-bubble glass">
+            <div class="stat-bubble-icon teal">
+              <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="stat-bubble-info">
+              <span class="label">Lab Utilization</span>
+              <div class="util-bar-container">
+                 <div id="util-bar-fill" class="util-bar-fill" style="width: 45%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Column 1: Forms & Active Items -->
         <div class="dashboard-col">
 
@@ -235,6 +277,26 @@
             <div id="requests-history-list" class="list-container"></div>
           </div>
 
+          <!-- Activity Timeline -->
+          <div class="card glass">
+            <h3>
+              <svg class="svg-icon icon-md icon-primary" style="margin-right: 8px;" viewBox="0 0 24 24">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              Recent Activity
+            </h3>
+            <p class="section-desc">The latest updates for your group.</p>
+            <div id="activity-timeline" class="timeline-container">
+              <!-- Timeline events injected here -->
+              <div class="empty-state">
+                <svg class="svg-illustration" viewBox="0 0 64 64">
+                   <circle cx="32" cy="32" r="30" fill="var(--paper-deep)" />
+                   <path d="M32 15v17l10 5" stroke="var(--line-strong)" stroke-width="3" fill="none" />
+                </svg>
+                <p>No recent activity tracked yet.</p>
+              </div>
+            </div>
+          </div>
         </div> <!-- End Column 2 -->
 
       </main>

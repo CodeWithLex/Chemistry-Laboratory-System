@@ -57,6 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const receiptActivityTitle = document.getElementById('receipt-activity-title');
   const receiptQuickSelect = document.getElementById('receipt-quick-select');
 
+  // Dashboard Stats Elements
+  const statPendingCount = document.getElementById('stat-pending-count');
+  const statBorrowedCount = document.getElementById('stat-borrowed-count');
+  const statInventoryHealth = document.getElementById('stat-inventory-health');
+  const statUtilBar = document.getElementById('util-bar-fill');
+  const activityTimeline = document.getElementById('activity-timeline');
+
   // Application State
   let currentGroup = null;
   let requestCart = [];
@@ -316,6 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
 
+        // Update Stats & Timeline
+        updateDashboardStats(data);
+        renderTimeline(data);
+
         // Bind Receipt Buttons
         document.querySelectorAll('.btn-receipt-small').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -378,6 +389,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   });
 
+  // 6. Stats & Timeline Logic
+  function updateDashboardStats(data) {
+    const pending = data.filter(r => r.status === 'Pending').length;
+    const borrowed = data.filter(r => r.status === 'Approved').length;
+    const total = data.length;
+
+    statPendingCount.textContent = pending;
+    statBorrowedCount.textContent = borrowed;
+    
+    // Utilization Bar logic (Example: Pending vs Total)
+    const utilProgress = total > 0 ? Math.min(100, (pending / 10) * 100) : 0;
+    statUtilBar.style.width = `${utilProgress}%`;
+
+    // Health logic (Example: based on rejection rate)
+    const rejected = data.filter(r => r.status === 'Rejected').length;
+    const health = (rejected / (total || 1)) > 0.3 ? 'Warning' : 'Good';
+    statInventoryHealth.textContent = health;
+    statInventoryHealth.style.color = health === 'Good' ? 'var(--green)' : 'var(--amber)';
+  }
+
+  function renderTimeline(data) {
+    if (!activityTimeline) return;
+    
+    // Take the 6 most recent unique status changes or requests
+    const recent = data.slice(0, 6);
+    
+    if (recent.length === 0) {
+      // Keep existing empty state
+      return;
+    }
+
+    activityTimeline.innerHTML = '';
+    recent.forEach(r => {
+      const event = document.createElement('div');
+      event.className = 'timeline-event';
+      
+      let dotClass = 'active';
+      if (r.status === 'Approved') dotClass = 'success';
+      if (r.status === 'Rejected') dotClass = 'warning';
+      
+      const timeAgo = formatTimeAgo(new Date(r.created_at));
+
+      event.innerHTML = `
+        <div class="timeline-dot ${dotClass}"></div>
+        <div class="timeline-content">
+          <span class="timeline-text">${escapeHtml(r.item_name)}: ${r.status}</span>
+          <span class="timeline-time">${timeAgo}</span>
+        </div>
+      `;
+      activityTimeline.appendChild(event);
+    });
+  }
+
+  function formatTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return date.toLocaleDateString();
+  }
+
   // 6. Fetch Other Groups' Pending Requests
   async function fetchOthersPendingRequests() {
     try {
@@ -412,12 +486,20 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="item-title">${escapeHtml(appName)}</span>
               <div class="other-pending-details">${listStr}</div>
             </div>
-            <span class="status-badge Pending">Pending</span>
+            <span class="status-badge Pending">In Queue</span>
           `;
           othersPendingList.appendChild(div);
         });
       } else {
-        othersPendingList.innerHTML = '<p class="empty-text">No pending requests from other groups.</p>';
+        othersPendingList.innerHTML = `
+          <div class="empty-state">
+            <svg class="svg-illustration" viewBox="0 0 64 64">
+              <rect x="12" y="10" width="40" height="44" rx="2" fill="none" stroke="var(--line-strong)" stroke-width="3"/>
+              <path d="M22 24h20M22 32h20M22 40h10" stroke="var(--line-strong)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <p>Borrowing queue is clear.<br><span style="font-size: 0.75rem; opacity: 0.7;">No pending requests from other groups.</span></p>
+          </div>
+        `;
       }
     } catch (err) {
       console.error('Fetch other pending requests error:', err);
