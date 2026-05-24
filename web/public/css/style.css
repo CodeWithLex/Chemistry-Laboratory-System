@@ -1339,8 +1339,19 @@ form {
     padding: 16px;
   }
 
+  .navbar {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px 16px;
+  }
+
+  .nav-brand {
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
   .nav-brand h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
 
   .nav-actions,
