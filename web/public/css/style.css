@@ -173,14 +173,11 @@ textarea:focus-visible {
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .glass:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-1.5px);
-  border-color: var(--line-strong);
+  transform: translateY(-2px);
 }
 
 /* ==========================================
@@ -412,130 +409,29 @@ textarea:focus-visible {
   background: #e2e8f0;
 }
 
-/* ==========================================
-   PROFESSIONAL PRINT & PDF EXPORT
-   ========================================== */
+/* Print Overrides */
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 0; /* Clear all default margins to give us full canvas control */
+  body * {
+    visibility: hidden;
   }
-
-  /* Reset body for a clean print canvas */
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-    font-size: 11pt; /* Professional print scale */
-    color: #000000 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    /* Use flexbox on the entire body to center the receipt vertically/horizontally */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 100vh !important;
+  #receipt-printable-area, #receipt-printable-area * {
+    visibility: visible;
   }
-
-  /* Hide absolutely everything else */
-  body > *:not(#receipt-modal),
-  .toast-container,
-  .receipt-actions,
-  .close-btn,
-  .modal-header,
-  .navbar,
-  .main-footer,
-  .dashboard-grid {
+  #receipt-printable-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+  .receipt-actions, .close-btn, .modal-overlay::before {
     display: none !important;
   }
-
-  /* Show modal container as a simple transparent wrapper */
-  #receipt-modal {
-    display: block !important;
-    position: relative !important;
+  .modal-overlay {
     background: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    box-shadow: none !important;
-    z-index: auto !important;
-  }
-
-  /* Target the Modal Card specifically to remove screen-based styling */
-  #receipt-modal .modal-card {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    transform: none !important;
-  }
-
-  #receipt-modal .modal-body {
-    padding: 0 !important;
-  }
-
-  /* The actual Receipt Content Box */
-  #receipt-printable-area {
-    display: block !important;
-    visibility: visible !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    width: 180mm !important; /* Optimized width for A4 (210mm - safe margins) */
-    padding: 30px !important;
-    margin: auto !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 4px !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  #receipt-printable-area * {
-    visibility: visible !important;
-    color: #000000 !important;
-  }
-
-  /* Professional spacing for print */
-  .receipt-header {
-    border-bottom: 3px solid #1a4d1a !important;
-    margin-bottom: 25px !important;
-    padding-bottom: 15px !important;
-  }
-
-  .receipt-header h2 {
-    font-size: 24pt !important;
-    letter-spacing: 1.5px !important;
-  }
-
-  /* Table styling for paper */
-  .receipt-table {
-    border-bottom: 1px solid #000 !important;
-  }
-
-  .receipt-table th {
-    font-weight: 800 !important;
-    color: #000 !important;
-    border-bottom: 2px solid #000 !important;
-  }
-
-  /* Ensure signature lines are solid and visible on paper */
-  .signature-line {
-    border-top: 1.5pt solid #000 !important;
-    width: 160px !important;
-    padding-top: 10px !important;
-    color: #000 !important;
-    font-weight: 600 !important;
-  }
-
-  /* Footer meta adjustment */
-  .receipt-meta {
-    gap: 20px !important;
-    margin-bottom: 20px !important;
   }
 }
-
 
 /* Login */
 
@@ -1421,113 +1317,91 @@ form {
 
 @media (max-width: 620px) {
   #dashboard-view {
-    padding: 10px;
+    padding: 12px;
   }
 
   .stats-row {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
   }
   
   .stat-bubble {
-    padding: 10px;
-    gap: 8px;
-    border-radius: 10px;
+    padding: 12px;
+    gap: 10px;
   }
   
   .stat-bubble-icon {
-    width: 32px;
-    height: 32px;
-    padding: 6px;
+    width: 36px;
+    height: 36px;
   }
   
   .stat-bubble-info .value {
-    font-size: 1rem;
-    margin-top: 2px;
-  }
-
-  .stat-bubble-info .label {
-    font-size: 0.65rem;
+    font-size: 1.1rem;
   }
 
   .login-card,
   .card,
   .welcome-card,
   .modal-card {
-    padding: 18px;
-    border-radius: 12px;
+    padding: 16px;
   }
 
   .navbar {
     grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 12px;
-    border-top-width: 4px;
-    text-align: center;
+    gap: 12px;
+    padding: 18px 16px;
   }
 
   .nav-brand {
     justify-content: center;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--line);
     margin-bottom: 4px;
   }
 
   .nav-brand h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
 
-  .nav-actions {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
+  .nav-actions,
+  .member-add-form {
+    display: grid;
+    grid-template-columns: 1fr;
     width: 100%;
-    justify-content: center;
   }
 
-  .welcome-badge {
-    display: none; /* Hide welcome badge on very small screens to save space */
-  }
-
+  .welcome-badge,
   .btn-secondary,
   .btn-danger {
-    flex: 1;
-    min-height: 40px;
-    font-size: 0.85rem;
-    padding: 0 10px;
-  }
-
-  .dashboard-grid {
-    gap: 12px;
+    width: 100%;
+    max-width: none;
   }
 
   .list-item,
   .member-row {
     grid-template-columns: 1fr;
-    gap: 4px;
-    padding: 10px;
+    align-items: start;
   }
 
   .status-badge {
-    font-size: 0.75rem;
-    padding: 2px 8px;
+    width: fit-content;
   }
 
   /* Receipt Mobile Fix */
   .receipt-content {
-    padding: 20px 14px;
+    padding: 24px 16px;
   }
 
   .receipt-footer {
     flex-direction: column;
     align-items: center;
-    gap: 32px;
-    margin-top: 32px;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .signature-box {
+    width: 100%;
   }
 
   .signature-line {
-    max-width: 200px;
+    max-width: 240px;
   }
 }
 
