@@ -339,10 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
 
-        // Update Stats & Timeline
-        updateDashboardStats(data);
-        renderTimeline(data);
-
         // Bind Receipt Buttons
         document.querySelectorAll('.btn-receipt-small').forEach(btn => {
           btn.addEventListener('click', (e) => {
@@ -355,8 +351,18 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         requestsHistoryList.innerHTML = '<p class="empty-text">No requests submitted yet.</p>';
       }
+
+      // ─────────────────────────────────────────────
+      // ALWAYS Update Stats & Timeline (even if empty)
+      // otherwise skeletons get stuck!
+      // ─────────────────────────────────────────────
+      updateDashboardStats(data);
+      renderTimeline(data);
+
     } catch (err) {
       console.error('Fetch requests history error:', err);
+      if (requestsHistoryList) requestsHistoryList.innerHTML = '<p class="empty-text">Error loading requests.</p>';
+      if (activityTimeline) activityTimeline.innerHTML = '<p class="empty-text">Error loading activity.</p>';
     }
   }
 
@@ -432,7 +438,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const recent = data.slice(0, 6);
     
     if (recent.length === 0) {
-      // Keep existing empty state
+      // Release skeleton and show empty SVG illustration
+      activityTimeline.innerHTML = `
+        <div class="empty-state">
+          <svg class="svg-illustration" viewBox="0 0 64 64">
+             <circle cx="32" cy="32" r="30" fill="var(--paper-deep)" />
+             <path d="M32 15v17l10 5" stroke="var(--line-strong)" stroke-width="3" fill="none" />
+          </svg>
+          <p>No recent activity tracked yet.</p>
+        </div>
+      `;
       return;
     }
 
@@ -519,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Fetch other pending requests error:', err);
+      if (othersPendingList) othersPendingList.innerHTML = '<p class="empty-text">Error loading queue.</p>';
     }
   }
 
