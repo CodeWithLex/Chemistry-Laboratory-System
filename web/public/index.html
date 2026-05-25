@@ -80,14 +80,18 @@
       <!-- Navbar -->
       <header class="navbar glass">
         <div class="nav-brand">
-          <svg class="svg-icon icon-md icon-primary" style="margin-right: 8px;" viewBox="0 0 24 24">
-            <path d="M4.5 3h15M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3M6 14h12" />
-          </svg>
-          <h2>ChemLab Portal</h2>
+          <div class="brand-logo">
+            <svg class="svg-icon icon-md icon-primary" viewBox="0 0 24 24">
+              <path d="M4.5 3h15M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3M6 14h12" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h2>ChemLab Portal</h2>
+            <span id="group-welcome-badge" class="welcome-badge">Loading...</span>
+          </div>
         </div>
 
         <div class="nav-actions">
-          <span id="group-welcome-badge" class="welcome-badge">Loading group...</span>
           <button id="toggle-members-btn" class="btn-secondary">
             <svg class="svg-icon icon-sm" style="margin-right: 6px;" viewBox="0 0 24 24">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
