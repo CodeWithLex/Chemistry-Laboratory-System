@@ -398,6 +398,53 @@ textarea:focus-visible {
   font-weight: 500;
 }
 
+/* Skeleton Loading States */
+.skeleton {
+  background: var(--paper-deep);
+  background: linear-gradient(
+    90deg,
+    var(--paper-deep) 25%,
+    var(--line) 50%,
+    var(--paper-deep) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+.skeleton-text {
+  height: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.skeleton-title {
+  height: 18px;
+  width: 60%;
+  margin-bottom: 12px;
+}
+
+@keyframes skeletonPulse {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.pulse-glow {
+  animation: pulseOpacity 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseOpacity {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .btn-receipt-small {
   font-size: 12px;
   padding: 4px 10px;

@@ -105,10 +105,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadDashboardData() {
+    injectSkeletons();
     fetchApparatus();
     fetchRequestsHistory();
     fetchOthersPendingRequests();
     fetchMembers();
+  }
+
+  function injectSkeletons() {
+    const skeletonHtml = `
+      <div class="loading-placeholder">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+      </div>
+    `;
+    
+    if (othersPendingList) othersPendingList.innerHTML = skeletonHtml;
+    if (requestsHistoryList) requestsHistoryList.innerHTML = skeletonHtml;
+    if (activityTimeline) activityTimeline.innerHTML = skeletonHtml;
+    // Note: BorrowingList is hidden by default, so we don't need a skeleton there
   }
 
   // ==========================================
