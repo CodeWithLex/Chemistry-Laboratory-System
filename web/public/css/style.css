@@ -272,19 +272,25 @@ textarea:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  gap: 20px;
 }
 
 .signature-box {
-  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .signature-line {
   border-top: 1px solid #1e293b;
-  width: 180px;
+  width: 100%;
+  max-width: 200px;
   padding-top: 8px;
   font-size: 11px;
   color: #64748b;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .receipt-actions {
@@ -1377,4 +1383,25 @@ form {
   .status-badge {
     width: fit-content;
   }
+
+  /* Receipt Mobile Fix */
+  .receipt-content {
+    padding: 24px 16px;
+  }
+
+  .receipt-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .signature-box {
+    width: 100%;
+  }
+
+  .signature-line {
+    max-width: 240px;
+  }
 }
+
