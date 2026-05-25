@@ -43,6 +43,13 @@ function requireEnv(name) {
   return value.trim();
 }
 
+// ─── Environment Summary (Safe to log) ─────────────────────────────────────────
+console.log('[STARTUP] Checking Environment...');
+console.log(`- NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`- DB_HOST:  ${process.env.SUPABASE_HOST ? 'Present' : 'MISSING'}`);
+console.log(`- RESEND:   ${process.env.RESEND_API_KEY ? 'Configured' : 'NOT CONFIGURED'}`);
+console.log(`- PORT:     ${process.env.PORT || 3000}`);
+
 /**
  * Raw Socket Connectivity Probe
  * Tests if a host:port is reachable to bypass ETIMEDOUT guessing.
@@ -106,11 +113,17 @@ async function startServer() {
   try {
     const client = await pool.connect();
     console.log('[DB] Connected to Supabase PostgreSQL successfully.');
+    // Check if we can run a simple query
+    const res = await client.query('SELECT NOW()');
+    console.log('[DB] Basic query test successful at:', res.rows[0].now);
     client.release();
   } catch (err) {
-    console.error('[DB FATAL] Failed to connect to Supabase:', err.message);
-    console.error('[DB HINT] If your IP changed recently, wait 1-2 mins and Render will retry.');
-    // We don't exit here to allow Render to keep trying the deploy
+    console.error('[DB FATAL] Failed to connect to Supabase!');
+    console.error(`[DB ERROR DETAILS] Code: ${err.code || 'N/A'}, Message: ${err.message}`);
+    console.error(`[DB DEBUG] Attempted Host: ${dbHost}, User: ${process.env.SUPABASE_USER}`);
+    console.error('[DB HINT] Common issues: 1) Wrong credentials, 2) IP Whitelisting in Supabase, 3) IPv6 connectivity issues.');
+    // In production, we keep the process alive so Render doesn't loop forever,
+    // allowing developers to see the logs.
   }
 
   // Global reference for any tools that need it
