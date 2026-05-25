@@ -437,6 +437,76 @@ app.get('/api/requests/others-pending', requireAuth, async (req, res) => {
   }
 });
 
+// ─── DASHBOARD SUMMARY (Performance Optimization) ────────────────────────────
+// Fetches all dashboard components in a single round-trip.
+app.get('/api/dashboard/summary', requireAuth, async (req, res) => {
+  try {
+    const groupId = req.session.groupId;
+
+    // Run all fetches in parallel for maximum speed
+    const [myRequests, othersPending, apparatus] = await Promise.all([
+      // 1. My Timeline & History
+      pool.query(
+        `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, a.item_name
+         FROM requests r
+         JOIN apparatus a ON r.apparatus_id = a.apparatus_id
+         WHERE r.group_id = $1
+         ORDER BY r.created_at DESC LIMIT 50`,
+        [groupId]
+      ),
+      // 2. Others Pending (Joined with names on server)
+      pool.query(
+        `SELECT r.apparatus_id, a.item_name, g.group_name, r.qty
+         FROM requests r
+         JOIN student_groups g ON r.group_id = g.group_id
+         JOIN apparatus a ON r.apparatus_id = a.apparatus_id
+         WHERE r.status = 'Pending' AND r.group_id != $1
+         ORDER BY r.created_at ASC`,
+        [groupId]
+      ),
+      // 3. Apparatus List (for select dropdown)
+      pool.query(`
+        SELECT a.apparatus_id, a.item_name, a.current_quantity,
+          (a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending','Released') THEN r.qty ELSE 0 END), 0))::int AS real_available
+        FROM apparatus a
+        LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending','Released')
+        WHERE a.current_quantity > 0
+          AND (a.deleted_at IS NULL OR a.deleted_at > NOW())
+        GROUP BY a.apparatus_id, a.item_name, a.current_quantity
+        ORDER BY a.item_name
+      `)
+    ]);
+
+    // Group the 'Others Pending' by item name/id for the UI
+    const groupedPending = {};
+    othersPending.rows.forEach(row => {
+      const aid = row.apparatus_id;
+      if (!groupedPending[aid]) {
+        groupedPending[aid] = {
+          item_name: row.item_name,
+          requests: []
+        };
+      }
+      groupedPending[aid].requests.push({ 
+        group_name: row.group_name, 
+        qty: row.qty 
+      });
+    });
+
+    res.json({
+      myRequests: myRequests.rows,
+      othersPending: groupedPending,
+      apparatus: apparatus.rows,
+      serverTime: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[API] Dashboard summary error:', error.message);
+    res.status(500).json({ error: 'Failed to generate dashboard summary.' });
+  }
+});
+
+
 // Submit bulk borrow requests
 app.post('/api/requests/borrow', requireAuth, async (req, res) => {
   const { lab_activity, items } = req.body;
