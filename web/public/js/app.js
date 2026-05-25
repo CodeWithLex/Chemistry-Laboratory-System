@@ -104,49 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.reset();
   }
 
-  async function loadDashboardData() {
-    injectSkeletons();
-    
-    try {
-      const res = await fetch('/api/dashboard/summary');
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch summary');
-
-      // 1. Process Apparatus (for select dropdown)
-      renderApparatusSelect(data.apparatus);
-      
-      // 2. Process My History & Stats
-      renderMyHistory(data.myRequests);
-      
-      // 3. Process Others Pending
-      renderOthersPending(data.othersPending);
-
-      // 4. Load Members (Keep separate for now as it's in a modal)
-      fetchMembers();
-
-    } catch (err) {
-      console.error('Dashboard Load Error:', err);
-      showToast('Error loading some dashboard parts.', 'error');
-      // Skeletons will be cleared by the catch blocks in sub-renderers or handled here
-      if (othersPendingList) othersPendingList.innerHTML = '<p class="empty-text">Error loading queue.</p>';
-      if (requestsHistoryList) requestsHistoryList.innerHTML = '<p class="empty-text">Error loading history.</p>';
-    }
-  }
-
-  function injectSkeletons() {
-    const skeletonHtml = `
-      <div class="loading-placeholder">
-        <div class="skeleton skeleton-title"></div>
-        <div class="skeleton skeleton-text"></div>
-        <div class="skeleton skeleton-text" style="width: 80%;"></div>
-      </div>
-    `;
-    
-    if (othersPendingList) othersPendingList.innerHTML = skeletonHtml;
-    if (requestsHistoryList) requestsHistoryList.innerHTML = skeletonHtml;
-    if (activityTimeline) activityTimeline.innerHTML = skeletonHtml;
-    // Note: BorrowingList is hidden by default, so we don't need a skeleton there
+  function loadDashboardData() {
+    fetchApparatus();
+    fetchRequestsHistory();
+    fetchOthersPendingRequests();
+    fetchMembers();
   }
 
   // ==========================================
@@ -259,120 +221,128 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 4. Available Apparatus Select
-  function renderApparatusSelect(data) {
-    // Save previously selected value
-    const prevSelected = apparatusSelect.value;
-
-    apparatusSelect.innerHTML = '<option value="">Select an item...</option>';
-    data.forEach(item => {
-      const option = document.createElement('option');
-      option.value = item.apparatus_id;
-      option.disabled = item.real_available <= 0;
-      option.textContent = `${item.item_name} (${item.real_available} available)`;
-      apparatusSelect.appendChild(option);
-    });
-
-    // Restore previous selection if valid
-    if (prevSelected) {
-      apparatusSelect.value = prevSelected;
-    }
-  }
-
-  // LEGACY: Removed fetchApparatus() in favor of batch loading
-
-  // 5. Render Requests & History
-  function renderMyHistory(data) {
-    // Populate Currently Borrowed (Status: Approved)
-    const approvedItems = data.filter(r => r.status === 'Approved');
-    if (approvedItems.length > 0) {
-      borrowingCard.classList.remove('hidden');
-      borrowingList.innerHTML = '';
-      approvedItems.forEach(b => {
-        const div = document.createElement('div');
-        div.className = 'borrow-item';
-        div.innerHTML = `<strong>${escapeHtml(b.item_name)}</strong> x${b.qty}`;
-        borrowingList.appendChild(div);
-      });
-    } else {
-      borrowingCard.classList.add('hidden');
-    }
-
-    // Populate Request History (Grouped by Lab Activity)
-    if (data.length > 0) {
-      requestsHistoryList.innerHTML = '';
+  // 4. Fetch Available Apparatus
+  async function fetchApparatus() {
+    try {
+      const res = await fetch('/api/apparatus');
+      const data = await res.json();
       
-      // Grouping logic
-      const groups = {};
-      data.forEach(r => {
-        const act = r.lab_activity || 'General Laboratory Activity';
-        if (!groups[act]) groups[act] = [];
-        groups[act].push(r);
-      });
-      currentGroupHistoryGroups = groups;
+      // Save previously selected value
+      const prevSelected = apparatusSelect.value;
 
-      // Populate Quick Select
-      receiptQuickSelect.innerHTML = '<option value="">Quick Select Activity...</option>';
-      Object.keys(groups).sort().forEach(actTitle => {
-        const opt = document.createElement('option');
-        opt.value = actTitle;
-        opt.textContent = actTitle;
-        receiptQuickSelect.appendChild(opt);
+      apparatusSelect.innerHTML = '<option value="">Select an item...</option>';
+      data.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.apparatus_id;
+        option.disabled = item.real_available <= 0;
+        option.textContent = `${item.item_name} (${item.real_available} available)`;
+        apparatusSelect.appendChild(option);
       });
 
-      Object.keys(groups).forEach(actTitle => {
-        const items = groups[actTitle];
-        
-        // Header for the group
-        const header = document.createElement('div');
-        header.className = 'history-group-header';
-        header.innerHTML = `
-          <h4>${escapeHtml(actTitle)}</h4>
-          <button class="btn-receipt-small" data-activity="${escapeHtml(actTitle)}">
-            View Receipt
-          </button>
-        `;
-        requestsHistoryList.appendChild(header);
-
-        items.forEach(r => {
-          const div = document.createElement('div');
-          div.className = `list-item ${r.status}`;
-          const date = new Date(r.created_at).toLocaleDateString(undefined, { 
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-          });
-
-          div.innerHTML = `
-            <div class="item-info">
-              <span class="item-title">${escapeHtml(r.item_name)} x${r.qty}</span>
-              <span class="item-subtitle">Requested on ${date}</span>
-            </div>
-            <span class="status-badge ${r.status}">${r.status}</span>
-          `;
-          requestsHistoryList.appendChild(div);
-        });
-      });
-
-      // Bind Receipt Buttons
-      document.querySelectorAll('.btn-receipt-small').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const actTitle = e.target.getAttribute('data-activity');
-          const itemsToPopulate = groups[actTitle];
-          openReceipt(actTitle, itemsToPopulate);
-        });
-      });
-
-    } else {
-      requestsHistoryList.innerHTML = '<p class="empty-text">No requests submitted yet.</p>';
+      // Restore previous selection if valid
+      if (prevSelected) {
+        apparatusSelect.value = prevSelected;
+      }
+    } catch (err) {
+      console.error('Fetch apparatus error:', err);
     }
-
-    // ─────────────────────────────────────────────
-    // ALWAYS Update Stats & Timeline (even if empty)
-    // ─────────────────────────────────────────────
-    updateDashboardStats(data);
-    renderTimeline(data);
   }
 
-  // LEGACY: Removed fetchRequestsHistory() in favor of batch loading
+  // 5. Fetch Requests & Borrowing History
+  async function fetchRequestsHistory() {
+    try {
+      const res = await fetch('/api/requests/my');
+      const data = await res.json();
+      
+      // Populate Currently Borrowed (Status: Approved)
+      const approvedItems = data.filter(r => r.status === 'Approved');
+      if (approvedItems.length > 0) {
+        borrowingCard.classList.remove('hidden');
+        borrowingList.innerHTML = '';
+        approvedItems.forEach(b => {
+          const div = document.createElement('div');
+          div.className = 'borrow-item';
+          div.innerHTML = `<strong>${escapeHtml(b.item_name)}</strong> x${b.qty}`;
+          borrowingList.appendChild(div);
+        });
+      } else {
+        borrowingCard.classList.add('hidden');
+      }
+
+      // Populate Request History (Grouped by Lab Activity)
+      if (data.length > 0) {
+        requestsHistoryList.innerHTML = '';
+        
+        // Grouping logic
+        const groups = {};
+        data.forEach(r => {
+          const act = r.lab_activity || 'General Laboratory Activity';
+          if (!groups[act]) groups[act] = [];
+          groups[act].push(r);
+        });
+        currentGroupHistoryGroups = groups;
+
+        // Populate Quick Select
+        receiptQuickSelect.innerHTML = '<option value="">Quick Select Activity...</option>';
+        Object.keys(groups).sort().forEach(actTitle => {
+          const opt = document.createElement('option');
+          opt.value = actTitle;
+          opt.textContent = actTitle;
+          receiptQuickSelect.appendChild(opt);
+        });
+
+        Object.keys(groups).forEach(actTitle => {
+          const items = groups[actTitle];
+          
+          // Header for the group
+          const header = document.createElement('div');
+          header.className = 'history-group-header';
+          header.innerHTML = `
+            <h4>${escapeHtml(actTitle)}</h4>
+            <button class="btn-receipt-small" data-activity="${escapeHtml(actTitle)}">
+              View Receipt
+            </button>
+          `;
+          requestsHistoryList.appendChild(header);
+
+          items.forEach(r => {
+            const div = document.createElement('div');
+            div.className = `list-item ${r.status}`;
+            const date = new Date(r.created_at).toLocaleDateString(undefined, { 
+              month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+
+            div.innerHTML = `
+              <div class="item-info">
+                <span class="item-title">${escapeHtml(r.item_name)} x${r.qty}</span>
+                <span class="item-subtitle">Requested on ${date}</span>
+              </div>
+              <span class="status-badge ${r.status}">${r.status}</span>
+            `;
+            requestsHistoryList.appendChild(div);
+          });
+        });
+
+        // Update Stats & Timeline
+        updateDashboardStats(data);
+        renderTimeline(data);
+
+        // Bind Receipt Buttons
+        document.querySelectorAll('.btn-receipt-small').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const actTitle = e.target.getAttribute('data-activity');
+            const itemsToPopulate = groups[actTitle];
+            openReceipt(actTitle, itemsToPopulate);
+          });
+        });
+
+      } else {
+        requestsHistoryList.innerHTML = '<p class="empty-text">No requests submitted yet.</p>';
+      }
+    } catch (err) {
+      console.error('Fetch requests history error:', err);
+    }
+  }
 
   function openReceipt(title, items) {
     receiptActivityTitle.textContent = title;
@@ -446,16 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recent = data.slice(0, 6);
     
     if (recent.length === 0) {
-      // Release skeleton and show empty SVG illustration
-      activityTimeline.innerHTML = `
-        <div class="empty-state">
-          <svg class="svg-illustration" viewBox="0 0 64 64">
-             <circle cx="32" cy="32" r="30" fill="var(--paper-deep)" />
-             <path d="M32 15v17l10 5" stroke="var(--line-strong)" stroke-width="3" fill="none" />
-          </svg>
-          <p>No recent activity tracked yet.</p>
-        </div>
-      `;
+      // Keep existing empty state
       return;
     }
 
@@ -491,46 +452,59 @@ document.addEventListener('DOMContentLoaded', () => {
     return date.toLocaleDateString();
   }
 
-  // 6. Render Other Groups' Pending Requests
-  function renderOthersPending(data) {
-    const keys = Object.keys(data);
-    if (keys.length > 0) {
-      othersPendingList.innerHTML = '';
-      keys.forEach(aid => {
-        const itemData = data[aid];
-        const appName = itemData.item_name || 'Unknown Apparatus';
-        
-        const div = document.createElement('div');
-        div.className = 'list-item Pending';
-        
-        let listStr = '';
-        itemData.requests.forEach(o => {
-          listStr += `${escapeHtml(o.group_name)} — qty: ${o.qty}<br>`;
-        });
-
-        div.innerHTML = `
-          <div class="item-info">
-            <span class="item-title">${escapeHtml(appName)}</span>
-            <div class="other-pending-details">${listStr}</div>
-          </div>
-          <span class="status-badge Pending">In Queue</span>
-        `;
-        othersPendingList.appendChild(div);
+  // 6. Fetch Other Groups' Pending Requests
+  async function fetchOthersPendingRequests() {
+    try {
+      const res = await fetch('/api/requests/others-pending');
+      const data = await res.json();
+      
+      // Get all apparatus to match names
+      const appRes = await fetch('/api/apparatus');
+      const apparatus = await appRes.json();
+      const appNamesMap = {};
+      apparatus.forEach(item => {
+        appNamesMap[item.apparatus_id] = item.item_name;
       });
-    } else {
-      othersPendingList.innerHTML = `
-        <div class="empty-state">
-          <svg class="svg-illustration" viewBox="0 0 64 64">
-            <rect x="12" y="10" width="40" height="44" rx="2" fill="none" stroke="var(--line-strong)" stroke-width="3"/>
-            <path d="M22 24h20M22 32h20M22 40h10" stroke="var(--line-strong)" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <p>Borrowing queue is clear.<br><span style="font-size: 0.75rem; opacity: 0.7;">No pending requests from other groups.</span></p>
-        </div>
-      `;
+
+      const keys = Object.keys(data);
+      if (keys.length > 0) {
+        othersPendingList.innerHTML = '';
+        keys.forEach(aid => {
+          const others = data[aid];
+          const appName = appNamesMap[aid] || 'Unknown Apparatus';
+          
+          const div = document.createElement('div');
+          div.className = 'list-item Pending';
+          
+          let listStr = '';
+          others.forEach(o => {
+            listStr += `${escapeHtml(o.group_name)} — qty: ${o.qty}<br>`;
+          });
+
+          div.innerHTML = `
+            <div class="item-info">
+              <span class="item-title">${escapeHtml(appName)}</span>
+              <div class="other-pending-details">${listStr}</div>
+            </div>
+            <span class="status-badge Pending">In Queue</span>
+          `;
+          othersPendingList.appendChild(div);
+        });
+      } else {
+        othersPendingList.innerHTML = `
+          <div class="empty-state">
+            <svg class="svg-illustration" viewBox="0 0 64 64">
+              <rect x="12" y="10" width="40" height="44" rx="2" fill="none" stroke="var(--line-strong)" stroke-width="3"/>
+              <path d="M22 24h20M22 32h20M22 40h10" stroke="var(--line-strong)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <p>Borrowing queue is clear.<br><span style="font-size: 0.75rem; opacity: 0.7;">No pending requests from other groups.</span></p>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('Fetch other pending requests error:', err);
     }
   }
-
-  // LEGACY: Removed fetchOthersPendingRequests() in favor of batch loading
 
   // 7. Bulk Request Cart Logic
   borrowForm.addEventListener('submit', (e) => {

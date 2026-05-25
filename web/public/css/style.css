@@ -381,68 +381,21 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 15px;
+  padding: 40px 20px;
   text-align: center;
   color: var(--muted);
 }
 
 .svg-illustration {
-  width: 44px;
-  height: 44px;
-  margin-bottom: 12px;
-  opacity: 0.5;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
+  opacity: 0.6;
 }
 
 .empty-state p {
   font-size: 0.85rem;
   font-weight: 500;
-}
-
-/* Skeleton Loading States */
-.skeleton {
-  background: var(--paper-deep);
-  background: linear-gradient(
-    90deg,
-    var(--paper-deep) 25%,
-    var(--line) 50%,
-    var(--paper-deep) 75%
-  );
-  background-size: 200% 100%;
-  animation: skeletonPulse 1.5s infinite linear;
-  border-radius: 4px;
-}
-
-.skeleton-text {
-  height: 12px;
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.skeleton-title {
-  height: 18px;
-  width: 60%;
-  margin-bottom: 12px;
-}
-
-@keyframes skeletonPulse {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-
-.loading-placeholder {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 8px 0;
-}
-
-.pulse-glow {
-  animation: pulseOpacity 1.8s ease-in-out infinite;
-}
-
-@keyframes pulseOpacity {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
 }
 
 .btn-receipt-small {
@@ -954,7 +907,6 @@ form {
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  align-items: start;
   gap: 18px;
   margin-top: 18px;
 }
