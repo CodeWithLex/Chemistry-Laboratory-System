@@ -1347,31 +1347,49 @@ form {
 
   .navbar {
     grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 18px 16px;
+    gap: 10px;
+    padding: 16px 14px;
+    border-bottom: 1px solid var(--line);
   }
 
   .nav-brand {
     justify-content: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .nav-brand h2 {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
 
-  .nav-actions,
+  .nav-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
   .member-add-form {
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
   }
 
-  .welcome-badge,
+  .welcome-badge {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
   .btn-secondary,
   .btn-danger {
     width: 100%;
     max-width: none;
+    padding: 10px 8px;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .list-item,
