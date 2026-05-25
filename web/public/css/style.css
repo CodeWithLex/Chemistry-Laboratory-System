@@ -409,29 +409,130 @@ textarea:focus-visible {
   background: #e2e8f0;
 }
 
-/* Print Overrides */
+/* ==========================================
+   PROFESSIONAL PRINT & PDF EXPORT
+   ========================================== */
 @media print {
-  body * {
-    visibility: hidden;
+  @page {
+    size: A4 portrait;
+    margin: 0; /* Clear all default margins to give us full canvas control */
   }
-  #receipt-printable-area, #receipt-printable-area * {
-    visibility: visible;
+
+  /* Reset body for a clean print canvas */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    font-size: 11pt; /* Professional print scale */
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    /* Use flexbox on the entire body to center the receipt vertically/horizontally */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
   }
-  #receipt-printable-area {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 20px;
-  }
-  .receipt-actions, .close-btn, .modal-overlay::before {
+
+  /* Hide absolutely everything else */
+  body > *:not(#receipt-modal),
+  .toast-container,
+  .receipt-actions,
+  .close-btn,
+  .modal-header,
+  .navbar,
+  .main-footer,
+  .dashboard-grid {
     display: none !important;
   }
-  .modal-overlay {
+
+  /* Show modal container as a simple transparent wrapper */
+  #receipt-modal {
+    display: block !important;
+    position: relative !important;
     background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    z-index: auto !important;
+  }
+
+  /* Target the Modal Card specifically to remove screen-based styling */
+  #receipt-modal .modal-card {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+  }
+
+  #receipt-modal .modal-body {
+    padding: 0 !important;
+  }
+
+  /* The actual Receipt Content Box */
+  #receipt-printable-area {
+    display: block !important;
+    visibility: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 180mm !important; /* Optimized width for A4 (210mm - safe margins) */
+    padding: 30px !important;
+    margin: auto !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  #receipt-printable-area * {
+    visibility: visible !important;
+    color: #000000 !important;
+  }
+
+  /* Professional spacing for print */
+  .receipt-header {
+    border-bottom: 3px solid #1a4d1a !important;
+    margin-bottom: 25px !important;
+    padding-bottom: 15px !important;
+  }
+
+  .receipt-header h2 {
+    font-size: 24pt !important;
+    letter-spacing: 1.5px !important;
+  }
+
+  /* Table styling for paper */
+  .receipt-table {
+    border-bottom: 1px solid #000 !important;
+  }
+
+  .receipt-table th {
+    font-weight: 800 !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+  }
+
+  /* Ensure signature lines are solid and visible on paper */
+  .signature-line {
+    border-top: 1.5pt solid #000 !important;
+    width: 160px !important;
+    padding-top: 10px !important;
+    color: #000 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Footer meta adjustment */
+  .receipt-meta {
+    gap: 20px !important;
+    margin-bottom: 20px !important;
   }
 }
+
 
 /* Login */
 
