@@ -809,6 +809,11 @@ form {
   width: 100%;
 }
 
+.stats-row.full-width {
+  grid-column: 1 / -1;
+  align-items: start;
+}
+
 .stat-bubble {
   display: flex;
   flex-direction: column;
