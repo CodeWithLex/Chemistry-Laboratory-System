@@ -387,7 +387,7 @@ app.get('/api/apparatus', requireAuth, async (req, res) => {
 app.get('/api/requests/my', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, a.item_name
+      `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, r.session_id, a.item_name
        FROM requests r
        JOIN apparatus a ON r.apparatus_id = a.apparatus_id
        WHERE r.group_id = $1
@@ -436,6 +436,9 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
   try {
     await client.query('BEGIN');
     const insertedItems = [];
+    
+    // Generate a unique session ID for this batch
+    const sessionId = require('crypto').randomUUID();
 
     for (const item of items) {
       const aid = parseInt(item.apparatus_id);
@@ -461,10 +464,10 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
         throw new Error(`Quantity ${quantity} for ${item_name} exceeds availability (${available}).`);
       }
 
-      // Insert
+      // Insert with session_id
       await client.query(
-        "INSERT INTO requests (group_id, apparatus_id, qty, status, lab_activity) VALUES ($1, $2, $3, 'Pending', $4)",
-        [req.session.groupId, aid, quantity, lab_activity ? lab_activity.trim() : null]
+        "INSERT INTO requests (group_id, apparatus_id, qty, status, lab_activity, session_id) VALUES ($1, $2, $3, 'Pending', $4, $5)",
+        [req.session.groupId, aid, quantity, lab_activity ? lab_activity.trim() : null, sessionId]
       );
       
       insertedItems.push({ name: item_name, qty: quantity });
@@ -475,7 +478,7 @@ app.post('/api/requests/borrow', requireAuth, async (req, res) => {
     // Notify admin
     sendAdminNotification(req.session.groupName, insertedItems, lab_activity);
 
-    res.json({ success: true, message: 'All requests submitted successfully!' });
+    res.json({ success: true, message: 'All requests submitted successfully!', session_id: sessionId });
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('[API] Bulk borrow error:', error.message);

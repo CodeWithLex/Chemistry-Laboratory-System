@@ -1345,6 +1345,33 @@ form {
   }
 
   /* Requirement: Stacked Vertical Actions */
+  .receipt-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .receipt-qr {
+    background: #fff;
+    padding: 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .signature-box {
+    width: 100%;
+  }
+
+  .signature-line {
+    max-width: 240px;
+    margin: 0 auto;
+  }
+
   .nav-actions {
     flex-direction: column;
     width: 100%;

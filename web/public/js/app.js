@@ -361,6 +361,23 @@ document.addEventListener('DOMContentLoaded', () => {
       receiptItemsBody.appendChild(tr);
     });
 
+    // Generate QR Code for Admin Scanning
+    const qrContainer = document.getElementById('receipt-qr-code');
+    if (qrContainer) {
+      qrContainer.innerHTML = '';
+      const sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : 'NO_SESSION_ID';
+      
+      // The QR code stores the session ID for bulk return processing
+      new QRCode(qrContainer, {
+        text: `chemlab_session:${sessionId}`,
+        width: 110,
+        height: 110,
+        colorDark: "#1e4d2b",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
     receiptModal.classList.add('active');
   }
 
