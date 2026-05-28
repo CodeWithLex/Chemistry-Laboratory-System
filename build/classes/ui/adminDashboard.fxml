@@ -173,6 +173,84 @@
 
                     <!-- Main Dynamic Content Area -->
                     <TabPane fx:id="tabPane" styleClass="dashboard-tabs" VBox.vgrow="ALWAYS">
+                        <!-- Overview / Command Center Tab -->
+                        <Tab closable="false" text="Overview">
+                            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+                                <VBox spacing="20" style="-fx-padding: 16;">
+                                    <!-- Top Row: Agenda + Alerts + Insights -->
+                                    <HBox spacing="16">
+                                        <!-- Today's Agenda -->
+                                        <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="agenda-section" style="-fx-padding: 14;">
+                                            <Label text="Today's Agenda" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" />
+                                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                                <SVGPath content="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" fill="transparent" stroke="#10b981" strokeWidth="2" />
+                                                <Label text="Upcoming Pickups" style="-fx-font-weight: 700; -fx-text-fill: #10b981; -fx-font-size: 12px;" />
+                                            </HBox>
+                                            <VBox fx:id="pickupAgendaVBox" spacing="6" minHeight="40">
+                                                <Label text="No pickups scheduled for today." style="-fx-text-fill: #94a3b8; -fx-font-style: italic;" />
+                                            </VBox>
+                                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                                <SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#ef4444" strokeWidth="2" />
+                                                <Label text="Overdue Returns" style="-fx-font-weight: 700; -fx-text-fill: #ef4444; -fx-font-size: 12px;" />
+                                            </HBox>
+                                            <VBox fx:id="overdueAgendaVBox" spacing="6" minHeight="40">
+                                                <Label text="All equipment returned on time." style="-fx-text-fill: #94a3b8; -fx-font-style: italic;" />
+                                            </VBox>
+                                        </VBox>
+
+                                        <!-- Stock Alerts -->
+                                        <VBox spacing="10" prefWidth="260" styleClass="agenda-section" style="-fx-padding: 14;">
+                                            <Label text="Inventory Alerts" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" />
+                                            <VBox fx:id="stockAlertVBox" spacing="8">
+                                                <Label text="Stock levels are stable." style="-fx-text-fill: #94a3b8; -fx-font-style: italic;" />
+                                            </VBox>
+                                        </VBox>
+
+                                        <!-- Quick Insights -->
+                                        <VBox spacing="8" prefWidth="230" styleClass="agenda-section" style="-fx-padding: 14;">
+                                            <Label text="Quick Insights" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" />
+                                            <VBox styleClass="insight-summary-card" spacing="4" style="-fx-padding: 8; -fx-background-radius: 8;">
+                                                <Label text="Most Used Today" styleClass="stat-label" />
+                                                <Label fx:id="topItemTodayLabel" text="-" style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                            </VBox>
+                                            <VBox styleClass="insight-summary-card" spacing="4" style="-fx-padding: 8; -fx-background-radius: 8;">
+                                                <Label text="Items Currently In Use" styleClass="stat-label" />
+                                                <Label fx:id="itemsInUseLabel" text="0" style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3b82f6;" />
+                                            </VBox>
+                                            <VBox styleClass="insight-summary-card" spacing="4" style="-fx-padding: 8; -fx-background-radius: 8;">
+                                                <Label text="Active Lab Activity" styleClass="stat-label" />
+                                                <Label fx:id="activeActivityLabel" text="-" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #a855f7;" />
+                                            </VBox>
+                                        </VBox>
+                                    </HBox>
+
+                                    <!-- Recent Pending Requests mini-table -->
+                                    <VBox spacing="10" styleClass="agenda-section" style="-fx-padding: 14;">
+                                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                            <SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#f97316" strokeWidth="2" />
+                                            <Label text="Recent Pending Requests" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #1e293b;" />
+                                            <Region HBox.hgrow="ALWAYS" />
+                                            <Label text="Navigate to 'Pending Requests' tab to approve or reject" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;" />
+                                        </HBox>
+                                        <TableView fx:id="overviewPendingTable" prefHeight="240" maxHeight="300">
+                                            <columns>
+                                                <TableColumn fx:id="colOvId" prefWidth="60" text="ID" />
+                                                <TableColumn fx:id="colOvGroup" prefWidth="180" text="GROUP" />
+                                                <TableColumn fx:id="colOvActivity" prefWidth="180" text="ACTIVITY" />
+                                                <TableColumn fx:id="colOvApparatus" prefWidth="180" text="APPARATUS" />
+                                                <TableColumn fx:id="colOvQty" prefWidth="60" text="QTY" />
+                                                <TableColumn fx:id="colOvDate" prefWidth="180" text="REQUESTED AT" />
+                                            </columns>
+                                            <placeholder>
+                                                <VBox alignment="CENTER" spacing="6">
+                                                    <Label text="No pending requests — great job!" style="-fx-font-size: 13px; -fx-text-fill: #10b981;" />
+                                                </VBox>
+                                            </placeholder>
+                                        </TableView>
+                                    </VBox>
+                                </VBox>
+                            </ScrollPane>
+                        </Tab>
                         <!-- Pending Requests Tab -->
                         <Tab closable="false" text="Pending Requests">
                             <VBox spacing="16">
@@ -341,10 +419,12 @@
                                 </HBox>
                                 <TableView fx:id="apparatusTable" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="colAppId" prefWidth="80" text="ID" />
-                                        <TableColumn fx:id="colAppName" prefWidth="350" text="ITEM NAME" />
-                                        <TableColumn fx:id="colAppQty" prefWidth="200" text="CURRENT STOCK" />
-                                        <TableColumn fx:id="colAppRemaining" prefWidth="200" text="AVAIL. TO BORROW" />
+                                        <TableColumn fx:id="colAppId" prefWidth="60" text="ID" />
+                                        <TableColumn fx:id="colAppName" prefWidth="250" text="ITEM NAME" />
+                                        <TableColumn fx:id="colAppType" prefWidth="120" text="TYPE" />
+                                        <TableColumn fx:id="colAppUnit" prefWidth="80" text="UNIT" />
+                                        <TableColumn fx:id="colAppQty" prefWidth="150" text="CURRENT STOCK" />
+                                        <TableColumn fx:id="colAppRemaining" prefWidth="150" text="AVAIL. TO BORROW" />
                                     </columns>
                                 </TableView>
                             </VBox>

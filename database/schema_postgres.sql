@@ -36,7 +36,9 @@ CREATE TABLE student_groups (
 CREATE TABLE apparatus (
     apparatus_id     SERIAL PRIMARY KEY,
     item_name        VARCHAR(100) NOT NULL,
-    current_quantity INT DEFAULT 0
+    item_type        VARCHAR(30) DEFAULT 'Apparatus', -- 'Apparatus' or 'Chemical'
+    unit             VARCHAR(20) DEFAULT 'pcs',     -- 'pcs', 'mL', 'g', etc.
+    current_quantity DECIMAL(10,2) DEFAULT 0
 );
 
 -- Borrow Requests (from web / student groups)

@@ -53,6 +53,12 @@ public class ChemLab_System extends Application {
         if (rootContainer == null || rootContainer.getChildren().isEmpty())
             return;
         HBox titleBar = (HBox) rootContainer.getChildren().get(0);
+
+        // Always reset maximized state when switching modes (especially on logout)
+        if (mainStage.isMaximized()) {
+            mainStage.setMaximized(false);
+        }
+
         if (visible) {
             boolean alreadyExists = false;
             for (javafx.scene.Node node : titleBar.getChildren()) {
@@ -81,9 +87,24 @@ public class ChemLab_System extends Application {
                 ResizeHelper.addResizeListener(mainStage);
             }
         } else {
+            // Logout / Login page view
             titleBar.getChildren().removeIf(node -> node.getStyleClass().contains("maximize-button"));
+
+            // Clean up resizing listeners
+            ResizeHelper.removeResizeListener(mainStage);
+
+            // Reset title bar dragging to basic login behavior
+            final double[] xOffset = new double[1];
+            final double[] yOffset = new double[1];
             titleBar.setOnMousePressed(e -> {
-                // Return to static dragging (handled in start() logic xOffset/yOffset)
+                xOffset[0] = e.getSceneX();
+                yOffset[0] = e.getSceneY();
+            });
+            titleBar.setOnMouseDragged(e -> {
+                if (!mainStage.isMaximized()) {
+                    mainStage.setX(e.getScreenX() - xOffset[0]);
+                    mainStage.setY(e.getScreenY() - yOffset[0]);
+                }
             });
         }
     }
@@ -161,13 +182,30 @@ public class ChemLab_System extends Application {
 
     // Static helper class for resizing undecorated stage
     public static class ResizeHelper {
+        private static ResizeListener currentListener;
+
         public static void addResizeListener(Stage stage) {
-            ResizeListener listener = new ResizeListener(stage);
-            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_MOVED, listener);
-            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, listener);
-            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_DRAGGED, listener);
-            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_EXITED, listener);
-            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_ENTERED, listener);
+            if (currentListener != null) {
+                removeResizeListener(stage);
+            }
+            currentListener = new ResizeListener(stage);
+            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_MOVED, currentListener);
+            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, currentListener);
+            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_DRAGGED, currentListener);
+            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_EXITED, currentListener);
+            stage.getScene().addEventFilter(javafx.scene.input.MouseEvent.MOUSE_ENTERED, currentListener);
+        }
+
+        public static void removeResizeListener(Stage stage) {
+            if (currentListener != null && stage.getScene() != null) {
+                stage.getScene().removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_MOVED, currentListener);
+                stage.getScene().removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, currentListener);
+                stage.getScene().removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_DRAGGED, currentListener);
+                stage.getScene().removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_EXITED, currentListener);
+                stage.getScene().removeEventFilter(javafx.scene.input.MouseEvent.MOUSE_ENTERED, currentListener);
+                stage.getScene().setCursor(javafx.scene.Cursor.DEFAULT);
+                currentListener = null;
+            }
         }
 
         static class ResizeListener implements javafx.event.EventHandler<javafx.scene.input.MouseEvent> {
@@ -186,6 +224,8 @@ public class ChemLab_System extends Application {
                 javafx.event.EventType<? extends javafx.scene.input.MouseEvent> mouseEventType = mouseEvent
                         .getEventType();
                 Scene scene = stage.getScene();
+                if (scene == null)
+                    return;
 
                 double mouseEventX = mouseEvent.getSceneX();
                 double mouseEventY = mouseEvent.getSceneY();

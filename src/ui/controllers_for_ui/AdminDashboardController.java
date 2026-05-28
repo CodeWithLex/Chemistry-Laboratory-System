@@ -4,6 +4,43 @@
  */
 package ui.controllers_for_ui;
 
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import chemlab_system.database.Connector_ChemSystem;
+import chemlab_system.model.BorrowRequest;
+import chemlab_system.util.EmailService;
+import javafx.scene.shape.SVGPath;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.scene.input.KeyEvent;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.Date;
@@ -22,38 +59,6 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.shape.SVGPath;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.scene.input.KeyEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.scene.layout.HBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.util.Duration;
-import chemlab_system.database.Connector_ChemSystem;
-import chemlab_system.model.BorrowRequest;
-import chemlab_system.util.EmailService;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.XYChart;
-import javafx.scene.shape.SVGPath;
 
 /**
  * FXML Controller class for Admin Dashboard
@@ -112,6 +117,36 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private Label totalUsersLabel;
 
+    // Overview Tab Components
+    @FXML
+    private VBox pickupAgendaVBox;
+    @FXML
+    private VBox overdueAgendaVBox;
+    @FXML
+    private VBox stockAlertVBox;
+    @FXML
+    private Label topItemTodayLabel;
+    @FXML
+    private Label itemsInUseLabel;
+    @FXML
+    private Label activeActivityLabel;
+
+    // Overview: Recent Pending Requests mini-table
+    @FXML
+    private TableView<BorrowRequest> overviewPendingTable;
+    @FXML
+    private TableColumn<BorrowRequest, Integer> colOvId;
+    @FXML
+    private TableColumn<BorrowRequest, String> colOvGroup;
+    @FXML
+    private TableColumn<BorrowRequest, String> colOvActivity;
+    @FXML
+    private TableColumn<BorrowRequest, String> colOvApparatus;
+    @FXML
+    private TableColumn<BorrowRequest, Integer> colOvQty;
+    @FXML
+    private TableColumn<BorrowRequest, String> colOvDate;
+
     // Tabs
     @FXML
     private TabPane tabPane;
@@ -166,9 +201,13 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableColumn<ApparatusItem, String> colAppName;
     @FXML
-    private TableColumn<ApparatusItem, Integer> colAppQty;
+    private TableColumn<ApparatusItem, String> colAppType;
     @FXML
-    private TableColumn<ApparatusItem, Integer> colAppRemaining;
+    private TableColumn<ApparatusItem, String> colAppUnit;
+    @FXML
+    private TableColumn<ApparatusItem, String> colAppQty;
+    @FXML
+    private TableColumn<ApparatusItem, String> colAppRemaining;
 
     // Analytics Components
     @FXML
@@ -427,12 +466,20 @@ public class AdminDashboardController implements Initializable {
                 .setCellValueFactory(data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
 
         // Setup Apparatus Table columns
-        colAppId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colAppName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        colAppQty.setCellValueFactory(new PropertyValueFactory<>("currentQuantity"));
-        if (colAppRemaining != null) {
-            colAppRemaining.setCellValueFactory(new PropertyValueFactory<>("remainingQuantity"));
-        }
+        if (colAppId != null)
+            colAppId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        if (colAppName != null)
+            colAppName.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+        if (colAppType != null)
+            colAppType.setCellValueFactory(new PropertyValueFactory<>("itemType"));
+        if (colAppUnit != null)
+            colAppUnit.setCellValueFactory(new PropertyValueFactory<>("unit"));
+        if (colAppQty != null)
+            colAppQty.setCellValueFactory(
+                    data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getFormattedCurrentStock()));
+        if (colAppRemaining != null)
+            colAppRemaining.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
+                    data.getValue().getFormattedRemainingStock()));
 
         // Setup Student Groups Table columns
         colGroupId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
@@ -652,6 +699,20 @@ public class AdminDashboardController implements Initializable {
                     colArDate);
         }
 
+        // Setup Overview Pending Table columns
+        if (overviewPendingTable != null && colOvId != null) {
+            colOvId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getRequestId()).asObject());
+            colOvGroup.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
+            colOvActivity.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLabActivity()));
+            colOvApparatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getApparatusName()));
+            colOvQty.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQty()).asObject());
+            colOvDate.setCellValueFactory(
+                    data -> new SimpleStringProperty(formatTimestamp(data.getValue().getCreatedAt())));
+            overviewPendingTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            applyTextCellStyle(colOvId, colOvGroup, colOvActivity, colOvApparatus, colOvQty, colOvDate);
+            disableReorderAndSort(colOvId, colOvGroup, colOvActivity, colOvApparatus, colOvQty, colOvDate);
+        }
+
         // Load initial data (Stats and the first tab's content)
         loadStats();
         loadPendingRequests();
@@ -704,12 +765,16 @@ public class AdminDashboardController implements Initializable {
                     case "Audit Reports":
                         loadAuditData();
                         break;
+                    case "Overview":
+                        refreshOverviewData();
+                        break;
                 }
                 loadStats();
             }
         });
 
         // Initialize Data
+        refreshOverviewData();
         loadPendingRequests();
 
         // Start Auto-Activity Heartbeat (Keep Supabase Active)
@@ -742,6 +807,8 @@ public class AdminDashboardController implements Initializable {
                 loadCurrentlyInUse(
                         inUseStartDatePicker != null ? inUseStartDatePicker.getValue() : null,
                         inUseEndDatePicker != null ? inUseEndDatePicker.getValue() : null);
+            } else if ("Overview".equals(selectedTab)) {
+                refreshOverviewData();
             }
 
             // Phase 2: Check for new scans from Web Companion
@@ -774,6 +841,211 @@ public class AdminDashboardController implements Initializable {
                 // Silently fail for background polling to avoid interrupting admin
             }
         }).start();
+    }
+
+    private void refreshOverviewData() {
+        new Thread(() -> {
+            loadAgenda();
+            loadStockAlerts();
+            loadOverviewInsights();
+            loadOverviewPending();
+        }).start();
+    }
+
+    private void loadOverviewPending() {
+        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+        String sql = "SELECT r.request_id, g.group_name, a.item_name, r.qty, r.lab_activity, r.created_at " +
+                "FROM requests r " +
+                "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
+                "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                "WHERE r.status = 'Pending'::request_status " +
+                "ORDER BY r.created_at DESC LIMIT 10";
+        try (Connection conn = Connector_ChemSystem.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                BorrowRequest req = new BorrowRequest();
+                req.setRequestId(rs.getInt("request_id"));
+                req.setGroupName(rs.getString("group_name"));
+                req.setApparatusName(rs.getString("item_name"));
+                req.setQty(rs.getInt("qty"));
+                req.setLabActivity(rs.getString("lab_activity"));
+                req.setCreatedAt(rs.getTimestamp("created_at"));
+                req.setStatus("Pending");
+                list.add(req);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        javafx.application.Platform.runLater(() -> {
+            if (overviewPendingTable != null) {
+                overviewPendingTable.setItems(list);
+            }
+        });
+    }
+
+    private void loadAgenda() {
+        List<AgendaItem> pickups = new ArrayList<>();
+        List<AgendaItem> overdue = new ArrayList<>();
+
+        try (Connection conn = Connector_ChemSystem.getConnection()) {
+            // Pickups: Approved requests from today not yet released
+            String pickupSql = "SELECT g.group_name, r.apparatus_name, r.qty " +
+                    "FROM requests r JOIN student_groups g ON r.group_id = g.group_id " +
+                    "WHERE r.status = 'Approved' AND DATE(r.approved_at) = CURRENT_DATE";
+            try (PreparedStatement ps = conn.prepareStatement(pickupSql);
+                    ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    pickups.add(new AgendaItem(rs.getString("group_name"),
+                            "Collecting: " + rs.getInt("qty") + " " + rs.getString("apparatus_name")));
+                }
+            }
+
+            // Overdue: Released items checked out > 4 hours ago (heuristic for lab session)
+            // In a real system, we might have an 'expected_return_time'
+            String overdueSql = "SELECT g.group_name, r.apparatus_name, r.updated_at " +
+                    "FROM requests r JOIN student_groups g ON r.group_id = g.group_id " +
+                    "WHERE r.status = 'Released' AND r.updated_at < (CURRENT_TIMESTAMP - INTERVAL '4 hours')";
+            try (PreparedStatement ps = conn.prepareStatement(overdueSql);
+                    ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    overdue.add(new AgendaItem(rs.getString("group_name"),
+                            "Overdue: " + rs.getString("apparatus_name")));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        javafx.application.Platform.runLater(() -> {
+            updateAgendaVBox(pickupAgendaVBox, pickups, "No pickups scheduled for today.");
+            updateAgendaVBox(overdueAgendaVBox, overdue, "All equipment returned on time.");
+        });
+    }
+
+    private void updateAgendaVBox(VBox box, List<AgendaItem> items, String emptyMsg) {
+        if (box == null)
+            return;
+        box.getChildren().clear();
+        if (items.isEmpty()) {
+            Label lbl = new Label(emptyMsg);
+            lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-style: italic;");
+            box.getChildren().add(lbl);
+        } else {
+            for (AgendaItem item : items) {
+                VBox card = new VBox(2);
+                card.getStyleClass().add("agenda-card");
+                Label group = new Label(item.group);
+                group.getStyleClass().add("agenda-group-name");
+                Label detail = new Label(item.detail);
+                detail.getStyleClass().add("agenda-detail");
+                card.getChildren().addAll(group, detail);
+                box.getChildren().add(card);
+            }
+        }
+    }
+
+    private void loadStockAlerts() {
+        List<StockAlert> alerts = new ArrayList<>();
+        try (Connection conn = Connector_ChemSystem.getConnection();
+                PreparedStatement ps = conn
+                        .prepareStatement("SELECT item_name, current_qty FROM apparatus WHERE current_qty < 5");
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                alerts.add(new StockAlert(rs.getString("item_name"), rs.getInt("current_qty")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        javafx.application.Platform.runLater(() -> {
+            if (stockAlertVBox == null)
+                return;
+            stockAlertVBox.getChildren().clear();
+            if (alerts.isEmpty()) {
+                Label lbl = new Label("Stock levels are stable.");
+                lbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-style: italic;");
+                stockAlertVBox.getChildren().add(lbl);
+            } else {
+                for (StockAlert alert : alerts) {
+                    VBox card = new VBox(2);
+                    card.getStyleClass().add("alert-card-critical");
+                    Label name = new Label(alert.name);
+                    name.getStyleClass().add("alert-item-name");
+                    Label stock = new Label("Critical: " + alert.qty + " left");
+                    stock.getStyleClass().add("alert-item-stock");
+                    card.getChildren().addAll(name, stock);
+                    stockAlertVBox.getChildren().add(card);
+                }
+            }
+        });
+    }
+
+    private void loadOverviewInsights() {
+        String topItem = "-";
+        int inUseCount = 0;
+        String activeActivity = "-";
+
+        try (Connection conn = Connector_ChemSystem.getConnection()) {
+            // Top Item Today
+            String topSql = "SELECT apparatus_name, COUNT(*) as cnt FROM requests " +
+                    "WHERE DATE(created_at) = CURRENT_DATE GROUP BY apparatus_name ORDER BY cnt DESC LIMIT 1";
+            try (PreparedStatement ps = conn.prepareStatement(topSql); ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    topItem = rs.getString("apparatus_name");
+            }
+
+            // In Use Count
+            try (PreparedStatement ps = conn
+                    .prepareStatement("SELECT SUM(qty) FROM requests WHERE status = 'Released'");
+                    ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    inUseCount = rs.getInt(1);
+            }
+
+            // Active Activity
+            String activitySql = "SELECT lab_activity, COUNT(*) as cnt FROM requests " +
+                    "WHERE status = 'Released' GROUP BY lab_activity ORDER BY cnt DESC LIMIT 1";
+            try (PreparedStatement ps = conn.prepareStatement(activitySql); ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    activeActivity = rs.getString("lab_activity");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        final String fTop = topItem;
+        final int fInUse = inUseCount;
+        final String fActivity = activeActivity;
+
+        javafx.application.Platform.runLater(() -> {
+            if (topItemTodayLabel != null)
+                topItemTodayLabel.setText(fTop);
+            if (itemsInUseLabel != null)
+                itemsInUseLabel.setText(String.valueOf(fInUse));
+            if (activeActivityLabel != null)
+                activeActivityLabel.setText(fActivity);
+        });
+    }
+
+    // Helper classes for Agenda and Stock Alerts
+    private static class AgendaItem {
+        String group, detail;
+
+        AgendaItem(String g, String d) {
+            this.group = g;
+            this.detail = d;
+        }
+    }
+
+    private static class StockAlert {
+        String name;
+        int qty;
+
+        StockAlert(String n, int q) {
+            this.name = n;
+            this.qty = q;
+        }
     }
 
     private void showScanNotification(String groupName) {
@@ -1017,12 +1289,12 @@ public class AdminDashboardController implements Initializable {
                 return;
             }
 
-            String sql = "SELECT a.apparatus_id, a.item_name, a.current_quantity, " +
+            String sql = "SELECT a.apparatus_id, a.item_name, a.item_type, a.unit, a.current_quantity, " +
                     "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved'::request_status,'Pending'::request_status) THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
                     +
                     "FROM apparatus a " +
                     "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id " +
-                    "GROUP BY a.apparatus_id, a.item_name, a.current_quantity " +
+                    "GROUP BY a.apparatus_id, a.item_name, a.item_type, a.unit, a.current_quantity " +
                     "ORDER BY a.item_name";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql);
@@ -1031,8 +1303,10 @@ public class AdminDashboardController implements Initializable {
                     list.add(new ApparatusItem(
                             rs.getInt("apparatus_id"),
                             rs.getString("item_name"),
-                            rs.getInt("current_quantity"),
-                            rs.getInt("remaining_qty")));
+                            rs.getString("item_type"),
+                            rs.getString("unit"),
+                            rs.getDouble("current_quantity"),
+                            rs.getDouble("remaining_qty")));
                 }
             } catch (SQLException e) {
                 System.err.println("loadApparatus SQL error: " + e.getMessage());
@@ -1348,44 +1622,41 @@ public class AdminDashboardController implements Initializable {
             return;
 
         if (sourceBtn == sideNavDashboard) {
-            tabPane.getSelectionModel().select(0); // Default to Pending
+            tabPane.getSelectionModel().select(0); // Index 0 is Overview
             headerTitleLabel.setText("Overview");
         } else {
             switch (text) {
                 case "Pending Requests":
-                    tabPane.getSelectionModel().select(0);
-                    break;
-                case "To Be Claimed":
                     tabPane.getSelectionModel().select(1);
                     break;
-                case "All Requests":
+                case "To Be Claimed":
                     tabPane.getSelectionModel().select(2);
                     break;
-                case "Currently In Use":
+                case "All Requests":
                     tabPane.getSelectionModel().select(3);
                     break;
-                case "Borrowing History":
+                case "Currently In Use":
                     tabPane.getSelectionModel().select(4);
                     break;
-                case "Student Groups":
+                case "Borrowing History":
                     tabPane.getSelectionModel().select(5);
                     break;
-                case "Apparatus Inventory":
+                case "Student Groups":
                     tabPane.getSelectionModel().select(6);
                     break;
-                case "Apparatus Requests":
+                case "Apparatus Inventory":
                     tabPane.getSelectionModel().select(7);
                     break;
-                case "System Analytics":
+                case "Apparatus Requests":
                     tabPane.getSelectionModel().select(8);
+                    break;
+                case "System Analytics":
+                    tabPane.getSelectionModel().select(9);
                     loadAnalyticsData();
                     break;
                 case "Audit Reports":
-                    tabPane.getSelectionModel().select(9);
+                    tabPane.getSelectionModel().select(10);
                     loadAuditData();
-                    break;
-                case "Overview":
-                    tabPane.getSelectionModel().select(2); // Map Overview to All Requests
                     break;
             }
         }
@@ -1493,7 +1764,7 @@ public class AdminDashboardController implements Initializable {
             loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
             Parent root = loader.load();
             chemlab_system.ChemLab_System.setMaximizeButtonVisible(false);
-            chemlab_system.ChemLab_System.setContent(root, 1100, 700);
+            chemlab_system.ChemLab_System.setContent(root, 1100, 650);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
         } catch (Exception e) {
             e.printStackTrace();
@@ -1957,7 +2228,9 @@ public class AdminDashboardController implements Initializable {
         String lowerCaseKeyword = keyword.toLowerCase();
         ObservableList<ApparatusItem> filteredList = apparatusMaster.filtered(item -> {
             return String.valueOf(item.getId()).contains(lowerCaseKeyword) ||
-                    item.getItemName().toLowerCase().contains(lowerCaseKeyword);
+                    item.getItemName().toLowerCase().contains(lowerCaseKeyword) ||
+                    item.getItemType().toLowerCase().contains(lowerCaseKeyword) ||
+                    item.getUnit().toLowerCase().contains(lowerCaseKeyword);
         });
         apparatusTable.setItems(filteredList);
     }
@@ -2005,12 +2278,17 @@ public class AdminDashboardController implements Initializable {
     public static class ApparatusItem {
         private final int id;
         private final String itemName;
-        private final int currentQuantity;
-        private final int remainingQuantity;
+        private final String itemType;
+        private final String unit;
+        private final double currentQuantity;
+        private final double remainingQuantity;
 
-        public ApparatusItem(int id, String itemName, int currentQuantity, int remainingQuantity) {
+        public ApparatusItem(int id, String itemName, String itemType, String unit, double currentQuantity,
+                double remainingQuantity) {
             this.id = id;
             this.itemName = itemName;
+            this.itemType = itemType;
+            this.unit = unit;
             this.currentQuantity = currentQuantity;
             this.remainingQuantity = remainingQuantity;
         }
@@ -2023,14 +2301,34 @@ public class AdminDashboardController implements Initializable {
             return itemName;
         }
 
-        public int getCurrentQuantity() {
+        public String getItemType() {
+            return itemType;
+        }
+
+        public String getUnit() {
+            return unit;
+        }
+
+        public double getCurrentQuantity() {
             return currentQuantity;
         }
 
-        public int getRemainingQuantity() {
+        public double getRemainingQuantity() {
             return remainingQuantity;
         }
+
+        public String getFormattedCurrentStock() {
+            return String.format("%.1f %s", currentQuantity, unit);
+        }
+
+        public String getFormattedRemainingStock() {
+            return String.format("%.1f %s", remainingQuantity, unit);
+        }
     }
+
+    /**
+     * Simple model for the Student Groups table.
+     */
 
     // ==================== INNER CLASS: StudentGroupItem ====================
 
@@ -2121,6 +2419,7 @@ public class AdminDashboardController implements Initializable {
         public String getCreatedAt() {
             return createdAt;
         }
+
     }
 
     // ==================== BATCH OPERATIONS ====================

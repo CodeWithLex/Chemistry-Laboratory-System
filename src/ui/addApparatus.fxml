@@ -9,32 +9,52 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="250.0" prefWidth="350.0" spacing="15.0" style="-fx-background-color: #f4f4f4;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AddApparatusController">
+<VBox alignment="CENTER" prefHeight="380.0" prefWidth="350.0" spacing="15.0" style="-fx-background-color: #ffffff; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-radius: 10;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.AddApparatusController">
    <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
    </padding>
    <children>
-      <Label text="Add New Apparatus" textFill="#2e7d32">
+      <Label text="Add New Item" textFill="#1a4d1a">
          <font>
             <Font name="System Bold" size="20.0" />
          </font>
       </Label>
+      
       <VBox spacing="5.0">
          <children>
-            <Label text="Apparatus Name:" />
-            <TextField fx:id="apparatusNameField" promptText="Enter apparatus name..." />
+            <Label text="Item Name:" style="-fx-text-fill: #475569; -fx-font-weight: bold;" />
+            <TextField fx:id="apparatusNameField" promptText="e.g. Beaker 250mL, HCl" style="-fx-background-radius: 6;" />
          </children>
       </VBox>
+      
+      <HBox spacing="15.0">
+         <children>
+            <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label text="Item Type:" style="-fx-text-fill: #475569; -fx-font-weight: bold;" />
+                  <javafx.scene.control.ComboBox fx:id="typeComboBox" prefWidth="150.0" promptText="Select Type" style="-fx-background-radius: 6;" />
+               </children>
+            </VBox>
+            <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label text="Unit:" style="-fx-text-fill: #475569; -fx-font-weight: bold;" />
+                  <javafx.scene.control.ComboBox fx:id="unitComboBox" prefWidth="150.0" promptText="Unit" style="-fx-background-radius: 6;" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+
       <VBox spacing="5.0">
          <children>
-            <Label text="Initial Quantity:" />
-            <Spinner fx:id="quantitySpinner" prefWidth="150.0" />
+            <Label text="Initial Stock / Quantity:" style="-fx-text-fill: #475569; -fx-font-weight: bold;" />
+            <Spinner fx:id="quantitySpinner" editable="true" prefWidth="Infinity" style="-fx-background-radius: 6;" />
          </children>
       </VBox>
+
       <HBox alignment="CENTER" spacing="15.0">
          <children>
-            <Button mnemonicParsing="false" onAction="#addApparatus" style="-fx-background-color: #2e7d32; -fx-text-fill: white;" text="Add Apparatus" />
-            <Button mnemonicParsing="false" onAction="#cancel" text="Cancel" />
+            <Button mnemonicParsing="false" onAction="#addApparatus" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #1a4d1a; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-weight: bold; -fx-cursor: hand;" text="Add Item" />
+            <Button mnemonicParsing="false" onAction="#cancel" prefHeight="35.0" prefWidth="100.0" style="-fx-background-radius: 6; -fx-cursor: hand;" text="Cancel" />
          </children>
          <VBox.margin>
             <Insets top="10.0" />
