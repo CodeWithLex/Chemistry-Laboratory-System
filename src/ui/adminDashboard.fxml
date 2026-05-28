@@ -209,7 +209,7 @@
                                     <Button onAction="#refreshClaiming" styleClass="action-button" text="Refresh" />
                                     <TextField fx:id="claimingSearchField" promptText="Search ID or group..." onKeyReleased="#filterClaimingBySearch" prefWidth="200" />
                                     <Region HBox.hgrow="ALWAYS" />
-                                    <Button onAction="#batchReleasedSelected" styleClass="action-button, approve-button" text="Confirm Student Received" />
+                                    <Button fx:id="confirmReceiptBtn" onAction="#batchReleasedSelected" styleClass="action-button, approve-button" text="Confirm Student Received" />
                                 </HBox>
                                 <TableView fx:id="claimingTable" VBox.vgrow="ALWAYS">
                                     <columns>

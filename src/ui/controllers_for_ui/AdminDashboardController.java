@@ -40,6 +40,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -62,6 +63,8 @@ import javafx.scene.shape.SVGPath;
 public class AdminDashboardController implements Initializable {
 
     // Header
+    @FXML
+    private Label welcomeLabel;
     @FXML
     private Button logoutBtn;
 
@@ -135,9 +138,6 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private CheckBox selectAllCheckBox;
     @FXML
-    private Button batchApproveBtn;
-    @FXML
-    private Button batchRejectBtn;
 
     // All Requests Table
     @FXML
