@@ -334,12 +334,27 @@
 
   <!-- 4. ACTIVITY RECEIPT MODAL -->
   <div id="receipt-modal" class="modal-overlay receipt-modal">
-    <div class="modal-card glass">
-      <div class="modal-header">
+    <div class="receipt-modal-card glass">
+      <!-- STICKY HEADER: always visible, never scrolls off -->
+      <div class="receipt-modal-header">
         <h2>Activity Receipt</h2>
-        <button id="close-receipt-modal-btn" class="close-btn">&times;</button>
+        <div class="receipt-header-actions">
+          <button id="show-qr-btn" class="btn-show-qr" title="Show QR for Admin Scan">
+            <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M18 16H14v4h4z"/></svg>
+            <span>Show QR</span>
+          </button>
+          <button id="print-receipt-btn" class="btn-print">
+            <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            <span>Print</span>
+          </button>
+          <button id="close-receipt-modal-btn" class="close-btn" aria-label="Close">&times;</button>
+        </div>
       </div>
-      <div class="modal-body">
+
+      <!-- BODY: receipt + QR side panel -->
+      <div class="receipt-modal-body">
+
+        <!-- LEFT: Printable Receipt (clean, 1-page) -->
         <div id="receipt-printable-area" class="receipt-content">
           <div class="receipt-header">
             <h2>CHEMLAB SYSTEM</h2>
@@ -354,16 +369,16 @@
               <span>Date Generated</span>
               <span id="receipt-date">--/--/--</span>
             </div>
-            <div class="receipt-meta-item" style="grid-column: span 2;">
+            <div class="receipt-meta-item receipt-meta-full">
               <span>Laboratory Activity</span>
-              <strong id="receipt-activity-title" style="font-size: 16px; color: #1a4d1a;">General Laboratory Activity</strong>
+              <strong id="receipt-activity-title">General Laboratory Activity</strong>
             </div>
           </div>
           <table class="receipt-table">
             <thead>
               <tr>
                 <th>Apparatus Item</th>
-                <th style="text-align: center; width: 60px;">Qty</th>
+                <th class="receipt-th-qty">Qty</th>
               </tr>
             </thead>
             <tbody id="receipt-items-body">
@@ -374,19 +389,22 @@
             <div class="signature-box">
               <div class="signature-line">Student Representative</div>
             </div>
-            <!-- QR Code Placeholder -->
-            <div id="receipt-qr-code" class="receipt-qr"></div>
             <div class="signature-box">
               <div class="signature-line">Instructor / Custodian</div>
             </div>
           </div>
         </div>
-        <div class="receipt-actions">
-          <button id="print-receipt-btn" class="btn-print">
-            <svg class="svg-icon icon-sm" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-            <span>Print or Save PDF</span>
-          </button>
+
+        <!-- RIGHT: QR Panel (shown on demand, NOT in print) -->
+        <div id="qr-side-panel" class="qr-side-panel hidden no-print">
+          <div class="qr-panel-header">
+            <span>Scan to Return</span>
+            <button id="close-qr-panel-btn" class="close-btn close-btn-sm">&times;</button>
+          </div>
+          <div id="receipt-qr-code" class="receipt-qr"></div>
+          <p class="qr-hint">Admin scans this to process all items at once.</p>
         </div>
+
       </div>
     </div>
   </div>

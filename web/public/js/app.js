@@ -56,6 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const receiptDate = document.getElementById('receipt-date');
   const receiptActivityTitle = document.getElementById('receipt-activity-title');
   const receiptQuickSelect = document.getElementById('receipt-quick-select');
+  const qrSidePanel = document.getElementById('qr-side-panel');
+  const showQrBtn = document.getElementById('show-qr-btn');
+  const closeQrPanelBtn = document.getElementById('close-qr-panel-btn');
 
   // Dashboard Stats Elements
   const statPendingCount = document.getElementById('stat-pending-count');
@@ -361,59 +364,84 @@ document.addEventListener('DOMContentLoaded', () => {
       receiptItemsBody.appendChild(tr);
     });
 
-    // Open modal early while QR is being resolved
-    receiptModal.classList.add('active');
+    // Check Return Status: if all items are 'Returned', disable QR
+    const allReturned = items.length > 0 && items.every(i => i.status === 'Returned');
+    if (allReturned) {
+      showQrBtn.disabled = true;
+      showQrBtn.querySelector('span').textContent = 'Item Returned';
+      showQrBtn.setAttribute('title', 'All items in this activity have been returned.');
+    } else {
+      showQrBtn.disabled = false;
+      showQrBtn.querySelector('span').textContent = 'Show QR';
+      showQrBtn.setAttribute('title', 'Show QR for Admin Scan');
+    }
 
-    // Generate QR Code for Admin Scanning
+    // Default: Reset and hide QR panel
+    qrSidePanel.classList.add('hidden');
+    const qrContainer = document.getElementById('receipt-qr-code');
+    if (qrContainer) qrContainer.innerHTML = '';
+
+    // Open modal
+    receiptModal.classList.add('active');
+  }
+
+  // Handle QR Panel Toggle
+  showQrBtn.addEventListener('click', async () => {
+    // Determine the active activity items
+    const actTitle = receiptActivityTitle.textContent;
+    const items = currentGroupHistoryGroups[actTitle] || [];
+    
+    // Toggle view
+    qrSidePanel.classList.remove('hidden');
+
     const qrContainer = document.getElementById('receipt-qr-code');
     if (!qrContainer) return;
-
+    
     qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center;">Generating QR...</p>';
 
-    // Step 1: Try to get session_id from items (new receipts already have it)
+    // Step 1: Try to get session_id from items
     let sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : null;
 
-    // Step 2: If missing (legacy receipt), ask the server to assign one retroactively
-    if (!sessionId && title) {
+    // Step 2: Retroactive Patch if missing
+    if (!sessionId && actTitle) {
       try {
         const assignRes = await fetch('/api/requests/assign-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lab_activity: title })
+          body: JSON.stringify({ lab_activity: actTitle })
         });
         if (assignRes.ok) {
           const assignData = await assignRes.json();
           sessionId = assignData.session_id || null;
         }
       } catch (err) {
-        console.warn('[QR] Could not assign session retroactively:', err);
+        console.warn('[QR] Error assigning session:', err);
       }
     }
 
-    // Step 3: Render the QR code with all guards
+    // Step 3: Render
     qrContainer.innerHTML = '';
     if (sessionId) {
       try {
-        if (typeof QRCode === 'undefined') {
-          throw new Error('QRCode library not loaded');
-        }
+        if (typeof QRCode === 'undefined') throw new Error('QRCode not loaded');
         new QRCode(qrContainer, {
           text: `chemlab_session:${sessionId}`,
-          width: 110,
-          height: 110,
+          width: 130, // Slightly larger for better scanning
+          height: 130,
           colorDark: "#1e4d2b",
           colorLight: "#ffffff",
           correctLevel: QRCode.CorrectLevel.H
         });
       } catch (qrErr) {
-        console.error('[QR] QR generation failed:', qrErr);
-        qrContainer.innerHTML = `<p style="font-size: 0.65rem; color: var(--muted); text-align: center; max-width: 120px; word-break: break-all;">Session: ${sessionId.substring(0, 8)}...</p>`;
+        console.error('[QR] Render failed:', qrErr);
+        qrContainer.innerHTML = `<p style="font-size: 0.65rem; color: var(--muted); text-align: center; word-break: break-all;">ID: ${sessionId.substring(0, 8)}...</p>`;
       }
     } else {
-      qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center; max-width: 120px;">QR unavailable</p>';
+      qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center;">No Session ID</p>';
     }
-  }
+  });
 
+  closeQrPanelBtn.addEventListener('click', () => qrSidePanel.classList.add('hidden'));
   closeReceiptModalBtn.addEventListener('click', () => receiptModal.classList.remove('active'));
   
   // Quick Select Activity Event

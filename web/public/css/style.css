@@ -174,45 +174,146 @@ textarea:focus-visible {
 }
 
 /* ==========================================
-   RECEIPT MODAL & PRINT STYLES
+   RECEIPT MODAL & PRINT STYLES (REDESIGNED)
    ========================================== */
 
-.receipt-modal .modal-card {
-  max-width: 500px;
-  background: white;
-  color: #0f172a;
-}
-
-.receipt-content {
-  padding: 40px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-family: 'IBM Plex Sans', sans-serif;
-}
-
-#receipt-printable-area {
+/* The overlay remains full screen */
+.receipt-modal.modal-overlay {
+  display: none;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
+  background: rgba(15, 23, 42, 0.85); /* Slightly darker backdrop */
+  backdrop-filter: blur(8px);
+}
+
+.receipt-modal.modal-overlay.active {
+  display: flex !important;
+}
+
+/* New responsive container for the split layout */
+.receipt-modal-card {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--surface);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Header stays sticky */
+  box-shadow: var(--shadow-lg);
+  animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Sticky Header: Fixes the 'missing X' problem on mobile */
+.receipt-modal-header {
+  padding: 18px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.receipt-modal-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.receipt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Action Buttons in Header */
+.btn-show-qr, .btn-print {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-show-qr {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(30, 77, 43, 0.1);
+}
+
+.btn-show-qr:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-show-qr:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.btn-print {
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+.btn-print:hover {
+  background: var(--line-strong);
+}
+
+/* Scrollable Body with Panels */
+.receipt-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  background: var(--paper-deep);
+  padding: 24px;
+  gap: 24px;
+}
+
+/* Receipt Paper (Left Side) */
+.receipt-content {
+  flex: 2;
+  background: white;
+  padding: 40px;
+  border-radius: 4px; /* classic paper look */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  position: relative;
+  min-height: 100%;
 }
 
 .receipt-header {
   text-align: center;
-  border-bottom: 2px solid #1a4d1a;
+  border-bottom: 2px solid var(--primary);
   padding-bottom: 20px;
   margin-bottom: 24px;
 }
 
 .receipt-header h2 {
-  font-family: Fraunces, serif;
-  color: #1a4d1a;
+  font-family: var(--font-display);
+  color: var(--primary);
   margin: 0;
   font-size: 24px;
 }
 
 .receipt-header p {
-  color: #64748b;
+  color: var(--muted);
   margin: 4px 0 0 0;
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -220,23 +321,31 @@ textarea:focus-visible {
 .receipt-meta {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 30px;
   font-size: 13px;
 }
 
-.receipt-meta-item span:first-child {
-  color: #94a3b8;
+.receipt-meta-item span {
+  color: var(--muted);
   display: block;
   font-size: 10px;
   text-transform: uppercase;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
-.receipt-meta-item span:last-child {
-  color: #1e293b;
-  font-weight: 500;
+.receipt-meta-item strong, .receipt-meta-item span:last-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.receipt-meta-full {
+  grid-column: span 2;
+  padding: 12px;
+  background: var(--paper);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
 }
 
 .receipt-table {
@@ -247,16 +356,21 @@ textarea:focus-visible {
 
 .receipt-table th {
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--line-strong);
   padding: 10px 0;
-  color: #64748b;
+  color: var(--muted);
   font-size: 11px;
   text-transform: uppercase;
 }
 
+.receipt-th-qty {
+  text-align: center;
+  width: 60px;
+}
+
 .receipt-table td {
   padding: 12px 0;
-  border-bottom: 1px dashed #f1f5f9;
+  border-bottom: 1px dashed var(--line);
   font-size: 14px;
 }
 
@@ -276,34 +390,106 @@ textarea:focus-visible {
 }
 
 .signature-line {
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--ink);
   width: 100%;
-  max-width: 200px;
+  max-width: 180px;
   padding-top: 8px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--muted);
   text-transform: uppercase;
   text-align: center;
 }
 
-.receipt-actions {
+/* QR Side Panel (Right Side) */
+.qr-side-panel {
+  flex: 1;
+  max-width: 260px;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid var(--line-strong);
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  height: fit-content;
+  position: sticky;
+  top: 0;
 }
 
-.btn-print {
-  background: #1a4d1a;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+.qr-panel-header {
+  width: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.close-btn-sm {
+  font-size: 1.2rem;
+  padding: 0;
+}
+
+.receipt-qr {
+  background: #fff;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.qr-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ==========================================
+   PRINT OPTIMIZATION (1-PAGE CLEAN OUTPUT)
+   ========================================== */
+@media print {
+  @page {
+    margin: 5mm;
+  }
+  
+  body * {
+    visibility: hidden !important;
+  }
+  
+  .receipt-modal, .receipt-modal-card {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: none !important;
+    visibility: visible !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .receipt-modal-header, .qr-side-panel, .no-print {
+    display: none !important;
+  }
+
+  .receipt-content {
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .receipt-content * {
+    visibility: visible !important;
+  }
 }
 
 /* Timeline */
@@ -402,27 +588,21 @@ textarea:focus-visible {
   background: #e2e8f0;
 }
 
-/* Print Overrides */
-@media print {
-  body * {
-    visibility: hidden;
+
+/* Mobile adjustments for New Modal */
+@media (max-width: 768px) {
+  .receipt-modal-body {
+    flex-direction: column;
+    padding: 16px;
   }
-  #receipt-printable-area, #receipt-printable-area * {
-    visibility: visible;
+  
+  .receipt-content {
+    padding: 24px 16px;
   }
-  #receipt-printable-area {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 20px;
-  }
-  .receipt-actions, .close-btn, .modal-overlay::before {
-    display: none !important;
-  }
-  .modal-overlay {
-    background: none !important;
+
+  .qr-side-panel {
+    max-width: 100%;
+    position: static;
   }
 }
 
@@ -1350,17 +1530,6 @@ form {
     align-items: center;
     gap: 40px;
     margin-top: 40px;
-  }
-
-  .receipt-qr {
-    background: #fff;
-    padding: 8px;
-    border: 1px solid var(--line-strong);
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
 
   .signature-box {
