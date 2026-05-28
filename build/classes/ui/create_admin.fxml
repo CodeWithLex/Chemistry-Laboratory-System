@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" prefHeight="450.0" prefWidth="454.0" styleClass="admin-create-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.controllers_for_ui.Create_adminController">
+    <stylesheets>
+        <URL value="@/css/create_admin.css" />
+    </stylesheets>
+    <children>
+        <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="20.0">
+            <!-- Title -->
+            <Label styleClass="page-title" text="Create Admin Account">
+                <font>
+                    <Font name="System Bold" size="24.0" />
+                </font>
+            </Label>
+            <Label styleClass="page-subtitle" text="Fill in the details for the new admin" />
+
+            <!-- Form Grid -->
+            <GridPane hgap="10.0" vgap="12.0">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="110.0" prefWidth="120.0" />
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                </rowConstraints>
+
+                <!-- Row 0: Username -->
+                <Label styleClass="form-label" text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <TextField fx:id="usernameField" promptText="Enter username" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                <!-- Row 1: Full Name -->
+                <Label styleClass="form-label" text="Full Name:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="fullnameField" promptText="Enter full name" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                <!-- Row 2: Password -->
+                <Label styleClass="form-label" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                <!-- Row 3: Confirm Password -->
+                <Label styleClass="form-label" text="Confirm:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <PasswordField fx:id="confirmPass" promptText="Confirm password" styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            </GridPane>
+
+            <!-- Buttons -->
+            <VBox alignment="CENTER" spacing="10.0">
+                <padding>
+                    <Insets top="10.0" />
+                </padding>
+                <Button fx:id="createAdminBtn" mnemonicParsing="false" onAction="#createAdminClicked" prefHeight="42.0" prefWidth="200.0" styleClass="create-admin-button" text="Create Admin">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+                </Button>
+                <Button fx:id="backBtn" mnemonicParsing="false" onAction="#backClicked" prefHeight="36.0" prefWidth="200.0" styleClass="back-button" text="Back">
+                    <font>
+                        <Font name="System Bold" size="12.0" />
+                    </font>
+                </Button>
+            </VBox>
+        </VBox>
+    </children>
+</AnchorPane>

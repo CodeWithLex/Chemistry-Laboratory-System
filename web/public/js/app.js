@@ -611,9 +611,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok && data.success) {
         showToast(data.message, 'success');
+        
+        // Build items list with session_id attached for QR generation
+        const sessionId = data.session_id;
+        const receiptItems = requestCart.map(item => ({
+          item_name: item.name,
+          qty: item.qty,
+          session_id: sessionId
+        }));
+
         requestCart = [];
         labActivityTitle.value = '';
         renderCart();
+        
+        // Open receipt immediately with QR code
+        openReceipt(activityTitle || 'Laboratory Activity', receiptItems);
+        
+        // Refresh data in background
         loadDashboardData();
       } else {
         showToast(data.error || 'Failed to submit batch requests', 'error');
