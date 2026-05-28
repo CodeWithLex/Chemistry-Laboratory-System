@@ -63,9 +63,14 @@ public class AdminDashboardController implements Initializable {
 
     // Header
     @FXML
-    private Label welcomeLabel;
-    @FXML
     private Button logoutBtn;
+
+    @FXML
+    private HBox scanActivityBadge;
+    @FXML
+    private Label scanActivityLabel;
+
+    private java.sql.Timestamp lastScanTimestamp = new java.sql.Timestamp(System.currentTimeMillis());
 
     // Stats
     @FXML
@@ -693,10 +698,59 @@ public class AdminDashboardController implements Initializable {
                         allEndDatePicker != null ? allEndDatePicker.getValue() : null);
             } else if ("Apparatus Requests".equals(selectedTab)) {
                 loadApparatusRequests();
+            } else if ("To Be Claimed".equals(selectedTab)) {
+                loadClaimingRequests(
+                        claimingSearchField != null ? claimingSearchField.getText() : "");
+            } else if ("Currently In Use".equals(selectedTab)) {
+                loadCurrentlyInUse(
+                        inUseStartDatePicker != null ? inUseStartDatePicker.getValue() : null,
+                        inUseEndDatePicker != null ? inUseEndDatePicker.getValue() : null);
             }
+
+            // Phase 2: Check for new scans from Web Companion
+            checkForNewScans();
         }));
         autoRefreshTimeline.setCycleCount(Timeline.INDEFINITE);
         autoRefreshTimeline.play();
+    }
+
+    private void checkForNewScans() {
+        new Thread(() -> {
+            try (Connection conn = Connector_ChemSystem.getConnection();
+                    PreparedStatement ps = conn.prepareStatement(
+                            "SELECT session_id, updated_at, " +
+                                    "(SELECT g.group_name FROM requests r2 JOIN student_groups g ON r2.group_id = g.group_id WHERE r2.session_id = requests.session_id LIMIT 1) as group_name "
+                                    +
+                                    "FROM requests WHERE status = 'Returned' AND updated_at > ? " +
+                                    "ORDER BY updated_at DESC LIMIT 1")) {
+
+                ps.setTimestamp(1, lastScanTimestamp);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String groupName = rs.getString("group_name");
+                        lastScanTimestamp = rs.getTimestamp("updated_at");
+
+                        javafx.application.Platform.runLater(() -> showScanNotification(groupName));
+                    }
+                }
+            } catch (SQLException ex) {
+                // Silently fail for background polling to avoid interrupting admin
+            }
+        }).start();
+    }
+
+    private void showScanNotification(String groupName) {
+        if (scanActivityBadge == null || scanActivityLabel == null)
+            return;
+
+        scanActivityLabel.setText("Group Processed: " + groupName);
+        scanActivityBadge.setVisible(true);
+
+        // Hide after 6 seconds
+        Timeline hideTimeline = new Timeline(new KeyFrame(Duration.seconds(6), e -> {
+            scanActivityBadge.setVisible(false);
+        }));
+        hideTimeline.play();
     }
 
     /**

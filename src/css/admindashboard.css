@@ -328,3 +328,21 @@
 .chart-vertical-grid-lines, .chart-horizontal-grid-lines {
     -fx-stroke: #f1f5f9;
 }
+.scan-activity-badge {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #10b981;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 6 12;
+    -fx-alignment: center;
+}
+
+.scan-activity-label {
+    -fx-text-fill: #065f46;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.pulse-red {
+    -fx-text-fill: #ef4444;
+}

@@ -447,6 +447,22 @@ app.post('/api/admin/process-scan', requireAdmin, async (req, res) => {
   }
 });
 
+// Get recent scanning activity for desktop sync
+app.get('/api/admin/scan-activity', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT session_id, updated_at, 
+              (SELECT g.group_name FROM requests r2 JOIN student_groups g ON r2.group_id = g.group_id WHERE r2.session_id = requests.session_id LIMIT 1) as group_name
+       FROM requests 
+       WHERE status = 'Returned' AND updated_at > NOW() - INTERVAL '4 hours'
+       ORDER BY updated_at DESC LIMIT 10`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch scan activity.' });
+  }
+});
+
 // Get apparatus list with real availability
 app.get('/api/apparatus', requireAuth, async (req, res) => {
   try {

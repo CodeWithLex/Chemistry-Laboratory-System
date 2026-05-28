@@ -92,6 +92,10 @@
                 <Label fx:id="headerTitleLabel" styleClass="header-title" text="Overview" />
                 <Region HBox.hgrow="ALWAYS" />
                 <HBox alignment="CENTER" spacing="12">
+                    <HBox fx:id="scanActivityBadge" alignment="CENTER" spacing="6" styleClass="scan-activity-badge" visible="false">
+                        <SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#10b981" strokeWidth="1.5" />
+                        <Label fx:id="scanActivityLabel" styleClass="scan-activity-label" text="Scan Processed" />
+                    </HBox>
                     <VBox alignment="CENTER_RIGHT">
                         <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome, Admin" />
                         <Label text="Laboratory Manager" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;" />
