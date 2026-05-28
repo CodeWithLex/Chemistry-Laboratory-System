@@ -98,6 +98,8 @@ public class AdminDashboardController implements Initializable {
     private Button sideNavSpecial;
     @FXML
     private Button sideNavAnalytics;
+    @FXML
+    private Button sideNavAudit;
 
     private List<Button> navButtons;
 
@@ -288,6 +290,7 @@ public class AdminDashboardController implements Initializable {
     private ObservableList<ApparatusItem> apparatusMaster = FXCollections.observableArrayList();
     private ObservableList<StudentGroupItem> groupsMaster = FXCollections.observableArrayList();
     private ObservableList<BorrowRequest> historyMaster = FXCollections.observableArrayList();
+    private ObservableList<BorrowRequest> claimingMaster = FXCollections.observableArrayList();
 
     // Apparatus Requests Table (Feature 3 admin side)
     @FXML
@@ -328,6 +331,24 @@ public class AdminDashboardController implements Initializable {
     @FXML
     private TableColumn<BorrowRequest, String> colHistDuration;
 
+    // Audit Reports Components
+    @FXML
+    private Label auditUtilizationLabel;
+    @FXML
+    private Label auditBreakageLabel;
+    @FXML
+    private Label auditGroupLabel;
+    @FXML
+    private TableView<AuditItem> auditTableView;
+    @FXML
+    private TableColumn<AuditItem, String> colAuditItem;
+    @FXML
+    private TableColumn<AuditItem, Integer> colAuditTotalBorrowed;
+    @FXML
+    private TableColumn<AuditItem, Integer> colAuditBroken;
+    @FXML
+    private TableColumn<AuditItem, String> colAuditLossRate;
+
     // Action Buttons
     @FXML
     private Button refreshBtn;
@@ -355,11 +376,14 @@ public class AdminDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Enable maximize button and resizing for dashboard
+        chemlab_system.ChemLab_System.setMaximizeButtonVisible(true);
+
         // Initialize Navigation Buttons List
         navButtons = java.util.Arrays.asList(
                 sideNavDashboard, sideNavPending, sideNavClaim, sideNavInUse,
                 sideNavHistory, sideNavInventory, sideNavGroups, sideNavSpecial,
-                sideNavAnalytics);
+                sideNavAnalytics, sideNavAudit);
 
         // Setup Pending Requests Table columns
         // Checkbox column for batch selection
@@ -578,6 +602,17 @@ public class AdminDashboardController implements Initializable {
             colGrpDepartment.setMinWidth(150);
         }
 
+        // Setup Audit Reports Table columns
+        if (auditTableView != null && colAuditItem != null) {
+            colAuditItem.setCellValueFactory(new PropertyValueFactory<>("itemName"));
+            colAuditTotalBorrowed.setCellValueFactory(new PropertyValueFactory<>("totalBorrowed"));
+            colAuditBroken.setCellValueFactory(new PropertyValueFactory<>("brokenCount"));
+            colAuditLossRate.setCellValueFactory(new PropertyValueFactory<>("lossRate"));
+
+            auditTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            applyTextCellStyle(colAuditItem, colAuditTotalBorrowed, colAuditBroken, colAuditLossRate);
+        }
+
         colInUseId.setMinWidth(60);
         colInUseGroup.setMinWidth(130);
         colInUseApparatus.setMinWidth(150);
@@ -617,7 +652,7 @@ public class AdminDashboardController implements Initializable {
                     colArDate);
         }
 
-        // Load initial data
+        // Load initial data (Stats and the first tab's content)
         loadStats();
         loadPendingRequests();
 
@@ -665,6 +700,9 @@ public class AdminDashboardController implements Initializable {
                         break;
                     case "Apparatus Requests":
                         loadApparatusRequests();
+                        break;
+                    case "Audit Reports":
+                        loadAuditData();
                         break;
                 }
                 loadStats();
@@ -796,48 +834,50 @@ public class AdminDashboardController implements Initializable {
     // ==================== DATA LOADING ====================
 
     private void loadStats() {
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null)
-            return;
-
-        try {
-            // Pending count (standard + apparatus requests)
-            try (java.sql.Statement st1 = conn.createStatement();
-                    ResultSet rs1 = st1.executeQuery(
-                            "SELECT " +
-                                    "(SELECT COUNT(*) FROM requests WHERE status = 'Pending'::request_status) + " +
-                                    "(SELECT COUNT(*) FROM apparatus_requests WHERE status = 'Pending'::apparatus_request_status) AS cnt")) {
-                if (rs1.next())
-                    pendingCountLabel.setText(String.valueOf(rs1.getInt("cnt")));
+        runAsync(() -> {
+            int pending = 0, approved = 0, apparatus = 0, users = 0;
+            try (Connection conn = Connector_ChemSystem.getConnection()) {
+                if (conn == null)
+                    return;
+                // Pending count (standard + apparatus requests)
+                try (java.sql.Statement st1 = conn.createStatement();
+                        ResultSet rs1 = st1.executeQuery(
+                                "SELECT " +
+                                        "(SELECT COUNT(*) FROM requests WHERE status = 'Pending'::request_status) + " +
+                                        "(SELECT COUNT(*) FROM apparatus_requests WHERE status = 'Pending'::apparatus_request_status) AS cnt")) {
+                    if (rs1.next())
+                        pending = rs1.getInt("cnt");
+                }
+                // Approved today count
+                try (java.sql.Statement st2 = conn.createStatement();
+                        ResultSet rs2 = st2.executeQuery(
+                                "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved'::request_status AND DATE(updated_at) = CURRENT_DATE")) {
+                    if (rs2.next())
+                        approved = rs2.getInt("cnt");
+                }
+                // Total apparatus
+                try (java.sql.Statement st3 = conn.createStatement();
+                        ResultSet rs3 = st3.executeQuery("SELECT COUNT(*) AS cnt FROM apparatus")) {
+                    if (rs3.next())
+                        apparatus = rs3.getInt("cnt");
+                }
+                // Total users
+                try (java.sql.Statement st4 = conn.createStatement();
+                        ResultSet rs4 = st4.executeQuery("SELECT COUNT(*) AS cnt FROM users")) {
+                    if (rs4.next())
+                        users = rs4.getInt("cnt");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-
-            // Approved today count
-            try (java.sql.Statement st2 = conn.createStatement();
-                    ResultSet rs2 = st2.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM requests WHERE status = 'Approved'::request_status AND DATE(updated_at) = CURRENT_DATE")) {
-                if (rs2.next())
-                    approvedCountLabel.setText(String.valueOf(rs2.getInt("cnt")));
-            }
-
-            // Total apparatus
-            try (java.sql.Statement st3 = conn.createStatement();
-                    ResultSet rs3 = st3.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM apparatus")) {
-                if (rs3.next())
-                    totalApparatusLabel.setText(String.valueOf(rs3.getInt("cnt")));
-            }
-
-            // Total users
-            try (java.sql.Statement st4 = conn.createStatement();
-                    ResultSet rs4 = st4.executeQuery(
-                            "SELECT COUNT(*) AS cnt FROM users")) {
-                if (rs4.next())
-                    totalUsersLabel.setText(String.valueOf(rs4.getInt("cnt")));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            final int fPending = pending, fApproved = approved, fApparatus = apparatus, fUsers = users;
+            javafx.application.Platform.runLater(() -> {
+                pendingCountLabel.setText(String.valueOf(fPending));
+                approvedCountLabel.setText(String.valueOf(fApproved));
+                totalApparatusLabel.setText(String.valueOf(fApparatus));
+                totalUsersLabel.setText(String.valueOf(fUsers));
+            });
+        }, null);
     }
 
     private void loadPendingRequests() {
@@ -845,62 +885,63 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadPendingRequests(LocalDate startDate, LocalDate endDate) {
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null) {
-            System.err.println("loadPendingRequests: Connection is null!");
-            return;
-        }
+        runAsync(() -> {
+            ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null) {
+                System.err.println("loadPendingRequests: Connection is null!");
+                return;
+            }
 
-        // Use LEFT JOINs so requests still show even if group/apparatus data is missing
-        // Use aliases for the selected columns to avoid column-name issues
-        String sql = "SELECT r.request_id AS rid, " +
-                "g.group_name AS gname, " +
-                "a.item_name AS aname, " +
-                "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
-                "FROM requests r " +
-                "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
-                "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Pending'::request_status";
+            String sql = "SELECT r.request_id AS rid, " +
+                    "g.group_name AS gname, " +
+                    "a.item_name AS aname, " +
+                    "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
+                    "FROM requests r " +
+                    "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
+                    "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                    "WHERE r.status = 'Pending'::request_status";
 
-        if (startDate != null) {
-            sql += " AND DATE(r.created_at) >= ?";
-        }
-        if (endDate != null) {
-            sql += " AND DATE(r.created_at) <= ?";
-        }
-        sql += " ORDER BY r.created_at";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int paramIndex = 1;
             if (startDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+                sql += " AND DATE(r.created_at) >= ?";
             }
             if (endDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(endDate));
+                sql += " AND DATE(r.created_at) <= ?";
             }
+            sql += " ORDER BY r.created_at";
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest();
-                    req.setRequestId(rs.getInt("rid"));
-                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                    req.setQty(rs.getInt("rqty"));
-                    req.setStatus(rs.getString("rstatus"));
-                    req.setCreatedAt(rs.getTimestamp("rdate"));
-                    req.setLabActivity(rs.getString("lactivity"));
-                    list.add(req);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                if (startDate != null) {
+                    stmt.setDate(paramIndex++, Date.valueOf(startDate));
                 }
-            }
+                if (endDate != null) {
+                    stmt.setDate(paramIndex++, Date.valueOf(endDate));
+                }
 
-            System.out.println("loadPendingRequests: Loaded " + list.size() + " pending requests");
-        } catch (SQLException e) {
-            System.err.println("loadPendingRequests SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        pendingRequestsMaster = list;
-        applyPendingSearchFilter();
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        BorrowRequest req = new BorrowRequest();
+                        req.setRequestId(rs.getInt("rid"));
+                        req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
+                        req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
+                        req.setQty(rs.getInt("rqty"));
+                        req.setStatus(rs.getString("rstatus"));
+                        req.setCreatedAt(rs.getTimestamp("rdate"));
+                        req.setLabActivity(rs.getString("lactivity"));
+                        list.add(req);
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("loadPendingRequests SQL error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            final ObservableList<BorrowRequest> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                pendingRequestsMaster = finalList;
+                applyPendingSearchFilter();
+            });
+        }, null);
     }
 
     private void loadAllRequests() {
@@ -908,125 +949,137 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadAllRequests(LocalDate startDate, LocalDate endDate) {
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null) {
-            System.err.println("loadAllRequests: Connection is null!");
-            return;
-        }
+        runAsync(() -> {
+            ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null) {
+                System.err.println("loadAllRequests: Connection is null!");
+                return;
+            }
 
-        String sql = "SELECT r.request_id AS rid, " +
-                "g.group_name AS gname, " +
-                "a.item_name AS aname, " +
-                "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
-                "FROM requests r " +
-                "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
-                "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE 1=1";
+            String sql = "SELECT r.request_id AS rid, " +
+                    "g.group_name AS gname, " +
+                    "a.item_name AS aname, " +
+                    "r.qty AS rqty, r.status AS rstatus, r.lab_activity AS lactivity, r.created_at AS rdate " +
+                    "FROM requests r " +
+                    "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
+                    "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                    "WHERE 1=1";
 
-        if (startDate != null) {
-            sql += " AND DATE(r.created_at) >= ?";
-        }
-        if (endDate != null) {
-            sql += " AND DATE(r.created_at) <= ?";
-        }
-        sql += " ORDER BY r.created_at DESC";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int paramIndex = 1;
             if (startDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(startDate));
+                sql += " AND DATE(r.created_at) >= ?";
             }
             if (endDate != null) {
-                stmt.setDate(paramIndex++, Date.valueOf(endDate));
+                sql += " AND DATE(r.created_at) <= ?";
             }
+            sql += " ORDER BY r.created_at DESC";
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest();
-                    req.setRequestId(rs.getInt("rid"));
-                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                    req.setQty(rs.getInt("rqty"));
-                    req.setStatus(rs.getString("rstatus"));
-                    req.setCreatedAt(rs.getTimestamp("rdate"));
-                    req.setLabActivity(rs.getString("lactivity"));
-                    list.add(req);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                if (startDate != null) {
+                    stmt.setDate(paramIndex++, Date.valueOf(startDate));
                 }
+                if (endDate != null) {
+                    stmt.setDate(paramIndex++, Date.valueOf(endDate));
+                }
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        BorrowRequest req = new BorrowRequest();
+                        req.setRequestId(rs.getInt("rid"));
+                        req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
+                        req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
+                        req.setQty(rs.getInt("rqty"));
+                        req.setStatus(rs.getString("rstatus"));
+                        req.setCreatedAt(rs.getTimestamp("rdate"));
+                        req.setLabActivity(rs.getString("lactivity"));
+                        list.add(req);
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("loadAllRequests SQL error: " + e.getMessage());
+                e.printStackTrace();
             }
-            System.out.println("loadAllRequests: Loaded " + list.size() + " total requests");
-        } catch (SQLException e) {
-            System.err.println("loadAllRequests SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        allRequestsMaster = list;
-        applyAllSearchFilter();
+            final ObservableList<BorrowRequest> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                allRequestsMaster = finalList;
+                applyAllSearchFilter();
+            });
+        }, null);
     }
 
     private void loadApparatus() {
-        ObservableList<ApparatusItem> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null) {
-            System.err.println("loadApparatus: Connection is null!");
-            return;
-        }
-
-        String sql = "SELECT a.apparatus_id, a.item_name, a.current_quantity, " +
-                "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved'::request_status,'Pending'::request_status) THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
-                +
-                "FROM apparatus a " +
-                "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id " +
-                "GROUP BY a.apparatus_id, a.item_name, a.current_quantity " +
-                "ORDER BY a.item_name";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                list.add(new ApparatusItem(
-                        rs.getInt("apparatus_id"),
-                        rs.getString("item_name"),
-                        rs.getInt("current_quantity"),
-                        rs.getInt("remaining_qty")));
+        runAsync(() -> {
+            ObservableList<ApparatusItem> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null) {
+                System.err.println("loadApparatus: Connection is null!");
+                return;
             }
-            System.out.println("loadApparatus: Loaded " + list.size() + " apparatus items");
-        } catch (SQLException e) {
-            System.err.println("loadApparatus SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        apparatusMaster = list;
-        applyApparatusSearchFilter();
+
+            String sql = "SELECT a.apparatus_id, a.item_name, a.current_quantity, " +
+                    "GREATEST(a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved'::request_status,'Pending'::request_status) THEN r.qty ELSE 0 END), 0), 0) AS remaining_qty "
+                    +
+                    "FROM apparatus a " +
+                    "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id " +
+                    "GROUP BY a.apparatus_id, a.item_name, a.current_quantity " +
+                    "ORDER BY a.item_name";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                    ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new ApparatusItem(
+                            rs.getInt("apparatus_id"),
+                            rs.getString("item_name"),
+                            rs.getInt("current_quantity"),
+                            rs.getInt("remaining_qty")));
+                }
+            } catch (SQLException e) {
+                System.err.println("loadApparatus SQL error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            final ObservableList<ApparatusItem> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                apparatusMaster = finalList;
+                applyApparatusSearchFilter();
+            });
+        }, null);
     }
 
     private void loadStudentGroups() {
-        ObservableList<StudentGroupItem> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null) {
-            System.err.println("loadStudentGroups: Connection is null!");
-            return;
-        }
-
-        String sql = "SELECT sg.group_id, sg.group_name, sg.username, " +
-                "COALESCE(d.department_name, 'N/A') AS department_name " +
-                "FROM student_groups sg " +
-                "LEFT JOIN departments d ON sg.department_id = d.department_id " +
-                "ORDER BY sg.group_name";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                list.add(new StudentGroupItem(
-                        rs.getInt("group_id"),
-                        rs.getString("group_name"),
-                        rs.getString("username"),
-                        rs.getString("department_name")));
+        runAsync(() -> {
+            ObservableList<StudentGroupItem> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null) {
+                System.err.println("loadStudentGroups: Connection is null!");
+                return;
             }
-            System.out.println("loadStudentGroups: Loaded " + list.size() + " student groups");
-        } catch (SQLException e) {
-            System.err.println("loadStudentGroups SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        groupsMaster = list;
-        applyGroupsSearchFilter();
+
+            String sql = "SELECT sg.group_id, sg.group_name, sg.username, " +
+                    "COALESCE(d.department_name, 'N/A') AS department_name " +
+                    "FROM student_groups sg " +
+                    "LEFT JOIN departments d ON sg.department_id = d.department_id " +
+                    "ORDER BY sg.group_name";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                    ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new StudentGroupItem(
+                            rs.getInt("group_id"),
+                            rs.getString("group_name"),
+                            rs.getString("username"),
+                            rs.getString("department_name")));
+                }
+            } catch (SQLException e) {
+                System.err.println("loadStudentGroups SQL error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            final ObservableList<StudentGroupItem> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                groupsMaster = finalList;
+                applyGroupsSearchFilter();
+            });
+        }, null);
     }
 
     // ==================== ACTION HANDLERS ====================
@@ -1274,6 +1327,163 @@ public class AdminDashboardController implements Initializable {
     }
 
     @FXML
+    private void switchTab(ActionEvent event) {
+        Button sourceBtn = (Button) event.getSource();
+        String text = sourceBtn.getText();
+
+        // 1. Reset all button styles and apply active style to clicked button
+        for (Button btn : navButtons) {
+            btn.getStyleClass().remove("nav-button-active");
+            if (!btn.getStyleClass().contains("nav-button")) {
+                btn.getStyleClass().add("nav-button");
+            }
+        }
+        sourceBtn.getStyleClass().add("nav-button-active");
+
+        // 2. Set Header Title
+        headerTitleLabel.setText(text);
+
+        // 3. Switch the tab in the TabPane
+        if (tabPane == null)
+            return;
+
+        if (sourceBtn == sideNavDashboard) {
+            tabPane.getSelectionModel().select(0); // Default to Pending
+            headerTitleLabel.setText("Overview");
+        } else {
+            switch (text) {
+                case "Pending Requests":
+                    tabPane.getSelectionModel().select(0);
+                    break;
+                case "To Be Claimed":
+                    tabPane.getSelectionModel().select(1);
+                    break;
+                case "All Requests":
+                    tabPane.getSelectionModel().select(2);
+                    break;
+                case "Currently In Use":
+                    tabPane.getSelectionModel().select(3);
+                    break;
+                case "Borrowing History":
+                    tabPane.getSelectionModel().select(4);
+                    break;
+                case "Student Groups":
+                    tabPane.getSelectionModel().select(5);
+                    break;
+                case "Apparatus Inventory":
+                    tabPane.getSelectionModel().select(6);
+                    break;
+                case "Apparatus Requests":
+                    tabPane.getSelectionModel().select(7);
+                    break;
+                case "System Analytics":
+                    tabPane.getSelectionModel().select(8);
+                    loadAnalyticsData();
+                    break;
+                case "Audit Reports":
+                    tabPane.getSelectionModel().select(9);
+                    loadAuditData();
+                    break;
+                case "Overview":
+                    tabPane.getSelectionModel().select(2); // Map Overview to All Requests
+                    break;
+            }
+        }
+    }
+
+    private void loadAuditData() {
+        runAsync(() -> {
+            ObservableList<AuditItem> auditList = FXCollections.observableArrayList();
+            int totalUtilization = 0;
+            String highestBreakageItem = "None";
+            int maxBroken = 0;
+            String topGroup = "None";
+            int maxGroupTurnover = 0;
+
+            try (Connection conn = Connector_ChemSystem.getConnection()) {
+                // 1. Load Table Data (Summarized by Apparatus)
+                String tableSql = "SELECT a.item_name, " +
+                        "COUNT(r.request_id) as total_borrowed, " +
+                        "SUM(r.broken_qty) as total_broken " +
+                        "FROM apparatus a " +
+                        "LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status = 'Returned'::request_status "
+                        +
+                        "GROUP BY a.item_name ORDER BY total_borrowed DESC";
+
+                try (PreparedStatement ps = conn.prepareStatement(tableSql);
+                        ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String name = rs.getString("item_name");
+                        int borrowed = rs.getInt("total_borrowed");
+                        int broken = rs.getInt("total_broken");
+                        auditList.add(new AuditItem(name, borrowed, broken));
+
+                        totalUtilization += borrowed;
+                        if (broken > maxBroken) {
+                            maxBroken = broken;
+                            highestBreakageItem = name;
+                        }
+                    }
+                }
+
+                // 2. Load Top Turnover Group
+                String groupSql = "SELECT g.group_name, COUNT(r.request_id) as turnover " +
+                        "FROM student_groups g " +
+                        "JOIN requests r ON g.group_id = r.group_id " +
+                        "GROUP BY g.group_name ORDER BY turnover DESC LIMIT 1";
+                try (PreparedStatement ps = conn.prepareStatement(groupSql);
+                        ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        topGroup = rs.getString("group_name");
+                    }
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            final int fUtil = totalUtilization;
+            final String fBrokenItem = highestBreakageItem;
+            final String fTopGroup = topGroup;
+
+            javafx.application.Platform.runLater(() -> {
+                auditTableView.setItems(auditList);
+                auditUtilizationLabel.setText(String.valueOf(fUtil));
+                auditBreakageLabel.setText(fBrokenItem);
+                auditGroupLabel.setText(fTopGroup);
+            });
+        }, null);
+    }
+
+    @FXML
+    private void exportAuditToCSV(ActionEvent event) {
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Save Audit Report");
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fileChooser.setInitialFileName("Chemical_Lab_Audit_" + LocalDate.now() + ".csv");
+
+        java.io.File file = fileChooser.showSaveDialog(null);
+        if (file != null) {
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(file)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Apparatus Name,Total Borrowed,Broken/Lost,Loss Rate\n");
+
+                for (AuditItem item : auditTableView.getItems()) {
+                    sb.append("\"").append(item.getItemName()).append("\",");
+                    sb.append(item.getTotalBorrowed()).append(",");
+                    sb.append(item.getBrokenCount()).append(",");
+                    sb.append(item.getLossRate()).append("\n");
+                }
+
+                writer.write(sb.toString());
+                showAlert(AlertType.INFORMATION, "Export Success", "Audit report saved to: " + file.getAbsolutePath());
+            } catch (java.io.IOException e) {
+                showAlert(AlertType.ERROR, "Export Failed", "Could not save file: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
     private void logoutClicked(ActionEvent event) {
         try {
             if (autoRefreshTimeline != null) {
@@ -1282,7 +1492,8 @@ public class AdminDashboardController implements Initializable {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
             Parent root = loader.load();
-            chemlab_system.ChemLab_System.setContent(root, 1100, 650);
+            chemlab_system.ChemLab_System.setMaximizeButtonVisible(false);
+            chemlab_system.ChemLab_System.setContent(root, 1100, 700);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
         } catch (Exception e) {
             e.printStackTrace();
@@ -1338,58 +1549,63 @@ public class AdminDashboardController implements Initializable {
     }
 
     private void loadHistory(LocalDate startDate, LocalDate endDate) {
-        if (historyTable == null)
-            return;
+        runAsync(() -> {
+            if (historyTable == null)
+                return;
 
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null)
-            return;
+            ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
 
-        String sql = "SELECT r.request_id AS rid, g.group_name AS gname, a.item_name AS aname, " +
-                "r.qty AS rqty, r.created_at AS created_at, r.updated_at AS updated_at, r.lab_activity AS lactivity " +
-                "FROM requests r " +
-                "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
-                "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Returned'::request_status ";
+            String sql = "SELECT r.request_id AS rid, g.group_name AS gname, a.item_name AS aname, " +
+                    "r.qty AS rqty, r.created_at AS created_at, r.updated_at AS updated_at, r.lab_activity AS lactivity "
+                    +
+                    "FROM requests r " +
+                    "LEFT JOIN student_groups g ON r.group_id = g.group_id " +
+                    "LEFT JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                    "WHERE r.status = 'Returned'::request_status ";
 
-        if (startDate != null) {
-            sql += " AND DATE(r.updated_at) >= ?";
-        }
-        if (endDate != null) {
-            sql += " AND DATE(r.updated_at) <= ?";
-        }
-        sql += " ORDER BY r.updated_at DESC";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int paramIndex = 1;
             if (startDate != null) {
-                stmt.setDate(paramIndex++, java.sql.Date.valueOf(startDate));
+                sql += " AND DATE(r.updated_at) >= ?";
             }
             if (endDate != null) {
-                stmt.setDate(paramIndex++, java.sql.Date.valueOf(endDate));
+                sql += " AND DATE(r.updated_at) <= ?";
             }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest();
-                    req.setRequestId(rs.getInt("rid"));
-                    req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
-                    req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
-                    req.setQty(rs.getInt("rqty"));
-                    req.setCreatedAt(rs.getTimestamp("created_at"));
-                    req.setUpdatedAt(rs.getTimestamp("updated_at"));
-                    req.setLabActivity(rs.getString("lactivity"));
-                    req.setStatus("Returned");
-                    list.add(req);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("loadHistory SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
+            sql += " ORDER BY r.updated_at DESC";
 
-        historyMaster = list;
-        applyHistorySearchFilter();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                if (startDate != null) {
+                    stmt.setDate(paramIndex++, java.sql.Date.valueOf(startDate));
+                }
+                if (endDate != null) {
+                    stmt.setDate(paramIndex++, java.sql.Date.valueOf(endDate));
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        BorrowRequest req = new BorrowRequest();
+                        req.setRequestId(rs.getInt("rid"));
+                        req.setGroupName(rs.getString("gname") != null ? rs.getString("gname") : "Unknown Group");
+                        req.setApparatusName(rs.getString("aname") != null ? rs.getString("aname") : "Unknown");
+                        req.setQty(rs.getInt("rqty"));
+                        req.setCreatedAt(rs.getTimestamp("created_at"));
+                        req.setUpdatedAt(rs.getTimestamp("updated_at"));
+                        req.setLabActivity(rs.getString("lactivity"));
+                        req.setStatus("Returned");
+                        list.add(req);
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("loadHistory SQL error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            final ObservableList<BorrowRequest> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                historyMaster = finalList;
+                applyHistorySearchFilter();
+            });
+        }, null);
     }
 
     public void loadCurrentlyInUse() {
@@ -1397,50 +1613,53 @@ public class AdminDashboardController implements Initializable {
     }
 
     public void loadCurrentlyInUse(LocalDate startDate, LocalDate endDate) {
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null)
-            return;
+        runAsync(() -> {
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
 
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, a.current_quantity "
-                +
-                "FROM requests r " +
-                "JOIN student_groups g ON r.group_id = g.group_id " +
-                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Released'::request_status";
+            ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+            String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, a.current_quantity "
+                    +
+                    "FROM requests r " +
+                    "JOIN student_groups g ON r.group_id = g.group_id " +
+                    "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                    "WHERE r.status = 'Released'::request_status";
 
-        if (startDate != null && endDate != null) {
-            sql += " AND DATE(r.updated_at) BETWEEN ? AND ?";
-        }
-        sql += " ORDER BY r.updated_at DESC";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (startDate != null && endDate != null) {
-                stmt.setDate(1, java.sql.Date.valueOf(startDate));
-                stmt.setDate(2, java.sql.Date.valueOf(endDate));
+                sql += " AND DATE(r.updated_at) BETWEEN ? AND ?";
             }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest(
-                            rs.getInt("request_id"),
-                            rs.getInt("group_id"),
-                            rs.getString("group_name"),
-                            rs.getInt("apparatus_id"),
-                            rs.getString("item_name"),
-                            rs.getInt("qty"),
-                            rs.getString("status"),
-                            rs.getTimestamp("updated_at"));
-                    req.setLabActivity(rs.getString("lab_activity"));
-                    req.setApprovedAt(rs.getTimestamp("approved_at"));
-                    req.setApparatusRemaining(rs.getInt("current_quantity"));
-                    list.add(req);
+            sql += " ORDER BY r.updated_at DESC";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (startDate != null && endDate != null) {
+                    stmt.setDate(1, java.sql.Date.valueOf(startDate));
+                    stmt.setDate(2, java.sql.Date.valueOf(endDate));
                 }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        BorrowRequest req = new BorrowRequest(
+                                rs.getInt("request_id"),
+                                rs.getInt("group_id"),
+                                rs.getString("group_name"),
+                                rs.getInt("apparatus_id"),
+                                rs.getString("item_name"),
+                                rs.getInt("qty"),
+                                rs.getString("status"),
+                                rs.getTimestamp("updated_at"));
+                        req.setLabActivity(rs.getString("lab_activity"));
+                        list.add(req);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            inUseTable.setItems(list);
-            inUseTable.refresh();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+            final ObservableList<BorrowRequest> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                inUseMaster = finalList;
+                applyInUseSearchFilter();
+            });
+        }, null);
     }
 
     public void loadClaimingRequests() {
@@ -1448,50 +1667,59 @@ public class AdminDashboardController implements Initializable {
     }
 
     public void loadClaimingRequests(String search) {
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null)
-            return;
+        runAsync(() -> {
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
 
-        ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
-        String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, g.email "
-                +
-                "FROM requests r " +
-                "JOIN student_groups g ON r.group_id = g.group_id " +
-                "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
-                "WHERE r.status = 'Approved'::request_status";
+            ObservableList<BorrowRequest> list = FXCollections.observableArrayList();
+            String sql = "SELECT r.request_id, r.group_id, g.group_name, r.apparatus_id, a.item_name, r.qty, r.status, r.lab_activity, r.approved_at, r.updated_at, g.email "
+                    +
+                    "FROM requests r " +
+                    "JOIN student_groups g ON r.group_id = g.group_id " +
+                    "JOIN apparatus a ON r.apparatus_id = a.apparatus_id " +
+                    "WHERE r.status = 'Approved'::request_status";
 
-        if (search != null && !search.trim().isEmpty()) {
-            sql += " AND (g.group_name ILIKE ? OR r.request_id::text ILIKE ? OR r.lab_activity ILIKE ?)";
-        }
-        sql += " ORDER BY r.updated_at DESC";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (search != null && !search.trim().isEmpty()) {
-                String p = "%" + search + "%";
-                stmt.setString(1, p);
-                stmt.setString(2, p);
-                stmt.setString(3, p);
+                sql += " AND (g.group_name ILIKE ? OR r.request_id::text ILIKE ? OR r.lab_activity ILIKE ?)";
             }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BorrowRequest req = new BorrowRequest(
-                            rs.getInt("request_id"),
-                            rs.getInt("group_id"),
-                            rs.getString("group_name"),
-                            rs.getInt("apparatus_id"),
-                            rs.getString("item_name"),
-                            rs.getInt("qty"),
-                            rs.getString("status"),
-                            rs.getTimestamp("updated_at"));
-                    req.setLabActivity(rs.getString("lab_activity"));
-                    req.setApprovedAt(rs.getTimestamp("approved_at"));
-                    list.add(req);
+            sql += " ORDER BY r.updated_at DESC";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (search != null && !search.trim().isEmpty()) {
+                    String p = "%" + search + "%";
+                    stmt.setString(1, p);
+                    stmt.setString(2, p);
+                    stmt.setString(3, p);
                 }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        BorrowRequest req = new BorrowRequest(
+                                rs.getInt("request_id"),
+                                rs.getInt("group_id"),
+                                rs.getString("group_name"),
+                                rs.getInt("apparatus_id"),
+                                rs.getString("item_name"),
+                                rs.getInt("qty"),
+                                rs.getString("status"),
+                                rs.getTimestamp("updated_at"));
+                        req.setLabActivity(rs.getString("lab_activity"));
+                        req.setApprovedAt(rs.getTimestamp("approved_at"));
+                        req.setApparatusRemaining(0); // Optional: calculate if needed
+                        list.add(req);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            claimingTable.setItems(list);
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+            final ObservableList<BorrowRequest> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                if (claimingTable != null) {
+                    claimingMaster = finalList;
+                    claimingTable.setItems(finalList);
+                }
+            });
+        }, null);
     }
 
     private String calculateDurationText(Timestamp start, Timestamp end) {
@@ -1628,55 +1856,6 @@ public class AdminDashboardController implements Initializable {
             allSearchField.clear();
         }
         applyAllSearchFilter();
-    }
-
-    @FXML
-    private void switchTab(ActionEvent event) {
-        Button clickedBtn = (Button) event.getSource();
-        String text = clickedBtn.getText();
-
-        headerTitleLabel.setText(text);
-
-        // Update active button styling
-        for (Button btn : navButtons) {
-            btn.getStyleClass().remove("nav-button-active");
-        }
-        clickedBtn.getStyleClass().add("nav-button-active");
-
-        // Switch TabPane selection
-        if (tabPane == null)
-            return;
-        switch (text) {
-            case "Overview":
-                // Map Overview to All Requests (Index 2) for a broader visual summary
-                tabPane.getSelectionModel().select(2);
-                break;
-            case "Pending Requests":
-                tabPane.getSelectionModel().select(0);
-                break;
-            case "To Be Claimed":
-                tabPane.getSelectionModel().select(1);
-                break;
-            case "Currently In Use":
-                tabPane.getSelectionModel().select(3);
-                break;
-            case "Borrowing History":
-                tabPane.getSelectionModel().select(4);
-                break;
-            case "Apparatus Inventory":
-                tabPane.getSelectionModel().select(6);
-                break;
-            case "Student Groups":
-                tabPane.getSelectionModel().select(5);
-                break;
-            case "System Analytics":
-                tabPane.getSelectionModel().select(8); // Index of System Analytics tab
-                loadAnalyticsData();
-                break;
-            case "Apparatus Requests":
-                tabPane.getSelectionModel().select(7);
-                break;
-        }
     }
 
     @FXML
@@ -2151,38 +2330,43 @@ public class AdminDashboardController implements Initializable {
     // ====================
 
     private void loadApparatusRequests() {
-        if (apparatusRequestsTable == null)
-            return;
+        runAsync(() -> {
+            if (apparatusRequestsTable == null)
+                return;
 
-        ObservableList<ApparatusRequestItem> list = FXCollections.observableArrayList();
-        Connection conn = Connector_ChemSystem.getConnection();
-        if (conn == null)
-            return;
+            ObservableList<ApparatusRequestItem> list = FXCollections.observableArrayList();
+            Connection conn = Connector_ChemSystem.getConnection();
+            if (conn == null)
+                return;
 
-        String sql = "SELECT ar.ar_id, g.group_name, ar.apparatus_name, ar.lab_activity, ar.reason, ar.status, ar.created_at "
-                +
-                "FROM apparatus_requests ar " +
-                "LEFT JOIN student_groups g ON ar.group_id = g.group_id " +
-                "ORDER BY ar.created_at DESC";
+            String sql = "SELECT ar.ar_id, g.group_name, ar.apparatus_name, ar.lab_activity, ar.reason, ar.status, ar.created_at "
+                    +
+                    "FROM apparatus_requests ar " +
+                    "LEFT JOIN student_groups g ON ar.group_id = g.group_id " +
+                    "ORDER BY ar.created_at DESC";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                list.add(new ApparatusRequestItem(
-                        rs.getInt("ar_id"),
-                        rs.getString("group_name") != null ? rs.getString("group_name") : "Unknown",
-                        rs.getString("lab_activity") != null ? rs.getString("lab_activity") : "",
-                        rs.getString("apparatus_name"),
-                        rs.getString("reason") != null ? rs.getString("reason") : "",
-                        rs.getString("status"),
-                        formatTimestamp(rs.getTimestamp("created_at"))));
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                    ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new ApparatusRequestItem(
+                            rs.getInt("ar_id"),
+                            rs.getString("group_name") != null ? rs.getString("group_name") : "Unknown",
+                            rs.getString("lab_activity") != null ? rs.getString("lab_activity") : "",
+                            rs.getString("apparatus_name"),
+                            rs.getString("reason") != null ? rs.getString("reason") : "",
+                            rs.getString("status"),
+                            formatTimestamp(rs.getTimestamp("created_at"))));
+                }
+            } catch (SQLException e) {
+                System.err.println("loadApparatusRequests SQL error: " + e.getMessage());
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            System.err.println("loadApparatusRequests SQL error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        apparatusRequestsMaster = list;
-        apparatusRequestsTable.setItems(list);
+            final ObservableList<ApparatusRequestItem> finalList = list;
+            javafx.application.Platform.runLater(() -> {
+                apparatusRequestsMaster = finalList;
+                apparatusRequestsTable.setItems(finalList);
+            });
+        }, null);
     }
 
     @FXML
@@ -2359,5 +2543,71 @@ public class AdminDashboardController implements Initializable {
 
         // Initial heartbeat
         refreshAnalytics(null);
+    }
+
+    /**
+     * Helper to run database logic on a background thread and then update UI.
+     * 
+     * @param bgTask The SQL/Logic to run in the background.
+     * @param uiTask The UI update to run on the JavaFX Application Thread.
+     */
+    private void runAsync(Runnable bgTask, Runnable uiTask) {
+        javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                bgTask.run();
+                return null;
+            }
+        };
+        task.setOnSucceeded(e -> {
+            if (uiTask != null)
+                uiTask.run();
+        });
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            System.err.println("Async Task Failed: " + ex.getMessage());
+            ex.printStackTrace();
+        });
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    /**
+     * Inner class to represent audit data in the TableView.
+     */
+    public static class AuditItem {
+        private final String itemName;
+        private final int totalBorrowed;
+        private final int brokenCount;
+        private final String lossRate;
+
+        public AuditItem(String itemName, int totalBorrowed, int brokenCount) {
+            this.itemName = itemName;
+            this.totalBorrowed = totalBorrowed;
+            this.brokenCount = brokenCount;
+            if (totalBorrowed > 0) {
+                double rate = (brokenCount * 100.0) / totalBorrowed;
+                this.lossRate = String.format("%.2f%%", rate);
+            } else {
+                this.lossRate = "0.00%";
+            }
+        }
+
+        public String getItemName() {
+            return itemName;
+        }
+
+        public int getTotalBorrowed() {
+            return totalBorrowed;
+        }
+
+        public int getBrokenCount() {
+            return brokenCount;
+        }
+
+        public String getLossRate() {
+            return lossRate;
+        }
     }
 }

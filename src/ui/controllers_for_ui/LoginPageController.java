@@ -156,6 +156,7 @@ public class LoginPageController implements Initializable {
                     double w = Math.max(Math.min(sb.getWidth() * 0.85, 1400), 1000);
                     double h = Math.max(Math.min(sb.getHeight() * 0.85, 850), 600);
 
+                    chemlab_system.ChemLab_System.setMaximizeButtonVisible(true);
                     chemlab_system.ChemLab_System.setContent(root, w, h);
                     chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Instructor Dashboard");
                 } else {
@@ -165,9 +166,10 @@ public class LoginPageController implements Initializable {
                     dashController.setAdminName(fullName);
 
                     javafx.geometry.Rectangle2D sb = javafx.stage.Screen.getPrimary().getVisualBounds();
-                    double w = Math.max(Math.min(sb.getWidth() * 0.85, 1400), 1000);
-                    double h = Math.max(Math.min(sb.getHeight() * 0.85, 850), 600);
+                    double w = Math.max(Math.min(sb.getWidth() * 0.85, 1400), 1100);
+                    double h = Math.max(Math.min(sb.getHeight() * 0.9, 950), 880);
 
+                    chemlab_system.ChemLab_System.setMaximizeButtonVisible(true);
                     chemlab_system.ChemLab_System.setContent(root, w, h);
                     chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Dashboard");
                 }

@@ -1,0 +1,166 @@
+/* 
+    Simplified Emerald Admin Dashboard Theme
+    Aesthetics: Clean, Medical/Laboratory, Professional
+*/
+
+.dashboard-root {
+    -fx-background-color: #f8fafc;
+}
+
+/* Header Styles */
+.header-bar {
+    -fx-background-color: white;
+    -fx-padding: 15 25;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 0, 0, 0, 2);
+}
+
+.header-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #006442; /* Emerald Green */
+}
+
+.welcome-small {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+}
+
+.welcome-label {
+    -fx-text-fill: #1e293b;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-padding: 8 16;
+    -fx-text-fill: #1e293b;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.logout-button:hover {
+    -fx-background-color: #f1f5f9;
+}
+
+/* Stat Cards */
+.stat-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 10, 0, 0, 4);
+    /* Border bottom accent */
+    -fx-border-width: 1 1 4 1;
+}
+
+.stat-card:hover {
+    -fx-border-color: #006442;
+}
+
+.stat-number {
+    -fx-font-size: 32px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1e293b;
+}
+
+.stat-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.stat-icon-time { -fx-text-fill: #006442; -fx-font-size: 20px; }
+.stat-icon-check { -fx-text-fill: #10b981; -fx-font-size: 20px; }
+.stat-icon-flask { -fx-text-fill: #3b82f6; -fx-font-size: 20px; }
+.stat-icon-user { -fx-text-fill: #8b5cf6; -fx-font-size: 20px; }
+
+/* TabPane Styling */
+.tab-pane .tab-header-area {
+    -fx-padding: 5 20 0 20;
+    -fx-background-color: transparent;
+}
+
+.tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 10 20;
+}
+
+.tab-pane .tab:selected {
+    -fx-border-color: transparent transparent #006442 transparent;
+    -fx-border-width: 0 0 3 0;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 600;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #006442;
+}
+
+/* Table and Content */
+.tab-content-container {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.custom-table {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.custom-table .column-header-background {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 5;
+}
+
+.custom-table .column-header {
+    -fx-background-color: transparent;
+}
+
+.custom-table .column-header .label {
+    -fx-text-fill: #475569;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Buttons */
+.approve-button {
+    -fx-background-color: #006442;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 8 20;
+}
+
+.reject-button {
+    -fx-background-color: #dc2626;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 8 20;
+}
+
+.clear-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 6;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 12px;
+}
+
+/* Search Field */
+.search-field {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-width: 0;
+    -fx-padding: 8 12;
+}

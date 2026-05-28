@@ -37,7 +37,7 @@
 
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #94a3b8; /* Slate light */
+    -fx-text-fill: #cbd5e1; /* Higher contrast Slate 200 */
     -fx-alignment: center-left;
     -fx-padding: 12 16;
     -fx-font-size: 14px;
@@ -57,7 +57,7 @@
 .nav-button-active {
     -fx-background-color: rgba(255, 255, 255, 0.1);
     -fx-text-fill: #ffffff;
-    -fx-border-color: transparent transparent transparent #10b981; /* Emerald indicator */
+    -fx-border-color: transparent transparent transparent #22c55e; /* Brighter Green indicator */
     -fx-font-weight: 600;
 }
 

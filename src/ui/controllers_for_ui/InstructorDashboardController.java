@@ -102,6 +102,8 @@ public class InstructorDashboardController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Enable maximize button and resizing for dashboard
+        chemlab_system.ChemLab_System.setMaximizeButtonVisible(true);
         // Student Groups columns
         colSgId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
         colSgName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGroupName()));
@@ -306,6 +308,8 @@ public class InstructorDashboardController implements Initializable {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/ui/loginPage.fxml"));
             Parent root = loader.load();
+            // Disable maximization when returning to login
+            chemlab_system.ChemLab_System.setMaximizeButtonVisible(false);
             chemlab_system.ChemLab_System.setContent(root, 1100, 650);
             chemlab_system.ChemLab_System.setTitle("Chemistry Laboratory System - Login");
         } catch (Exception e) {

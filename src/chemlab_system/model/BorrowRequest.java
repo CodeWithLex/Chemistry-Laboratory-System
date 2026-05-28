@@ -17,7 +17,10 @@ public class BorrowRequest {
     private Timestamp approvedAt;
     private Timestamp updatedAt;
     private int apparatusRemaining;
+    private int brokenQty;
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
+    private final javafx.beans.property.IntegerProperty brokenQtyProp = new javafx.beans.property.SimpleIntegerProperty(
+            0);
 
     public BorrowRequest() {
     }
@@ -140,5 +143,18 @@ public class BorrowRequest {
 
     public void setApparatusRemaining(int apparatusRemaining) {
         this.apparatusRemaining = apparatusRemaining;
+    }
+
+    public int getBrokenQty() {
+        return brokenQtyProp.get();
+    }
+
+    public void setBrokenQty(int brokenQty) {
+        this.brokenQty = brokenQty;
+        this.brokenQtyProp.set(brokenQty);
+    }
+
+    public javafx.beans.property.IntegerProperty brokenQtyProperty() {
+        return brokenQtyProp;
     }
 }

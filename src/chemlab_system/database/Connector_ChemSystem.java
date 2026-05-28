@@ -24,7 +24,15 @@ public class Connector_ChemSystem {
      */
     public static Connection getConnection() {
         try {
-            if (AppConnection == null || AppConnection.isClosed()) {
+            // Check if connection is null, closed, or invalid (timed out on server side)
+            if (AppConnection == null || AppConnection.isClosed() || !AppConnection.isValid(2)) {
+                if (AppConnection != null && !AppConnection.isClosed()) {
+                    try {
+                        AppConnection.close();
+                    } catch (SQLException e) {
+                    }
+                }
+
                 String host = AppConfig.getRequired("supabase.host");
                 String port = AppConfig.get("supabase.port", "6543");
                 String db = AppConfig.get("supabase.dbname", "postgres");

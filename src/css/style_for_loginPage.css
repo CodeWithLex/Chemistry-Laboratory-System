@@ -208,3 +208,8 @@
 .close-button:hover {
     -fx-background-color: #e81123;
 }
+
+.maximize-button {
+    -fx-font-size: 16px;
+    -fx-padding: 5 10;
+}

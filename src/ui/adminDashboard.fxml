@@ -37,42 +37,48 @@
                 <Label text="MANAGEMENT SYSTEM" style="-fx-text-fill: #4caf50; -fx-font-size: 10px; -fx-font-weight: bold; -fx-character-spacing: 1;" />
             </VBox>
 
-            <VBox VBox.vgrow="ALWAYS" spacing="4" styleClass="sidebar-nav-container">
+            <VBox fx:id="sideNavVBox" spacing="4" styleClass="sidebar-nav-container" VBox.vgrow="ALWAYS">
                 <Button fx:id="sideNavDashboard" onAction="#switchTab" styleClass="nav-button, nav-button-active" text="Overview">
-                    <graphic><SVGPath content="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                    <graphic><SVGPath content="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
 
                 <Label text="BORROWING" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
                 
                 <Button fx:id="sideNavPending" onAction="#switchTab" styleClass="nav-button" text="Pending Requests">
-                    <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                    <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
                 <Button fx:id="sideNavClaim" onAction="#switchTab" styleClass="nav-button" text="To Be Claimed">
-                   <graphic><SVGPath content="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                   <graphic><SVGPath content="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
                 <Button fx:id="sideNavInUse" onAction="#switchTab" styleClass="nav-button" text="Currently In Use">
-                   <graphic><SVGPath content="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                   <graphic><SVGPath content="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
                 <Button fx:id="sideNavHistory" onAction="#switchTab" styleClass="nav-button" text="Borrowing History">
-                   <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                   <graphic><SVGPath content="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
 
                 <Label text="INVENTORY &amp; USERS" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
                 
                 <Button fx:id="sideNavInventory" onAction="#switchTab" styleClass="nav-button" text="Apparatus Inventory">
-                   <graphic><SVGPath content="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.675.27a6 6 0 01-3.86.517l-2.387-.477a2 2 0 00-1.022.547l-1.162 1.162a2 2 0 00.597 3.321l2.43.797a6 6 0 004.032 0l2.43-.797a2 2 0 00.597-3.321l-1.162-1.162z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                   <graphic><SVGPath content="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.675.27a6 6 0 01-3.86.517l-2.387-.477a2 2 0 00-1.022.547l-1.162 1.162a2 2 0 00.597 3.321l2.43.797a6 6 0 004.032 0l2.43-.797a2 2 0 00.597-3.321l-1.162-1.162z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
                 <Button fx:id="sideNavGroups" onAction="#switchTab" styleClass="nav-button" text="Student Groups">
-                   <graphic><SVGPath content="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                   <graphic><SVGPath content="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
                 <Button fx:id="sideNavSpecial" onAction="#switchTab" styleClass="nav-button" text="Apparatus Requests">
-                    <graphic><SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                    <graphic><SVGPath content="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
 
                 <Label text="INSIGHTS" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
                 
                 <Button fx:id="sideNavAnalytics" onAction="#switchTab" styleClass="nav-button" text="System Analytics">
-                    <graphic><SVGPath content="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" fill="transparent" stroke="#cbd5e1" strokeWidth="2" /></graphic>
+                    <graphic><SVGPath content="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
+                </Button>
+
+                <Label text="ADMINISTRATION" style="-fx-text-fill: #10b981; -fx-font-size: 10px; -fx-font-weight: 800; -fx-padding: 20 0 8 20; -fx-character-spacing: 1.5;" />
+                
+                <Button fx:id="sideNavAudit" onAction="#switchTab" styleClass="nav-button" text="Audit Reports">
+                    <graphic><SVGPath content="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" fill="transparent" stroke="WHITE" strokeWidth="2" /></graphic>
                 </Button>
             </VBox>
 
@@ -425,6 +431,52 @@
                                                 <xAxis><javafx.scene.chart.CategoryAxis label="Timeline" /></xAxis>
                                                 <yAxis><javafx.scene.chart.NumberAxis label="Daily Count" /></yAxis>
                                             </javafx.scene.chart.LineChart>
+                                        </VBox>
+                                    </VBox>
+                                </ScrollPane>
+                            </VBox>
+                        </Tab>
+
+                        <!-- Audit Reports Tab -->
+                        <Tab closable="false" text="Audit Reports">
+                            <VBox spacing="16">
+                                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="filter-bar">
+                                    <Label text="Audit Analytics" style="-fx-font-weight: bold; -fx-text-fill: #1a4d1a; -fx-font-size: 16px;" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#exportAuditToCSV" styleClass="action-button" style="-fx-background-color: #10b981; -fx-text-fill: white;" text="Download Full Audit Report (CSV)">
+                                        <graphic><SVGPath content="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" fill="transparent" stroke="white" strokeWidth="2" /></graphic>
+                                    </Button>
+                                </HBox> 
+                                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                                    <VBox spacing="24" style="-fx-padding: 0 24 24 24;">
+                                        <HBox spacing="20">
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                                                <Label text="Total Utilization" styleClass="stat-label" />
+                                                <Label fx:id="auditUtilizationLabel" text="0" styleClass="stat-number" />
+                                                <Label text="Requests processed" styleClass="stat-trend" style="-fx-text-fill: #64748b;" />
+                                            </VBox>
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                                                <Label text="Highest Breakage" styleClass="stat-label" />
+                                                <Label fx:id="auditBreakageLabel" text="None" styleClass="stat-number" style="-fx-font-size: 18px;" />
+                                                <Label text="Needs attention" styleClass="stat-trend, trend-up" style="-fx-text-fill: #ef4444;" />
+                                            </VBox>
+                                            <VBox styleClass="stat-card-base" HBox.hgrow="ALWAYS">
+                                                <Label text="Top Turnover Group" styleClass="stat-label" />
+                                                <Label fx:id="auditGroupLabel" text="None" styleClass="stat-number" style="-fx-font-size: 18px;" />
+                                                <Label text="Most active this semester" styleClass="stat-trend" style="-fx-text-fill: #3b82f6;" />
+                                            </VBox>
+                                        </HBox>
+
+                                        <VBox spacing="10">
+                                            <Label text="Apparatus Condition &amp; Utilization Summary" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                                            <TableView fx:id="auditTableView" prefHeight="400">
+                                                <columns>
+                                                    <TableColumn fx:id="colAuditItem" prefWidth="300" text="APPARATUS NAME" />
+                                                    <TableColumn fx:id="colAuditTotalBorrowed" prefWidth="150" text="TOTAL BORROWED" />
+                                                    <TableColumn fx:id="colAuditBroken" prefWidth="150" text="BROKEN / LOST" />
+                                                    <TableColumn fx:id="colAuditLossRate" prefWidth="150" text="LOSS RATE (%)" />
+                                                </columns>
+                                            </TableView>
                                         </VBox>
                                     </VBox>
                                 </ScrollPane>
