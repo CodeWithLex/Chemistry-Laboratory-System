@@ -137,7 +137,6 @@ public class AdminDashboardController implements Initializable {
     // Batch action controls
     @FXML
     private CheckBox selectAllCheckBox;
-    @FXML
 
     // All Requests Table
     @FXML
