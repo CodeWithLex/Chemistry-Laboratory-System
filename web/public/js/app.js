@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statInventoryHealth = document.getElementById('stat-inventory-health');
   const statUtilBar = document.getElementById('util-bar-fill');
   const activityTimeline = document.getElementById('activity-timeline');
+  const activitiesList = document.getElementById('activities-list');
 
   // Application State
   let currentGroup = null;
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchRequestsHistory();
     fetchOthersPendingRequests();
     fetchMembers();
+    fetchActivityTemplates();
   }
 
   // ==========================================
@@ -695,6 +697,73 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBulkBtn.disabled = false;
     }
   });
+
+  // 9. Activity Templates (Phase 4: Smart Throttling)
+  async function fetchActivityTemplates() {
+    if (!activitiesList) return;
+
+    try {
+      const res = await fetch('/api/activities/templates');
+      const data = await res.json();
+
+      if (data.length > 0) {
+        activitiesList.innerHTML = '';
+        data.forEach(t => {
+          const card = document.createElement('div');
+          card.className = 'activity-card';
+          card.innerHTML = `
+            <h4>${escapeHtml(t.activity_name)}</h4>
+            <p>${escapeHtml(t.description || 'No description provided.')}</p>
+            <div class="activity-card-meta">
+              <span class="item-badge">${t.item_count} Items</span>
+              <div class="btn-quick-claim">
+                <span>Quick Request</span>
+                <svg class="svg-icon icon-sm" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </div>
+          `;
+          card.addEventListener('click', () => claimActivityTemplate(t));
+          activitiesList.appendChild(card);
+        });
+      } else {
+        activitiesList.innerHTML = '<p class="empty-text">No featured activities available.</p>';
+      }
+    } catch (err) {
+      console.error('Fetch templates error:', err);
+      activitiesList.innerHTML = '<p class="empty-text">Failed to load activities.</p>';
+    }
+  }
+
+  async function claimActivityTemplate(template) {
+    if (!confirm(`Do you want to automatically request all apparatus for "${template.activity_name}"?`)) return;
+
+    try {
+      const res = await fetch('/api/requests/borrow-template', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_id: template.template_id })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        showToast(data.message, 'success');
+        
+        // Refresh data then open receipt
+        fetchApparatus();
+        await fetchRequestsHistory(); 
+        
+        if (currentGroupHistoryGroups[template.activity_name]) {
+          openReceipt(template.activity_name, currentGroupHistoryGroups[template.activity_name]);
+        }
+      } else {
+        showToast(data.error || 'Failed to process template request.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error, please try again.', 'error');
+    }
+  }
 
   // 8. Submit Request for Unlisted Apparatus (Updated for lab_activity)
   unlistedForm.addEventListener('submit', async (e) => {

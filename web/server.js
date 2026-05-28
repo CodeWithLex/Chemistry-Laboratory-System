@@ -463,41 +463,111 @@ app.get('/api/admin/scan-activity', requireAdmin, async (req, res) => {
   }
 });
 
-// Retroactively assign a session_id to legacy requests (those with null session_id)
-// This allows old receipts to become scannable for QR returns.
-app.post('/api/requests/assign-session', requireAuth, async (req, res) => {
-  const { lab_activity } = req.body;
-  if (!lab_activity) {
-    return res.status(400).json({ error: 'lab_activity is required.' });
-  }
-
-  try {
-    // Check if any requests for this group+activity already have a session_id
-    const existingResult = await pool.query(
-      `SELECT session_id FROM requests 
-       WHERE group_id = $1 AND lab_activity = $2 AND session_id IS NOT NULL 
-       LIMIT 1`,
-      [req.session.groupId, lab_activity]
-    );
-
-    if (existingResult.rows.length > 0) {
-      // Already has session_id, return existing one
-      return res.json({ session_id: existingResult.rows[0].session_id });
-    }
-
-    // Generate a new session_id and patch all null records for this group+activity
-    const newSessionId = require('crypto').randomUUID();
-    await pool.query(
-      `UPDATE requests SET session_id = $1 
-       WHERE group_id = $2 AND lab_activity = $3 AND session_id IS NULL`,
-      [newSessionId, req.session.groupId, lab_activity]
-    );
-
     console.log(`[QR] Retroactively assigned session_id ${newSessionId} to group ${req.session.groupId} for activity "${lab_activity}"`);
     res.json({ session_id: newSessionId });
   } catch (error) {
     console.error('[API] assign-session error:', error.message);
     res.status(500).json({ error: 'Failed to assign session.' });
+  }
+});
+
+// ─── ACTIVITY TEMPLATES (Phase 4: Smart Throttling) ──────────────────────────
+
+// Get all active lab activity templates
+app.get('/api/activities/templates', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT t.template_id, t.activity_name, t.description, 
+              (SELECT COUNT(*)::int FROM activity_template_items WHERE template_id = t.template_id) as item_count
+       FROM activity_templates t
+       WHERE t.is_active = true
+       ORDER BY t.activity_name`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('[API] Fetch templates error:', error.message);
+    res.status(500).json({ error: 'Failed to retrieve activity templates.' });
+  }
+});
+
+// Get items for a specific template
+app.get('/api/activities/templates/:id', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const template = await pool.query('SELECT activity_name, description FROM activity_templates WHERE template_id = $1', [id]);
+    if (template.rows.length === 0) return res.status(404).json({ error: 'Template not found.' });
+
+    const items = await pool.query(
+      `SELECT ati.fixed_qty, a.item_name, a.apparatus_id 
+       FROM activity_template_items ati
+       JOIN apparatus a ON ati.apparatus_id = a.apparatus_id
+       WHERE ati.template_id = $1`,
+      [id]
+    );
+    res.json({ ...template.rows[0], items: items.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve template details.' });
+  }
+});
+
+// Atomic Transaction: Borrow an entire activity at once
+app.post('/api/requests/borrow-template', requireAuth, async (req, res) => {
+  const { template_id } = req.body;
+  if (!template_id) return res.status(400).json({ error: 'template_id is required.' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Fetch items from template
+    const templateItems = await client.query(
+      `SELECT t.activity_name, ati.apparatus_id, ati.fixed_qty, a.item_name
+       FROM activity_template_items ati
+       JOIN activity_templates t ON ati.template_id = t.template_id
+       JOIN apparatus a ON ati.apparatus_id = a.apparatus_id
+       WHERE ati.template_id = $1`,
+      [template_id]
+    );
+
+    if (templateItems.rows.length === 0) throw new Error('Activity template is empty or invalid.');
+
+    const activityName = templateItems.rows[0].activity_name;
+    const sessionId = require('crypto').randomUUID();
+
+    // 2. Validate availability for ALL items in batch
+    for (const item of templateItems.rows) {
+      const availRes = await client.query(
+        `SELECT (current_quantity - COALESCE((SELECT SUM(qty) FROM requests WHERE apparatus_id = $1 AND status IN ('Approved', 'Pending', 'Released')),0))::int AS available
+         FROM apparatus WHERE apparatus_id = $1`,
+        [item.apparatus_id]
+      );
+      if (availRes.rows.length === 0 || availRes.rows[0].available < item.fixed_qty) {
+        throw new Error(`Insufficient stock for ${item.item_name}. Required: ${item.fixed_qty}, Available: ${availRes.rows[0]?.available || 0}`);
+      }
+    }
+
+    // 3. Perform batch insertion
+    for (const item of templateItems.rows) {
+      await client.query(
+        `INSERT INTO requests (group_id, apparatus_id, qty, lab_activity, status, session_id)
+         VALUES ($1, $2, $3, $4, 'Pending', $5)`,
+        [req.session.groupId, item.apparatus_id, item.fixed_qty, activityName, sessionId]
+      );
+    }
+
+    await client.query('COMMIT');
+    
+    // Notify admin background service (if using)
+    sendAdminNotification(req.session.groupName, templateItems.rows.map(i => ({ name: i.item_name, qty: i.fixed_qty })), activityName);
+
+    res.json({ success: true, message: `Successfully requested ${activityName}`, session_id: sessionId });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('[API] Borrow template error:', error.message);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
