@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function openReceipt(title, items) {
+  async function openReceipt(title, items) {
     receiptActivityTitle.textContent = title;
     receiptGroupName.textContent = currentGroup ? currentGroup.groupName : 'Student Group';
     receiptDate.textContent = new Date().toLocaleDateString(undefined, {
@@ -361,14 +361,42 @@ document.addEventListener('DOMContentLoaded', () => {
       receiptItemsBody.appendChild(tr);
     });
 
+    // Open modal early while QR is being resolved
+    receiptModal.classList.add('active');
+
     // Generate QR Code for Admin Scanning
     const qrContainer = document.getElementById('receipt-qr-code');
-    if (qrContainer) {
-      qrContainer.innerHTML = '';
-      const sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : null;
-      
-      if (sessionId) {
-        // The QR code stores the session ID for bulk return processing
+    if (!qrContainer) return;
+
+    qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center;">Generating QR...</p>';
+
+    // Step 1: Try to get session_id from items (new receipts already have it)
+    let sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : null;
+
+    // Step 2: If missing (legacy receipt), ask the server to assign one retroactively
+    if (!sessionId && title) {
+      try {
+        const assignRes = await fetch('/api/requests/assign-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lab_activity: title })
+        });
+        if (assignRes.ok) {
+          const assignData = await assignRes.json();
+          sessionId = assignData.session_id || null;
+        }
+      } catch (err) {
+        console.warn('[QR] Could not assign session retroactively:', err);
+      }
+    }
+
+    // Step 3: Render the QR code with all guards
+    qrContainer.innerHTML = '';
+    if (sessionId) {
+      try {
+        if (typeof QRCode === 'undefined') {
+          throw new Error('QRCode library not loaded');
+        }
         new QRCode(qrContainer, {
           text: `chemlab_session:${sessionId}`,
           width: 110,
@@ -377,12 +405,13 @@ document.addEventListener('DOMContentLoaded', () => {
           colorLight: "#ffffff",
           correctLevel: QRCode.CorrectLevel.H
         });
-      } else {
-        qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center; max-width: 120px;">QR scanning not supported for legacy receipts</p>';
+      } catch (qrErr) {
+        console.error('[QR] QR generation failed:', qrErr);
+        qrContainer.innerHTML = `<p style="font-size: 0.65rem; color: var(--muted); text-align: center; max-width: 120px; word-break: break-all;">Session: ${sessionId.substring(0, 8)}...</p>`;
       }
+    } else {
+      qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center; max-width: 120px;">QR unavailable</p>';
     }
-
-    receiptModal.classList.add('active');
   }
 
   closeReceiptModalBtn.addEventListener('click', () => receiptModal.classList.remove('active'));

@@ -463,6 +463,44 @@ app.get('/api/admin/scan-activity', requireAdmin, async (req, res) => {
   }
 });
 
+// Retroactively assign a session_id to legacy requests (those with null session_id)
+// This allows old receipts to become scannable for QR returns.
+app.post('/api/requests/assign-session', requireAuth, async (req, res) => {
+  const { lab_activity } = req.body;
+  if (!lab_activity) {
+    return res.status(400).json({ error: 'lab_activity is required.' });
+  }
+
+  try {
+    // Check if any requests for this group+activity already have a session_id
+    const existingResult = await pool.query(
+      `SELECT session_id FROM requests 
+       WHERE group_id = $1 AND lab_activity = $2 AND session_id IS NOT NULL 
+       LIMIT 1`,
+      [req.session.groupId, lab_activity]
+    );
+
+    if (existingResult.rows.length > 0) {
+      // Already has session_id, return existing one
+      return res.json({ session_id: existingResult.rows[0].session_id });
+    }
+
+    // Generate a new session_id and patch all null records for this group+activity
+    const newSessionId = require('crypto').randomUUID();
+    await pool.query(
+      `UPDATE requests SET session_id = $1 
+       WHERE group_id = $2 AND lab_activity = $3 AND session_id IS NULL`,
+      [newSessionId, req.session.groupId, lab_activity]
+    );
+
+    console.log(`[QR] Retroactively assigned session_id ${newSessionId} to group ${req.session.groupId} for activity "${lab_activity}"`);
+    res.json({ session_id: newSessionId });
+  } catch (error) {
+    console.error('[API] assign-session error:', error.message);
+    res.status(500).json({ error: 'Failed to assign session.' });
+  }
+});
+
 // Get apparatus list with real availability
 app.get('/api/apparatus', requireAuth, async (req, res) => {
   try {
