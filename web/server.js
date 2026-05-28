@@ -399,6 +399,16 @@ app.post('/api/admin/process-scan', requireAdmin, async (req, res) => {
   const { session_id } = req.body;
   if (!session_id) return res.status(400).json({ error: 'No session ID found in scan.' });
 
+  // Validate UUID format to prevent Postgres syntax errors
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  // Note: Using a slightly more permissive regex for standard UUIDs if needed, 
+  // but randomUUID generates v4.
+  const isV4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  
+  if (!isV4.test(session_id)) {
+      return res.status(400).json({ error: 'Unsupported or legacy QR code format.' });
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

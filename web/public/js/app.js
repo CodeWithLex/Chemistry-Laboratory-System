@@ -365,17 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrContainer = document.getElementById('receipt-qr-code');
     if (qrContainer) {
       qrContainer.innerHTML = '';
-      const sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : 'NO_SESSION_ID';
+      const sessionId = (items.length > 0 && items[0].session_id) ? items[0].session_id : null;
       
-      // The QR code stores the session ID for bulk return processing
-      new QRCode(qrContainer, {
-        text: `chemlab_session:${sessionId}`,
-        width: 110,
-        height: 110,
-        colorDark: "#1e4d2b",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
+      if (sessionId) {
+        // The QR code stores the session ID for bulk return processing
+        new QRCode(qrContainer, {
+          text: `chemlab_session:${sessionId}`,
+          width: 110,
+          height: 110,
+          colorDark: "#1e4d2b",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        qrContainer.innerHTML = '<p style="font-size: 0.7rem; color: var(--muted); text-align: center; max-width: 120px;">QR scanning not supported for legacy receipts</p>';
+      }
     }
 
     receiptModal.classList.add('active');
