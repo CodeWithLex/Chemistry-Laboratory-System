@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Scanner | ChemLab System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root {
+      --admin-primary: #1e3a8a; /* Deep blue for admin */
+      --admin-accent: #3b82f6;
+    }
+
+    body.admin-mode {
+      background: #f8fafc;
+      color: #1e293b;
+    }
+
+    .admin-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scanner-card {
+      padding: 0;
+      overflow: hidden;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    #reader {
+      width: 100% !important;
+      border: none !important;
+    }
+
+    #reader img {
+        display: none !important;
+    }
+
+    /* Customizing html5-qrcode UI */
+    #reader__dashboard_section_csr button {
+      background: var(--admin-primary) !important;
+      color: white !important;
+      border: none !important;
+      padding: 10px 20px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      margin: 10px 0 !important;
+    }
+
+    .scan-status-panel {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: var(--radius);
+    }
+
+    .scan-success-pill {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #10b981;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      animation: slideDown 0.4s ease;
+    }
+    
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .admin-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      color: var(--admin-primary);
+      font-size: 1.2rem;
+    }
+
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-overlay.active { display: flex; }
+
+    .admin-login-card {
+      width: 100%;
+      max-width: 360px;
+    }
+  </style>
+</head>
+<body class="admin-mode">
+  
+  <div id="login-overlay" class="login-overlay">
+    <div class="admin-login-card glass p-24">
+      <h2 class="mb-20">Admin Login</h2>
+      <form id="admin-login-form">
+        <div class="form-group mb-16">
+          <label>Username</label>
+          <input type="text" id="admin-username" required placeholder="Custodian Username">
+        </div>
+        <div class="form-group mb-20">
+          <label>Password</label>
+          <input type="password" id="admin-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary w-full" id="admin-login-btn">
+          Access Scanner
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-logo">Admin Companion</div>
+      <button id="admin-logout" class="btn-ghost" style="color: var(--danger)">Logout</button>
+    </header>
+
+    <div class="scanner-card glass mt-24">
+      <div id="reader"></div>
+    </div>
+
+    <div id="scan-results" class="scan-status-panel hidden">
+      <!-- Success results injected here -->
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    const loginOverlay = document.getElementById('login-overlay');
+    const adminLoginForm = document.getElementById('admin-login-form');
+    const scanResults = document.getElementById('scan-results');
+    const logoutBtn = document.getElementById('admin-logout');
+
+    let currentAdmin = null;
+    let html5QrCode = null;
+
+    // Check auth status
+    async function checkAdminAuth() {
+      // For simplicity, we reuse the session but distinguish via role
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.loggedIn && (data.role === 'Admin' || data.role === 'instructor')) {
+          startScanner();
+        } else {
+          loginOverlay.classList.add('active');
+        }
+      } catch (e) {
+        loginOverlay.classList.add('active');
+      }
+    }
+
+    adminLoginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const loginBtn = document.getElementById('admin-login-btn');
+      loginBtn.disabled = true;
+
+      const username = document.getElementById('admin-username').value;
+      const password = document.getElementById('admin-password').value;
+
+      try {
+        const res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          loginOverlay.classList.remove('active');
+          startScanner();
+        } else {
+          alert('Login failed: ' + (data.error || 'Invalid credentials'));
+        }
+      } catch (err) {
+        alert('Network error');
+      } finally {
+        loginBtn.disabled = false;
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.reload();
+    });
+
+    function startScanner() {
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        onScanSuccess
+      ).catch(err => {
+        console.error("Scanner failed", err);
+        // Fallback to file scan if camera fails
+      });
+    }
+
+    async function onScanSuccess(decodedText) {
+      if (!decodedText.startsWith('chemlab_session:')) return;
+      
+      const sessionId = decodedText.split(':')[1];
+      
+      // Pause scanner to process
+      html5QrCode.pause();
+      
+      try {
+        const res = await fetch('/api/admin/process-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showScanSuccess(data);
+          // Haptic feedback
+          if (navigator.vibrate) navigator.vibrate(200);
+        } else {
+          alert(data.error || 'Failed to process scan');
+        }
+      } catch (e) {
+        alert('Network Error');
+      } finally {
+        setTimeout(() => html5QrCode.resume(), 3000);
+      }
+    }
+
+    function showScanSuccess(data) {
+      scanResults.classList.remove('hidden');
+      const details = data.details;
+      
+      const div = document.createElement('div');
+      div.className = 'scan-success-pill';
+      div.innerHTML = `
+        <div style="font-weight: 700;">✅ Success: ${details.group_name}</div>
+        <div style="font-size: 0.85rem; opacity: 0.9;">
+          Returned ${data.message.split(' ')[2]} items for ${details.lab_activity || 'Activity'}.
+        </div>
+      `;
+      
+      scanResults.prepend(div);
+      
+      // Remove after 10 seconds
+      setTimeout(() => div.remove(), 10000);
+    }
+
+    checkAdminAuth();
+  </script>
+</body>
+</html>

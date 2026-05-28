@@ -2287,6 +2287,7 @@ public class AdminDashboardController implements Initializable {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
     private void startHeartbeat() {
         heartbeatTimeline = new Timeline(new KeyFrame(Duration.minutes(10), e -> {

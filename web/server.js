@@ -362,6 +362,81 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// ─── ADMIN AUTH & SCANNING ────────────────────────────────────────────────────
+
+// Admin Auth Middleware
+const requireAdmin = (req, res, next) => {
+  if (!req.session.userId || req.session.role !== 'Admin') {
+    return res.status(403).json({ error: 'Admin access required.' });
+  }
+  next();
+};
+
+app.post('/api/admin/auth/login', loginLimiter, async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const result = await pool.query(
+      'SELECT user_id, full_name, role, password_hash FROM users WHERE username = $1',
+      [username.trim()]
+    );
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials.' });
+
+    const admin = result.rows[0];
+    const matched = await bcrypt.compare(password, admin.password_hash);
+    if (!matched) return res.status(401).json({ error: 'Invalid credentials.' });
+
+    req.session.userId = admin.user_id;
+    req.session.userName = admin.full_name;
+    req.session.role = admin.role;
+    
+    res.json({ success: true, name: admin.full_name });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.post('/api/admin/process-scan', requireAdmin, async (req, res) => {
+  const { session_id } = req.body;
+  if (!session_id) return res.status(400).json({ error: 'No session ID found in scan.' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    // Check if session exists and get details for feedback
+    const check = await client.query(
+      `SELECT g.group_name, r.lab_activity, COUNT(*)::int as item_count 
+       FROM requests r 
+       JOIN student_groups g ON r.group_id = g.group_id 
+       WHERE r.session_id = $1 
+       GROUP BY g.group_name, r.lab_activity`,
+      [session_id]
+    );
+
+    if (check.rows.length === 0) {
+      throw new Error('Invalid or empty scanning session.');
+    }
+
+    // Process: All Approved/Released items in this session are marked as Returned
+    const updateResult = await client.query(
+      "UPDATE requests SET status = 'Returned', updated_at = NOW() WHERE session_id = $1 AND status IN ('Approved', 'Released')",
+      [session_id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ 
+      success: true, 
+      message: `Successfully returned ${updateResult.rowCount} items.`,
+      details: check.rows[0]
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Get apparatus list with real availability
 app.get('/api/apparatus', requireAuth, async (req, res) => {
   try {
@@ -554,6 +629,10 @@ app.delete('/api/group/members/:id', requireAuth, async (req, res) => {
     console.error('[API] Delete group member error:', error.message);
     res.status(500).json({ error: 'Failed to remove member.' });
   }
+});
+
+app.get('/admin/scan', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-scan.html'));
 });
 
 // Catch-all: serve index.html for SPA routing
