@@ -605,13 +605,13 @@ app.post('/api/requests/borrow-template', requireAuth, async (req, res) => {
 app.get('/api/apparatus', requireAuth, async (req, res) => {
   try {
     const queryStr = `
-      SELECT a.apparatus_id, a.item_name, a.current_quantity,
-        (a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending','Released') THEN r.qty ELSE 0 END), 0))::int AS real_available
+      SELECT a.apparatus_id, a.item_name, a.current_quantity, a.unit,
+        (a.current_quantity - COALESCE(SUM(CASE WHEN r.status IN ('Approved','Pending','Released') THEN r.qty ELSE 0 END), 0))::DECIMAL(10,2) AS real_available
       FROM apparatus a
       LEFT JOIN requests r ON a.apparatus_id = r.apparatus_id AND r.status IN ('Approved','Pending','Released')
       WHERE a.current_quantity > 0
         AND (a.deleted_at IS NULL OR a.deleted_at > NOW())
-      GROUP BY a.apparatus_id, a.item_name, a.current_quantity
+      GROUP BY a.apparatus_id, a.item_name, a.current_quantity, a.unit
       ORDER BY a.item_name
     `;
     const result = await pool.query(queryStr);
@@ -626,7 +626,7 @@ app.get('/api/apparatus', requireAuth, async (req, res) => {
 app.get('/api/requests/my', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, r.session_id, a.item_name
+      `SELECT r.request_id, r.qty, r.status, r.created_at, r.lab_activity, r.session_id, a.item_name, a.unit
        FROM requests r
        JOIN apparatus a ON r.apparatus_id = a.apparatus_id
        WHERE r.group_id = $1

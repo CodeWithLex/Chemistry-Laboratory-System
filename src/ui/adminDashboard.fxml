@@ -425,6 +425,7 @@
                                         <TableColumn fx:id="colAppUnit" prefWidth="80" text="UNIT" />
                                         <TableColumn fx:id="colAppQty" prefWidth="150" text="CURRENT STOCK" />
                                         <TableColumn fx:id="colAppRemaining" prefWidth="150" text="AVAIL. TO BORROW" />
+                                        <TableColumn fx:id="colAppAction" prefWidth="100" text="ACTIONS" />
                                     </columns>
                                 </TableView>
                             </VBox>

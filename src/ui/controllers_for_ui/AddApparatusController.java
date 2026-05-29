@@ -81,7 +81,25 @@ public class AddApparatusController {
             return;
         }
 
-        double quantity = quantitySpinner.getValue();
+        // Final attempt to capture the absolute latest text from the editor
+        double quantity = 1.0;
+        try {
+            String qText = quantitySpinner.getEditor().getText();
+            if (qText != null && !qText.trim().isEmpty()) {
+                // Strip everything except digits and decimal points (e.g. "500g" -> "500")
+                String cleanText = qText.replaceAll("[^0-9.]", "");
+                if (!cleanText.isEmpty()) {
+                    quantity = Double.parseDouble(cleanText);
+                    quantitySpinner.getValueFactory().setValue(quantity);
+                } else {
+                    quantity = quantitySpinner.getValue();
+                }
+            } else {
+                quantity = quantitySpinner.getValue();
+            }
+        } catch (Exception e) {
+            quantity = quantitySpinner.getValue();
+        }
         String type = typeComboBox.getValue();
         String unit = unitComboBox.getValue();
 

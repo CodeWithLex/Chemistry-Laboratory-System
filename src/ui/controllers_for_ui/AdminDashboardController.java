@@ -208,6 +208,8 @@ public class AdminDashboardController implements Initializable {
     private TableColumn<ApparatusItem, String> colAppQty;
     @FXML
     private TableColumn<ApparatusItem, String> colAppRemaining;
+    @FXML
+    private TableColumn<ApparatusItem, Void> colAppAction;
 
     // Analytics Components
     @FXML
@@ -480,6 +482,33 @@ public class AdminDashboardController implements Initializable {
         if (colAppRemaining != null)
             colAppRemaining.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
                     data.getValue().getFormattedRemainingStock()));
+
+        // Setup Action Column for Apparatus
+        if (colAppAction != null) {
+            colAppAction.setCellFactory(column -> new javafx.scene.control.TableCell<ApparatusItem, Void>() {
+                private final javafx.scene.control.Button deleteBtn = new javafx.scene.control.Button("Delete");
+                {
+                    deleteBtn.getStyleClass().add("delete-button");
+                    deleteBtn.setStyle(
+                            "-fx-background-color: #ef4444; -fx-text-fill: white; -fx-background-radius: 4; -fx-cursor: hand; -fx-font-size: 11px; -fx-padding: 2 8 2 8;");
+                    deleteBtn.setOnAction(event -> {
+                        ApparatusItem item = getTableView().getItems().get(getIndex());
+                        handleDeleteApparatus(item);
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        setGraphic(deleteBtn);
+                        setAlignment(javafx.geometry.Pos.CENTER);
+                    }
+                }
+            });
+        }
 
         // Setup Student Groups Table columns
         colGroupId.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
@@ -1104,6 +1133,56 @@ public class AdminDashboardController implements Initializable {
     }
 
     // ==================== DATA LOADING ====================
+
+    private void handleDeleteApparatus(ApparatusItem item) {
+        javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Deletion");
+        confirm.setHeaderText("Delete " + item.getItemName() + "?");
+        confirm.setContentText("Are you sure you want to permanently remove this item from the inventory?");
+
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                runAsync(() -> {
+                    try (Connection conn = Connector_ChemSystem.getConnection()) {
+                        if (conn == null)
+                            return;
+
+                        // Rule: Don't delete if there are active requests
+                        String checkSql = "SELECT COUNT(*) FROM requests WHERE apparatus_id = ? AND status IN ('Pending'::request_status, 'Approved'::request_status)";
+                        try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                            checkStmt.setInt(1, item.getId());
+                            ResultSet rs = checkStmt.executeQuery();
+                            if (rs.next() && rs.getInt(1) > 0) {
+                                javafx.application.Platform.runLater(() -> {
+                                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                                    alert.setTitle("Cannot Delete");
+                                    alert.setHeaderText("Active Requests Found");
+                                    alert.setContentText(
+                                            "This item cannot be deleted because it has pending or approved borrow requests.");
+                                    alert.show();
+                                });
+                                return;
+                            }
+                        }
+
+                        String deleteSql = "DELETE FROM apparatus WHERE apparatus_id = ?";
+                        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                            deleteStmt.setInt(1, item.getId());
+                            deleteStmt.executeUpdate();
+
+                            javafx.application.Platform.runLater(() -> {
+                                refreshApparatus(null);
+                                loadStats(); // Update the apparatus count widget
+                            });
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }, null);
+            }
+        });
+    }
 
     private void loadStats() {
         runAsync(() -> {

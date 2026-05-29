@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const option = document.createElement('option');
         option.value = item.apparatus_id;
         option.disabled = item.real_available <= 0;
-        option.textContent = `${item.item_name} (${item.real_available} available)`;
+        option.textContent = `${item.item_name} (${item.real_available} ${item.unit} available)`;
         apparatusSelect.appendChild(option);
       });
 
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         approvedItems.forEach(b => {
           const div = document.createElement('div');
           div.className = 'borrow-item';
-          div.innerHTML = `<strong>${escapeHtml(b.item_name)}</strong> x${b.qty}`;
+          div.innerHTML = `<strong>${escapeHtml(b.item_name)}</strong> x${b.qty} ${b.unit || ''}`;
           borrowingList.appendChild(div);
         });
       } else {
@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             div.innerHTML = `
               <div class="item-info">
-                <span class="item-title">${escapeHtml(r.item_name)} x${r.qty}</span>
+                <span class="item-title">${escapeHtml(r.item_name)} x${r.qty} ${r.unit || ''}</span>
                 <span class="item-subtitle">Requested on ${date}</span>
               </div>
               <span class="status-badge ${r.status}">${r.status}</span>
@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${escapeHtml(item.item_name)}</td>
-        <td style="text-align: center;">${item.qty}</td>
+        <td style="text-align: center;">${item.qty} ${item.unit || ''}</td>
       `;
       receiptItemsBody.appendChild(tr);
     });
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (existing) {
       existing.qty += qty;
     } else {
-      requestCart.push({ apparatus_id: aid, qty, name: appName });
+      requestCart.push({ apparatus_id: aid, qty, name: appName, unit: selectedOption.textContent.split('(')[1].split(' ')[1] });
     }
 
     renderCart();
@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
       div.innerHTML = `
         <div class="cart-item-info">
           <span class="cart-item-name">${escapeHtml(item.name)}</span>
-          <span class="cart-item-qty">Quantity: ${item.qty}</span>
+          <span class="cart-item-qty">Quantity: ${item.qty} ${item.unit || ''}</span>
         </div>
         <button class="remove-item-btn" data-index="${index}">
           <svg class="svg-icon icon-sm" viewBox="0 0 24 24">
